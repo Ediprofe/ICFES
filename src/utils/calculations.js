@@ -122,3 +122,28 @@ export const getMetricsByGrade = (data) => {
     };
   }).sort((a, b) => a.grado.localeCompare(b.grado));
 };
+
+// Promedios globales por grado (para gráficos)
+export const getGradeAverages = (data) => {
+  // Agrupar por grado
+  const byGrade = data.reduce((acc, student) => {
+    const grade = student.Grupo;
+    if (!acc[grade]) acc[grade] = [];
+    acc[grade].push(student);
+    return acc;
+  }, {});
+  
+  // Calcular promedios y desviaciones para cada grado
+  return Object.entries(byGrade).map(([grade, students]) => {
+    const studentsConPIAR = students;
+    const studentsSinPIAR = students.filter(s => s['¿PIAR?'] !== 'Sí');
+    
+    return {
+      grado: grade,
+      promedioConPIAR: mean(studentsConPIAR.map(s => s.Global)),
+      promedioSinPIAR: mean(studentsSinPIAR.map(s => s.Global)),
+      desviacionConPIAR: stdDev(studentsConPIAR.map(s => s.Global)),
+      desviacionSinPIAR: stdDev(studentsSinPIAR.map(s => s.Global))
+    };
+  }).sort((a, b) => a.grado.localeCompare(b.grado));
+};

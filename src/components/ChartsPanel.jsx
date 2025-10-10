@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
-import { calculateAreaMetrics } from '../utils/calculations';
+import { calculateAreaMetrics, getGradeAverages } from '../utils/calculations';
 
 export default function ChartsPanel({ data }) {
   const [showPIAR, setShowPIAR] = useState(true);
@@ -8,6 +8,9 @@ export default function ChartsPanel({ data }) {
   // Calcular métricas con PIAR y sin PIAR
   const metricsConPIAR = calculateAreaMetrics(data, false);
   const metricsSinPIAR = calculateAreaMetrics(data, true);
+  
+  // Calcular promedios por grado
+  const gradeAverages = getGradeAverages(data);
   
   // Colores por área
   const areaColors = {
@@ -225,6 +228,83 @@ export default function ChartsPanel({ data }) {
           </ResponsiveContainer>
         </>
       )}
+
+      {/* NUEVO: Gráficos por Grado */}
+      <div className="mt-12 pt-8 border-t-4 border-indigo-200">
+        <h2 className="text-2xl font-bold mb-6 text-indigo-700">Análisis por grado</h2>
+        
+        {/* Preparar datos para gráficos de grado */}
+        {(() => {
+          const chartDataByGrade = gradeAverages.map(g => ({
+            grado: `Grado ${g.grado}`,
+            'Con PIAR': g.promedioConPIAR,
+            'Sin PIAR': g.promedioSinPIAR
+          }));
+          
+          const chartDataDesviacionByGrade = gradeAverages.map(g => ({
+            grado: `Grado ${g.grado}`,
+            'Con PIAR': g.desviacionConPIAR,
+            'Sin PIAR': g.desviacionSinPIAR
+          }));
+          
+          // Color único para todos los grados (índigo)
+          const gradeColor = '#6366f1';
+          
+          return (
+            <>
+              <h3 className="text-xl font-bold mb-4">Promedios globales por grado</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartDataByGrade}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="grado" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  {showPIAR ? (
+                    <>
+                      <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                        <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+                      </Bar>
+                      <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                        <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                      </Bar>
+                    </>
+                  ) : (
+                    <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                      <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                    </Bar>
+                  )}
+                </BarChart>
+              </ResponsiveContainer>
+              
+              <h3 className="text-xl font-bold mt-8 mb-4">Desviación estándar por grado</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartDataDesviacionByGrade}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="grado" />
+                  <YAxis domain={[0, 30]} />
+                  <Tooltip />
+                  <Legend />
+                  {showPIAR ? (
+                    <>
+                      <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                        <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+                      </Bar>
+                      <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                        <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                      </Bar>
+                    </>
+                  ) : (
+                    <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                      <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                    </Bar>
+                  )}
+                </BarChart>
+              </ResponsiveContainer>
+            </>
+          );
+        })()}
+      </div>
     </div>
   );
 }

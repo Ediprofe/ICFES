@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev, zScore } from './calculations';
+import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, getGradeAverages, findOutliers, mean, stdDev, zScore } from './calculations';
 
 // Función auxiliar para dibujar gráfico de barras en el PDF
 const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, showComparison = true) => {
@@ -42,8 +42,13 @@ const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, sho
     'Inglés': [168, 85, 247]
   };
   
+  // Detectar si son grados (todos empiezan con "Grado")
+  const isGradeChart = data.length > 0 && data[0].area.startsWith('Grado');
+  const gradeColor = [99, 102, 241]; // Color índigo para grados
+  
   data.forEach((item, index) => {
-    const color = areaColors[item.area] || [37, 99, 235];
+    // Usar color índigo para grados, o colores específicos para áreas
+    const color = isGradeChart ? gradeColor : (areaColors[item.area] || [37, 99, 235]);
     const xPos = x + (index * (barWidth * (showComparison ? 2.5 : 1.5)));
     
     if (showComparison && item.conPIAR !== undefined) {
@@ -717,6 +722,60 @@ export const generatePDF = (data) => {
     
     drawBarChart(doc, chartDataPercentiles, 20, yPos, pageWidth - 40, 70, 'Percentiles promedio por área', 100, true);
   }
+  
+  // NUEVA SECCIÓN: Gráficos por Grado
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('8. Gráficos comparativos por grado', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  // Preparar datos de promedios por grado
+  const gradeAverages = getGradeAverages(data);
+  
+  const chartDataByGrade = gradeAverages.map(g => ({
+    area: `Grado ${g.grado}`,
+    conPIAR: g.promedioConPIAR,
+    sinPIAR: g.promedioSinPIAR
+  }));
+  
+  const chartDataDesviacionByGrade = gradeAverages.map(g => ({
+    area: `Grado ${g.grado}`,
+    conPIAR: g.desviacionConPIAR,
+    sinPIAR: g.desviacionSinPIAR
+  }));
+  
+  // Gráfico 1: Promedios globales por grado
+  yPos = 28;
+  drawBarChart(doc, chartDataByGrade, 20, yPos, pageWidth - 40, 70, 'Promedios globales por grado', 100, true);
+  
+  // Gráfico 2: Desviación estándar por grado
+  yPos += 95;
+  
+  // Si no cabe en la página, crear nueva
+  if (yPos > 180) {
+    addNewPage();
+    
+    // Repetir encabezado de sección
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, pageWidth, 20, 'F');
+    doc.setTextColor(255);
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('8. Gráficos comparativos por grado (continuación)', 14, 13);
+    doc.setTextColor(0);
+    doc.setFont(undefined, 'normal');
+    
+    yPos = 28;
+  }
+  
+  drawBarChart(doc, chartDataDesviacionByGrade, 20, yPos, pageWidth - 40, 70, 'Desviación estándar por grado', 30, true);
   
   // Generar nombre de archivo con fecha
   const fechaArchivo = new Date().toISOString().split('T')[0];
