@@ -2,6 +2,108 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev, zScore } from './calculations';
 
+// Función auxiliar para dibujar gráfico de barras en el PDF
+const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, showComparison = true) => {
+  const barWidth = width / (data.length * (showComparison ? 2.5 : 1.5));
+  const chartHeight = height - 35; // Dejar espacio para título y ejes
+  const barSpacing = barWidth * 0.3;
+  
+  // Título del gráfico
+  doc.setFontSize(11);
+  doc.setFont(undefined, 'bold');
+  doc.text(title, x + width / 2, y, { align: 'center' });
+  
+  y += 10;
+  
+  // Dibujar eje Y con líneas de referencia
+  doc.setDrawColor(200);
+  doc.setLineWidth(0.3);
+  
+  // Líneas horizontales de referencia
+  for (let i = 0; i <= 5; i++) {
+    const yLine = y + chartHeight - (i * chartHeight / 5);
+    doc.line(x, yLine, x + width, yLine);
+    
+    // Etiquetas del eje Y
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    const label = ((yAxisMax / 5) * i).toFixed(0);
+    doc.text(label, x - 5, yLine + 1, { align: 'right' });
+  }
+  
+  doc.setTextColor(0);
+  
+  // Dibujar barras
+  const areaColors = {
+    'Lectura': [59, 130, 246],
+    'Matemáticas': [239, 68, 68],
+    'Sociales': [249, 115, 22],
+    'Naturales': [34, 197, 94],
+    'Inglés': [168, 85, 247]
+  };
+  
+  data.forEach((item, index) => {
+    const color = areaColors[item.area] || [37, 99, 235];
+    const xPos = x + (index * (barWidth * (showComparison ? 2.5 : 1.5)));
+    
+    if (showComparison && item.conPIAR !== undefined) {
+      // Barra con PIAR (gris, más tenue)
+      const barHeightConPIAR = (item.conPIAR / yAxisMax) * chartHeight;
+      doc.setFillColor(156, 163, 175); // Gris
+      doc.setDrawColor(107, 114, 128);
+      doc.setLineWidth(0.5);
+      doc.rect(xPos, y + chartHeight - barHeightConPIAR, barWidth - barSpacing, barHeightConPIAR, 'FD');
+      
+      // Etiqueta con PIAR
+      doc.setFontSize(8);
+      doc.setTextColor(107, 114, 128);
+      doc.setFont(undefined, 'bold');
+      doc.text(item.conPIAR.toFixed(1), xPos + (barWidth - barSpacing) / 2, y + chartHeight - barHeightConPIAR - 2, { align: 'center' });
+    }
+    
+    // Barra sin PIAR (color del área)
+    const xPosSinPIAR = showComparison ? xPos + barWidth : xPos;
+    const barHeightSinPIAR = (item.sinPIAR / yAxisMax) * chartHeight;
+    doc.setFillColor(color[0], color[1], color[2]);
+    doc.setDrawColor(color[0] * 0.8, color[1] * 0.8, color[2] * 0.8);
+    doc.setLineWidth(0.5);
+    doc.rect(xPosSinPIAR, y + chartHeight - barHeightSinPIAR, barWidth - barSpacing, barHeightSinPIAR, 'FD');
+    
+    // Etiqueta sin PIAR
+    doc.setFontSize(8);
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.setFont(undefined, 'bold');
+    doc.text(item.sinPIAR.toFixed(1), xPosSinPIAR + (barWidth - barSpacing) / 2, y + chartHeight - barHeightSinPIAR - 2, { align: 'center' });
+    
+    // Etiqueta del eje X (nombre del área)
+    doc.setTextColor(0);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    const labelX = showComparison ? xPos + barWidth : xPos + (barWidth - barSpacing) / 2;
+    doc.text(item.area, labelX, y + chartHeight + 8, { align: 'center', maxWidth: barWidth * (showComparison ? 2 : 1) });
+  });
+  
+  // Leyenda
+  if (showComparison) {
+    const legendY = y + chartHeight + 15;
+    doc.setFontSize(8);
+    
+    // Con PIAR
+    doc.setFillColor(156, 163, 175);
+    doc.rect(x + width / 2 - 35, legendY - 2, 4, 4, 'F');
+    doc.setTextColor(100);
+    doc.text('Con PIAR', x + width / 2 - 28, legendY + 1);
+    
+    // Sin PIAR
+    doc.setFillColor(34, 197, 94);
+    doc.rect(x + width / 2 + 5, legendY - 2, 4, 4, 'F');
+    doc.setTextColor(100);
+    doc.text('Sin PIAR', x + width / 2 + 12, legendY + 1);
+  }
+  
+  doc.setTextColor(0);
+};
+
 export const generatePDF = (data) => {
   console.log('Iniciando generación de PDF con', data.length, 'estudiantes');
   
@@ -509,6 +611,111 @@ export const generatePDF = (data) => {
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text('Todos los estudiantes se encuentran dentro del rango normal (±3σ)', 14, yPos + 25);
+  }
+  
+  // NUEVA SECCIÓN: Gráficos de barras por área
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('7. Gráficos comparativos por área', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  // Preparar datos para los gráficos
+  const chartData = metricsConPIAR.map((m, index) => ({
+    area: m.area.replace(' crítica', ''),
+    conPIAR: parseFloat(m.promedio),
+    sinPIAR: parseFloat(metricsSinPIAR[index].promedio)
+  }));
+  
+  const chartDataDesviacion = metricsConPIAR.map((m, index) => ({
+    area: m.area.replace(' crítica', ''),
+    conPIAR: parseFloat(m.desviacion),
+    sinPIAR: parseFloat(metricsSinPIAR[index].desviacion)
+  }));
+  
+  // Calcular datos de percentiles
+  const subjectsForChart = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+  const chartDataPercentiles = subjectsForChart.map(subject => {
+    const percentileKey = `Percentil ${subject}`;
+    const area = subject.replace(' crítica', '');
+    
+    // Calcular promedio CON PIAR
+    const studentsWithPercentilesConPIAR = data.filter(s => 
+      s[percentileKey] !== undefined && 
+      s[percentileKey] !== null && 
+      s[percentileKey] !== ''
+    );
+    
+    let avgPercentileConPIAR = null;
+    if (studentsWithPercentilesConPIAR.length > 0) {
+      const sum = studentsWithPercentilesConPIAR.reduce((acc, s) => {
+        const value = parseFloat(s[percentileKey]);
+        return acc + (isNaN(value) ? 0 : value);
+      }, 0);
+      avgPercentileConPIAR = sum / studentsWithPercentilesConPIAR.length;
+    }
+    
+    // Calcular promedio SIN PIAR
+    const studentsSinPIARForPercentile = data.filter(s => s['¿PIAR?'] !== 'Sí');
+    const studentsWithPercentilesSinPIAR = studentsSinPIARForPercentile.filter(s => 
+      s[percentileKey] !== undefined && 
+      s[percentileKey] !== null && 
+      s[percentileKey] !== ''
+    );
+    
+    let avgPercentileSinPIAR = null;
+    if (studentsWithPercentilesSinPIAR.length > 0) {
+      const sum = studentsWithPercentilesSinPIAR.reduce((acc, s) => {
+        const value = parseFloat(s[percentileKey]);
+        return acc + (isNaN(value) ? 0 : value);
+      }, 0);
+      avgPercentileSinPIAR = sum / studentsWithPercentilesSinPIAR.length;
+    }
+    
+    return {
+      area,
+      conPIAR: avgPercentileConPIAR || 0,
+      sinPIAR: avgPercentileSinPIAR || 0,
+      hasData: avgPercentileConPIAR !== null || avgPercentileSinPIAR !== null
+    };
+  }).filter(d => d.hasData);
+  
+  // Gráfico 1: Promedios por área
+  yPos = 28;
+  drawBarChart(doc, chartData, 20, yPos, pageWidth - 40, 70, 'Promedios por área', 100, true);
+  
+  // Gráfico 2: Desviación estándar por área
+  yPos += 95;
+  drawBarChart(doc, chartDataDesviacion, 20, yPos, pageWidth - 40, 70, 'Desviación estándar por área', 30, true);
+  
+  // Gráfico 3: Percentiles (si hay datos)
+  if (chartDataPercentiles.length > 0) {
+    yPos += 95;
+    
+    // Si no cabe en la página, crear nueva
+    if (yPos > 180) {
+      addNewPage();
+      
+      // Repetir encabezado de sección
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, pageWidth, 20, 'F');
+      doc.setTextColor(255);
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('7. Gráficos comparativos por área (continuación)', 14, 13);
+      doc.setTextColor(0);
+      doc.setFont(undefined, 'normal');
+      
+      yPos = 28;
+    }
+    
+    drawBarChart(doc, chartDataPercentiles, 20, yPos, pageWidth - 40, 70, 'Percentiles promedio por área', 100, true);
   }
   
   // Generar nombre de archivo con fecha
