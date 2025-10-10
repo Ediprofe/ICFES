@@ -30,11 +30,21 @@ function App() {
     return true;
   }).sort((a, b) => b.Global - a.Global) : [];
   
+  const handleResetApp = () => {
+    setData(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-blue-600">Análisis ICFES</h1>
+          <h1 
+            className="text-4xl font-bold text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
+            onClick={handleResetApp}
+            title="Volver al inicio"
+          >
+            Análisis ICFES
+          </h1>
           <div className="text-right">
             <p className="text-sm text-gray-500 mb-2">Desarrollado por</p>
             <a 
