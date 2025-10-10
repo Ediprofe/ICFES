@@ -147,7 +147,7 @@ export function generateInteractiveHTML(data) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Análisis ICFES - Presentación Interactiva</title>
+  <title>Análisis ICFES - presentación interactiva</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
@@ -558,7 +558,7 @@ export function generateInteractiveHTML(data) {
     <div class="content">
       <!-- SECCIÓN 1: MÉTRICAS GLOBALES -->
       <div class="section">
-        <h2>📈 Métricas Globales</h2>
+        <h2>📈 Métricas globales</h2>
         <div class="metrics-grid">
           <div class="metric-card secondary">
             <div class="metric-label">Promedio Global (con PIAR)</div>
@@ -667,10 +667,10 @@ export function generateInteractiveHTML(data) {
       
       <!-- SECCIÓN 2: PROMEDIOS POR ÁREA -->
       <div class="section">
-        <h2>📊 Análisis por Área</h2>
+        <h2>📊 Análisis por área</h2>
         
         <div class="controls">
-          <h3 style="margin: 0;">Comparación de Promedios</h3>
+          <h3 style="margin: 0;">Comparación de promedios</h3>
           <div>
             <span style="margin-right: 10px; color: #64748b;">Comparar con/sin PIAR:</span>
             <button class="toggle-button" id="togglePIAR" onclick="togglePIARComparison()">
@@ -686,7 +686,7 @@ export function generateInteractiveHTML(data) {
         </div>
         
         <div class="chart-container">
-          <h3>Desviación Estándar por Área</h3>
+          <h3>Desviación estándar por área</h3>
           <div class="chart-wrapper">
             <canvas id="chartDesviacion"></canvas>
           </div>
@@ -694,7 +694,7 @@ export function generateInteractiveHTML(data) {
         
         ${hasPercentileData ? `
         <div class="chart-container">
-          <h3>Percentiles Promedio por Área</h3>
+          <h3>Percentiles promedio por área</h3>
           <p style="color: #64748b; font-size: 0.9em; margin-bottom: 15px;">
             Posición relativa de los estudiantes respecto al total nacional
           </p>
@@ -704,7 +704,7 @@ export function generateInteractiveHTML(data) {
         </div>
         ` : ''}
         
-        <h3>Tabla Comparativa de Métricas</h3>
+        <h3>Tabla comparativa de métricas</h3>
         <table>
           <thead>
             <tr>
@@ -735,14 +735,14 @@ export function generateInteractiveHTML(data) {
       
       <!-- SECCIÓN 3: ANÁLISIS POR GRADO -->
       <div class="section">
-        <h2>🎓 Análisis por Grado</h2>
+        <h2>🎓 Análisis por grado</h2>
         
         <div class="info-box">
           <p><strong>📊 Gráfico Integrado:</strong> Vista completa de todas las áreas académicas por grado (sin PIAR)</p>
         </div>
         
         <div class="chart-container">
-          <h3>Análisis Detallado: Todas las Áreas por Grado</h3>
+          <h3>Análisis detallado: todas las áreas por grado</h3>
           <p style="color: #64748b; font-size: 0.9em; margin-bottom: 15px;">
             Comparación de promedios en las 5 áreas académicas agrupadas por grado
           </p>
@@ -752,14 +752,14 @@ export function generateInteractiveHTML(data) {
         </div>
         
         <div class="chart-container">
-          <h3>Promedios Globales por Grado</h3>
+          <h3>Promedios globales por grado</h3>
           <div class="chart-wrapper">
             <canvas id="chartGradosPromedios"></canvas>
           </div>
         </div>
         
         <div class="chart-container">
-          <h3>Desviación Estándar por Grado</h3>
+          <h3>Desviación estándar por grado</h3>
           <div class="chart-wrapper">
             <canvas id="chartGradosDesviacion"></canvas>
           </div>
@@ -807,7 +807,7 @@ export function generateInteractiveHTML(data) {
       
       <!-- SECCIÓN 4: TOP 5 POR ÁREA -->
       <div class="section">
-        <h2>🏆 Top 5 por Área</h2>
+        <h2>🏆 Top 5 por área</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
           ${subjects.map(subject => {
             const top5 = getTop5BySubject(data, subject);
@@ -831,7 +831,7 @@ export function generateInteractiveHTML(data) {
       
       <!-- SECCIÓN 5: TOP 3 POR GRADO -->
       <div class="section">
-        <h2>🌟 Top 3 por Grado</h2>
+        <h2>🌟 Top 3 por grado</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
           ${top3ByGrade.map(({ grado, top }) => {
             const medals = ['🥇', '🥈', '🥉'];
@@ -855,7 +855,7 @@ export function generateInteractiveHTML(data) {
       <!-- SECCIÓN 6: VALORES ATÍPICOS -->
       ${outliers.length > 0 ? `
       <div class="section">
-        <h2>⚡ Valores Atípicos (Outliers)</h2>
+        <h2>⚡ Valores atípicos (outliers)</h2>
         <div class="info-box">
           <p><strong>Definición:</strong> Estudiantes cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio.</p>
           <p>Estos valores indican rendimiento excepcional (positivo) o que requiere atención especial (negativo).</p>
@@ -863,7 +863,7 @@ export function generateInteractiveHTML(data) {
         
         <div class="metrics-grid">
           <div class="metric-card">
-            <div class="metric-label">Total de Outliers</div>
+            <div class="metric-label">Total de outliers</div>
             <div class="metric-value">${outliers.length}</div>
             <div class="metric-subtitle">${((outliers.length / data.length) * 100).toFixed(1)}% del total</div>
           </div>
@@ -880,7 +880,7 @@ export function generateInteractiveHTML(data) {
             <div class="metric-subtitle">Por encima de +3σ</div>
           </div>
           <div class="metric-card" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-color: #fca5a5;">
-            <div class="metric-label">Bajo Rendimiento</div>
+            <div class="metric-label">Bajo rendimiento</div>
             <div class="metric-value" style="color: #dc2626;">
               ${outliers.filter(s => {
                 const globals = data.map(st => st.Global);
@@ -915,7 +915,7 @@ export function generateInteractiveHTML(data) {
                         ? 'background: #86efac; color: #065f46;' 
                         : 'background: #fca5a5; color: #991b1b;'
                     }">
-                      ${isSobresaliente ? '↑ Sobresaliente' : '↓ Bajo Rendimiento'}
+                      ${isSobresaliente ? '↑ Sobresaliente' : '↓ Bajo rendimiento'}
                     </span>
                   </div>
                 </div>
@@ -926,7 +926,7 @@ export function generateInteractiveHTML(data) {
       </div>
       ` : `
       <div class="section">
-        <h2>⚡ Valores Atípicos (Outliers)</h2>
+        <h2>⚡ Valores atípicos (outliers)</h2>
         <div style="text-align: center; padding: 40px; background: #f0fdf4; border-radius: 15px; border: 2px solid #86efac;">
           <div style="font-size: 3em; margin-bottom: 15px;">✓</div>
           <h3 style="color: #059669; margin: 0 0 10px 0;">No se encontraron valores atípicos</h3>
@@ -947,7 +947,7 @@ export function generateInteractiveHTML(data) {
           🌐 <a href="https://ediprofe.com" target="_blank">Sitio Web</a>
         </p>
         <p style="font-size: 0.8em; margin-top: 15px; opacity: 0.6;">
-          © ${new Date().getFullYear()} - Análisis ICFES Interactivo
+          © ${new Date().getFullYear()} - Análisis ICFES interactivo
         </p>
       </div>
     </footer>
