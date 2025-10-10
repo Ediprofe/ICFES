@@ -5,6 +5,7 @@ import ChartsPanel from './components/ChartsPanel';
 import MetricsPanel from './components/MetricsPanel';
 import FilterControls from './components/FilterControls';
 import PDFGenerator from './components/PDFGenerator';
+import GradeAreaCharts from './components/GradeAreaCharts';
 import { addPercentiles } from './utils/percentiles';
 import { Youtube, Music2, Globe } from 'lucide-react';
 
@@ -98,12 +99,14 @@ function App() {
             grades={[...new Set(data.map(s => s.Grupo))]}
           />
           
-          {/* Tabla de estudiantes PRIMERO */}
+          {/* 1. Listado de estudiantes */}
           <StudentsTable data={filteredData} />
           
-          {/* Métricas y gráficos después - ahora muestran comparación con/sin PIAR internamente */}
+          {/* 2. Métricas globales, por área y por grado */}
           <MetricsPanel data={data} />
-          <ChartsPanel data={data} />
+          
+          {/* 3. Análisis detallado: Grado por área (gráficos interactivos) */}
+          <GradeAreaCharts data={data} />
           
           <PDFGenerator data={data} />
           

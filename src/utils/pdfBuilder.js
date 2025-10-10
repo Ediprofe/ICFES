@@ -868,6 +868,151 @@ export const generatePDF = (data) => {
     }
   });
   
+  // NUEVA SECCIÓN: Gráficos de barras por grado y área (PROMEDIOS)
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(99, 102, 241); // Color índigo
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('7.1. Gráficos: Promedios por grado y área', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  // Descripción
+  yPos = 28;
+  doc.setFontSize(10);
+  doc.setTextColor(60);
+  doc.text('Visualización gráfica de los promedios por grado en cada área académica', 14, yPos);
+  doc.setTextColor(0);
+  
+  // Preparar datos para gráficos por área
+  const subjectsForGradeCharts = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+  const metricsByGradeForCharts = getMetricsByGrade(data);
+  
+  yPos += 10;
+  let chartCount = 0;
+  
+  subjectsForGradeCharts.forEach((subject) => {
+    // Preparar datos para este subject
+    const chartData = metricsByGradeForCharts.map(gradeData => {
+      const metricConPIAR = gradeData.metricsConPIAR.find(m => m.subject === subject);
+      const metricSinPIAR = gradeData.metricsSinPIAR.find(m => m.subject === subject);
+      
+      return {
+        area: gradeData.grado,
+        conPIAR: parseFloat(metricConPIAR.promedio) || 0,
+        sinPIAR: parseFloat(metricSinPIAR.promedio) || 0
+      };
+    });
+    
+    // Calcular escala dinámica para promedios (la función drawBarChart la usa internamente)
+    const allPromedios = chartData.flatMap(d => [d.conPIAR, d.sinPIAR]).filter(v => v > 0);
+    const minPromedio = Math.min(...allPromedios);
+    const maxPromedio = Math.max(...allPromedios);
+    const padding = (maxPromedio - minPromedio) * 0.15;
+    Math.max(0, Math.floor(minPromedio - padding)); // Para referencia de escala
+    Math.ceil(maxPromedio + padding); // Para referencia de escala
+    
+    // Dibujar gráfico (2 por página)
+    const chartWidth = pageWidth - 40;
+    const chartHeight = 60;
+    const xPos = 20;
+    
+    if (chartCount > 0 && chartCount % 2 === 0) {
+      // Nueva página cada 2 gráficos
+      addNewPage();
+      
+      // Repetir encabezado de sección
+      doc.setFillColor(99, 102, 241);
+      doc.rect(0, 0, pageWidth, 20, 'F');
+      doc.setTextColor(255);
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('7.1. Gráficos: Promedios por grado y área (continuación)', 14, 13);
+      doc.setTextColor(0);
+      doc.setFont(undefined, 'normal');
+      
+      yPos = 28;
+    }
+    
+    drawBarChart(doc, chartData, xPos, yPos, chartWidth, chartHeight, subject, 100, true, true);
+    
+    yPos += chartHeight + 20;
+    chartCount++;
+  });
+  
+  // NUEVA SECCIÓN: Gráficos de barras por grado y área (DESVIACIONES)
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(99, 102, 241);
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('7.2. Gráficos: Desviación estándar por grado y área', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  // Descripción
+  yPos = 28;
+  doc.setFontSize(10);
+  doc.setTextColor(60);
+  doc.text('Visualización gráfica de las desviaciones estándar por grado en cada área académica', 14, yPos);
+  doc.setTextColor(0);
+  
+  yPos += 10;
+  chartCount = 0;
+  
+  subjectsForGradeCharts.forEach((subject) => {
+    // Preparar datos para este subject
+    const chartData = metricsByGradeForCharts.map(gradeData => {
+      const metricConPIAR = gradeData.metricsConPIAR.find(m => m.subject === subject);
+      const metricSinPIAR = gradeData.metricsSinPIAR.find(m => m.subject === subject);
+      
+      return {
+        area: gradeData.grado,
+        conPIAR: parseFloat(metricConPIAR.desviacion) || 0,
+        sinPIAR: parseFloat(metricSinPIAR.desviacion) || 0
+      };
+    });
+    
+    // Calcular escala dinámica para desviaciones
+    const allDesviaciones = chartData.flatMap(d => [d.conPIAR, d.sinPIAR]).filter(v => v > 0);
+    const maxDesviacion = Math.max(...allDesviaciones);
+    const dynamicMax = Math.ceil(maxDesviacion * 1.2);
+    
+    // Dibujar gráfico (2 por página)
+    const chartWidth = pageWidth - 40;
+    const chartHeight = 60;
+    const xPos = 20;
+    
+    if (chartCount > 0 && chartCount % 2 === 0) {
+      // Nueva página cada 2 gráficos
+      addNewPage();
+      
+      // Repetir encabezado de sección
+      doc.setFillColor(99, 102, 241);
+      doc.rect(0, 0, pageWidth, 20, 'F');
+      doc.setTextColor(255);
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('7.2. Gráficos: Desviación estándar por grado y área (continuación)', 14, 13);
+      doc.setTextColor(0);
+      doc.setFont(undefined, 'normal');
+      
+      yPos = 28;
+    }
+    
+    drawBarChart(doc, chartData, xPos, yPos, chartWidth, chartHeight, subject, dynamicMax, true, true);
+    
+    yPos += chartHeight + 20;
+    chartCount++;
+  });
+  
   // PÁGINA: Valores Atípicos (Outliers)
   addNewPage();
   
