@@ -12,7 +12,7 @@ export const parseExcel = (file) => {
         
         // Validar columnas obligatorias
         const requiredColumns = [
-          '¿PIAR?', 'Grupo', 'Nombre', 
+          '¿PIAR?', 'Grupo', 'Nombre', 'Apellido',
           'Lectura crítica', 'Matemáticas', 
           'Sociales', 'Naturales', 'Inglés', 'Global'
         ];

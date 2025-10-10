@@ -5,9 +5,10 @@ export default function StudentsTable({ data }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'Global', direction: 'desc' });
 
-  // Filtrar por búsqueda
+  // Filtrar por búsqueda (nombre o apellido)
   const filteredData = data.filter(student => 
-    student.Nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    student.Nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.Apellido.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Ordenar datos
@@ -49,12 +50,12 @@ export default function StudentsTable({ data }) {
           </p>
         </div>
         
-        {/* Búsqueda por nombre */}
+        {/* Búsqueda por nombre o apellido */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
-            placeholder="Buscar por nombre..."
+            placeholder="Buscar por nombre o apellido..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
@@ -69,6 +70,11 @@ export default function StudentsTable({ data }) {
             <th className="p-2 text-left cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Nombre')}>
               <div className="flex items-center gap-1">
                 Nombre <ArrowUpDown size={14} />
+              </div>
+            </th>
+            <th className="p-2 text-left cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Apellido')}>
+              <div className="flex items-center gap-1">
+                Apellido <ArrowUpDown size={14} />
               </div>
             </th>
             <th className="p-2 text-left cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Grupo')}>
@@ -114,6 +120,7 @@ export default function StudentsTable({ data }) {
             <tr key={index} className="border-b hover:bg-gray-50">
               <td className="p-2 text-gray-500">{index + 1}</td>
               <td className="p-2">{student.Nombre}</td>
+              <td className="p-2">{student.Apellido}</td>
               <td className="p-2">{student.Grupo}</td>
               <td className="p-2">
                 {student['¿PIAR?'] === 'Sí' && (
@@ -133,7 +140,7 @@ export default function StudentsTable({ data }) {
 
       {sortedData.length === 0 && (
         <div className="text-center py-8 text-gray-500">
-          No se encontraron estudiantes con ese nombre
+          No se encontraron estudiantes con ese nombre o apellido
         </div>
       )}
     </div>

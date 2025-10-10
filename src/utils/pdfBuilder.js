@@ -23,8 +23,8 @@ export const generatePDF = (data, filters) => {
   const sortedData = [...data].sort((a, b) => b.Global - a.Global);
   doc.autoTable({
     startY: 30,
-    head: [['Pos', 'Nombre', 'Grupo', 'Global']],
-    body: sortedData.map((s, i) => [i + 1, s.Nombre, s.Grupo, s.Global.toFixed(2)]),
+    head: [['Pos', 'Nombre', 'Apellido', 'Grupo', 'Global']],
+    body: sortedData.map((s, i) => [i + 1, s.Nombre, s.Apellido, s.Grupo, s.Global.toFixed(2)]),
     theme: 'grid'
   });
   
@@ -50,8 +50,8 @@ export const generatePDF = (data, filters) => {
     doc.text(subject, 14, y);
     doc.autoTable({
       startY: y + 5,
-      head: [['Nombre', 'Puntaje']],
-      body: top5.map(s => [s.nombre, s.puntaje.toFixed(2)]),
+      head: [['Nombre Completo', 'Puntaje']],
+      body: top5.map(s => [s.nombreCompleto, s.puntaje.toFixed(2)]),
       margin: { left: 14 },
       theme: 'plain'
     });
@@ -74,8 +74,8 @@ export const generatePDF = (data, filters) => {
     doc.text(`Grado: ${grado}`, 14, yGrade);
     doc.autoTable({
       startY: yGrade + 5,
-      head: [['Nombre', 'Global']],
-      body: top.map(s => [s.nombre, s.global.toFixed(2)]),
+      head: [['Nombre Completo', 'Global']],
+      body: top.map(s => [s.nombreCompleto, s.global.toFixed(2)]),
       margin: { left: 14 },
       theme: 'plain'
     });
@@ -98,9 +98,10 @@ export const generatePDF = (data, filters) => {
     
     doc.autoTable({
       startY: 30,
-      head: [['Nombre', 'Global', 'Z-Score']],
+      head: [['Nombre', 'Apellido', 'Global', 'Z-Score']],
       body: outliers.map(s => [
-        s.Nombre, 
+        s.Nombre,
+        s.Apellido,
         s.Global.toFixed(2), 
         zScore(s.Global, avg, sd).toFixed(2)
       ]),

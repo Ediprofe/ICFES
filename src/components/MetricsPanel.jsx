@@ -27,15 +27,15 @@ export default function MetricsPanel({ data }) {
         
         {/* Comparación Global con/sin PIAR */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-            <p className="text-sm text-gray-600 mb-1">Promedio global (con PIAR)</p>
-            <p className="text-3xl font-bold text-primary">{globalAvgConPIAR}</p>
-            <p className="text-xs text-gray-500 mt-1">{dataConPIAR.length} estudiantes</p>
+          <div className="bg-gray-100 p-4 rounded-lg border-2 border-gray-300 opacity-75">
+            <p className="text-sm text-gray-500 mb-1">Promedio global (con PIAR)</p>
+            <p className="text-3xl font-bold text-gray-600">{globalAvgConPIAR}</p>
+            <p className="text-xs text-gray-400 mt-1">{dataConPIAR.length} estudiantes</p>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
-            <p className="text-sm text-gray-600 mb-1">Promedio global (sin PIAR)</p>
-            <p className="text-3xl font-bold text-green-600">{globalAvgSinPIAR}</p>
-            <p className="text-xs text-gray-500 mt-1">{dataSinPIAR.length} estudiantes</p>
+          <div className="bg-green-50 p-4 rounded-lg border-4 border-green-500 shadow-lg">
+            <p className="text-sm text-green-800 mb-1 font-semibold">Promedio global (sin PIAR)</p>
+            <p className="text-4xl font-bold text-green-600">{globalAvgSinPIAR}</p>
+            <p className="text-xs text-green-700 mt-1 font-medium">{dataSinPIAR.length} estudiantes</p>
           </div>
         </div>
 
@@ -64,20 +64,20 @@ export default function MetricsPanel({ data }) {
                 <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Desviación estándar</th>
               </tr>
               <tr className="bg-gray-50">
-                <th className="p-2 text-right text-xs border-l-2 border-gray-300">con PIAR</th>
-                <th className="p-2 text-right text-xs">sin PIAR</th>
-                <th className="p-2 text-right text-xs border-l-2 border-gray-300">con PIAR</th>
-                <th className="p-2 text-right text-xs">sin PIAR</th>
+                <th className="p-2 text-right text-xs border-l-2 border-gray-300 text-gray-500">con PIAR</th>
+                <th className="p-2 text-right text-xs text-green-700 font-bold">sin PIAR</th>
+                <th className="p-2 text-right text-xs border-l-2 border-gray-300 text-gray-500">con PIAR</th>
+                <th className="p-2 text-right text-xs text-green-700 font-bold">sin PIAR</th>
               </tr>
             </thead>
             <tbody>
               {metricsConPIAR.map((metric, index) => (
                 <tr key={index} className="border-b hover:bg-gray-50">
                   <td className="p-2 font-medium">{metric.area}</td>
-                  <td className="p-2 text-right border-l-2 border-gray-200 bg-blue-50">{metric.promedio}</td>
-                  <td className="p-2 text-right bg-green-50">{metricsSinPIAR[index].promedio}</td>
-                  <td className="p-2 text-right border-l-2 border-gray-200 bg-blue-50">{metric.desviacion}</td>
-                  <td className="p-2 text-right bg-green-50">{metricsSinPIAR[index].desviacion}</td>
+                  <td className="p-2 text-right border-l-2 border-gray-200 bg-gray-100 text-gray-500">{metric.promedio}</td>
+                  <td className="p-2 text-right bg-green-100 text-green-800 font-bold border-2 border-green-300">{metricsSinPIAR[index].promedio}</td>
+                  <td className="p-2 text-right border-l-2 border-gray-200 bg-gray-100 text-gray-500">{metric.desviacion}</td>
+                  <td className="p-2 text-right bg-green-100 text-green-800 font-bold border-2 border-green-300">{metricsSinPIAR[index].desviacion}</td>
                 </tr>
               ))}
             </tbody>
@@ -96,7 +96,7 @@ export default function MetricsPanel({ data }) {
                 {top.map((student, index) => (
                   <li key={index} className="flex justify-between items-center">
                     <span className="text-sm">
-                      <span className="font-bold">{index + 1}.</span> {student.nombre}
+                      <span className="font-bold">{index + 1}.</span> {student.nombreCompleto}
                     </span>
                     <span className="font-bold text-primary">{student.global.toFixed(2)}</span>
                   </li>
@@ -120,7 +120,7 @@ export default function MetricsPanel({ data }) {
                   {top5.map((student, index) => (
                     <li key={index} className="flex justify-between items-center">
                       <span className="text-sm">
-                        <span className="font-bold">{index + 1}.</span> {student.nombre}
+                        <span className="font-bold">{index + 1}.</span> {student.nombreCompleto}
                       </span>
                       <span className="font-bold text-primary">{student.puntaje.toFixed(2)}</span>
                     </li>
@@ -141,6 +141,7 @@ export default function MetricsPanel({ data }) {
               <thead>
                 <tr className="bg-yellow-50">
                   <th className="p-2 text-left">Nombre</th>
+                  <th className="p-2 text-left">Apellido</th>
                   <th className="p-2 text-left">Grupo</th>
                   <th className="p-2 text-right">Global</th>
                 </tr>
@@ -149,6 +150,7 @@ export default function MetricsPanel({ data }) {
                 {outliers.map((student, index) => (
                   <tr key={index} className="border-b hover:bg-gray-50">
                     <td className="p-2">{student.Nombre}</td>
+                    <td className="p-2">{student.Apellido}</td>
                     <td className="p-2">{student.Grupo}</td>
                     <td className="p-2 text-right font-bold">{student.Global.toFixed(2)}</td>
                   </tr>

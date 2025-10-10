@@ -53,7 +53,12 @@ export const getTop5BySubject = (data, subject) => {
   return [...data]
     .sort((a, b) => b[subject] - a[subject])
     .slice(0, 5)
-    .map(s => ({ nombre: s.Nombre, puntaje: s[subject] }));
+    .map(s => ({ 
+      nombre: s.Nombre, 
+      apellido: s.Apellido,
+      nombreCompleto: `${s.Nombre} ${s.Apellido}`,
+      puntaje: s[subject] 
+    }));
 };
 
 // Top 3 por grado
@@ -70,6 +75,11 @@ export const getTop3ByGrade = (data) => {
     top: students
       .sort((a, b) => b.Global - a.Global)
       .slice(0, 3)
-      .map(s => ({ nombre: s.Nombre, global: s.Global }))
+      .map(s => ({ 
+        nombre: s.Nombre,
+        apellido: s.Apellido,
+        nombreCompleto: `${s.Nombre} ${s.Apellido}`,
+        global: s.Global 
+      }))
   }));
 };

@@ -51,11 +51,11 @@ export default function ChartsPanel({ data }) {
           <Legend />
           {showPIAR ? (
             <>
-              <Bar dataKey="Con PIAR" fill="#2563eb" />
-              <Bar dataKey="Sin PIAR" fill="#10b981" />
+              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5} />
+              <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
             </>
           ) : (
-            <Bar dataKey="Con PIAR" fill="#2563eb" />
+            <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
           )}
         </BarChart>
       </ResponsiveContainer>
@@ -70,11 +70,11 @@ export default function ChartsPanel({ data }) {
           <Legend />
           {showPIAR ? (
             <>
-              <Bar dataKey="Con PIAR" fill="#64748b" />
-              <Bar dataKey="Sin PIAR" fill="#f59e0b" />
+              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5} />
+              <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
             </>
           ) : (
-            <Bar dataKey="Con PIAR" fill="#64748b" />
+            <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
           )}
         </BarChart>
       </ResponsiveContainer>
