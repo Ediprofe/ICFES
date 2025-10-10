@@ -292,6 +292,133 @@ export const generatePDF = (data) => {
     }
   });
   
+  // PÁGINA 2.5: Métricas globales
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('2. Métricas globales', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  // Calcular datos
+  const allData = data;
+  const dataConPIAR = allData;
+  const dataSinPIAR = allData.filter(s => s['¿PIAR?'] !== 'Sí');
+  const globalAvgConPIAR = mean(dataConPIAR.map(s => s.Global)).toFixed(2);
+  const globalAvgSinPIAR = mean(dataSinPIAR.map(s => s.Global)).toFixed(2);
+  
+  yPos = 30;
+  
+  // Título de sección
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.text('Promedios globales (comparación con/sin PIAR)', 14, yPos);
+  doc.setFont(undefined, 'normal');
+  
+  yPos += 10;
+  
+  // Cajas de promedios globales
+  const boxWidth = (pageWidth - 40) / 2;
+  const boxHeight = 35;
+  const boxX1 = 14;
+  const boxX2 = 14 + boxWidth + 6;
+  
+  // Caja Con PIAR (gris, menos prominente)
+  doc.setDrawColor(156, 163, 175);
+  doc.setLineWidth(1);
+  doc.setFillColor(243, 244, 246);
+  doc.roundedRect(boxX1, yPos, boxWidth, boxHeight, 3, 3, 'FD');
+  
+  doc.setFontSize(9);
+  doc.setTextColor(107, 114, 128);
+  doc.text('Promedio global (con PIAR)', boxX1 + 5, yPos + 8);
+  
+  doc.setFontSize(24);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(75, 85, 99);
+  doc.text(globalAvgConPIAR, boxX1 + boxWidth / 2, yPos + 22, { align: 'center' });
+  
+  doc.setFontSize(8);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(107, 114, 128);
+  doc.text(`${dataConPIAR.length} estudiantes`, boxX1 + boxWidth / 2, yPos + 30, { align: 'center' });
+  
+  // Caja Sin PIAR (verde, destacada)
+  doc.setDrawColor(34, 197, 94);
+  doc.setLineWidth(2);
+  doc.setFillColor(240, 253, 244);
+  doc.roundedRect(boxX2, yPos, boxWidth, boxHeight, 3, 3, 'FD');
+  
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(22, 101, 52);
+  doc.text('Promedio global (sin PIAR)', boxX2 + 5, yPos + 8);
+  
+  doc.setFontSize(26);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(22, 163, 74);
+  doc.text(globalAvgSinPIAR, boxX2 + boxWidth / 2, yPos + 22, { align: 'center' });
+  
+  doc.setFontSize(8);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(21, 128, 61);
+  doc.text(`${dataSinPIAR.length} estudiantes`, boxX2 + boxWidth / 2, yPos + 30, { align: 'center' });
+  
+  // Otras métricas
+  yPos += boxHeight + 15;
+  
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0);
+  doc.text('Otras métricas', 14, yPos);
+  doc.setFont(undefined, 'normal');
+  
+  yPos += 8;
+  
+  // Cajas de otras métricas
+  const smallBoxWidth = (pageWidth - 40) / 2;
+  const smallBoxHeight = 28;
+  
+  // Total de estudiantes
+  doc.setDrawColor(168, 85, 247);
+  doc.setLineWidth(1);
+  doc.setFillColor(250, 245, 255);
+  doc.roundedRect(boxX1, yPos, smallBoxWidth, smallBoxHeight, 3, 3, 'FD');
+  
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text('Total de estudiantes', boxX1 + 5, yPos + 8);
+  
+  doc.setFontSize(20);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(168, 85, 247);
+  doc.text(String(data.length), boxX1 + smallBoxWidth / 2, yPos + 20, { align: 'center' });
+  
+  // Estudiantes excepcionales
+  const outliersCount = findOutliers(data).length;
+  doc.setDrawColor(234, 179, 8);
+  doc.setLineWidth(1);
+  doc.setFillColor(254, 252, 232);
+  doc.roundedRect(boxX2, yPos, smallBoxWidth, smallBoxHeight, 3, 3, 'FD');
+  
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(100);
+  doc.text('Estudiantes excepcionales', boxX2 + 5, yPos + 8);
+  
+  doc.setFontSize(20);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(234, 179, 8);
+  doc.text(String(outliersCount), boxX2 + smallBoxWidth / 2, yPos + 20, { align: 'center' });
+  
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(0);
+  
   // PÁGINA 3: Métricas por área
   addNewPage();
   
@@ -301,32 +428,12 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('2. Métricas por área', 14, 13);
+  doc.text('3. Métricas por área', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
-  // Métricas globales
+  // Comparación por área
   yPos = 30;
-  doc.setFontSize(12);
-  doc.setFont(undefined, 'bold');
-  doc.text('Promedios globales', 14, yPos);
-  doc.setFont(undefined, 'normal');
-  
-  const allData = data;
-  const dataConPIAR = allData;
-  const dataSinPIAR = allData.filter(s => s['¿PIAR?'] !== 'Sí');
-  const globalAvgConPIAR = mean(dataConPIAR.map(s => s.Global)).toFixed(2);
-  const globalAvgSinPIAR = mean(dataSinPIAR.map(s => s.Global)).toFixed(2);
-  
-  yPos += 8;
-  doc.setFontSize(10);
-  doc.text(`• Promedio global (con PIAR): ${globalAvgConPIAR} - ${dataConPIAR.length} estudiantes`, 20, yPos);
-  doc.setFont(undefined, 'bold');
-  doc.text(`• Promedio global (sin PIAR): ${globalAvgSinPIAR} - ${dataSinPIAR.length} estudiantes`, 20, yPos + 6);
-  doc.setFont(undefined, 'normal');
-  
-  // Tabla comparativa
-  yPos += 18;
   doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
   doc.text('Comparación por área (con/sin PIAR)', 14, yPos);
@@ -373,7 +480,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('3. Top 5 estudiantes por área', 14, 13);
+  doc.text('4. Top 5 estudiantes por área', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -430,7 +537,7 @@ export const generatePDF = (data) => {
       doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('3. Top 5 estudiantes por área (continuación)', 14, 13);
+      doc.text('4. Top 5 estudiantes por área (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');
       
@@ -447,7 +554,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('4. Top 3 estudiantes por grado', 14, 13);
+  doc.text('5. Top 3 estudiantes por grado', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -493,7 +600,7 @@ export const generatePDF = (data) => {
       doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('4. Top 3 estudiantes por grado (continuación)', 14, 13);
+      doc.text('5. Top 3 estudiantes por grado (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');
       
@@ -510,7 +617,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('5. Métricas por grado (comparación con/sin PIAR)', 14, 13);
+  doc.text('6. Métricas por grado (comparación con/sin PIAR)', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -574,7 +681,7 @@ export const generatePDF = (data) => {
       doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('5. Métricas por grado (continuación)', 14, 13);
+      doc.text('6. Métricas por grado (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');
       
@@ -591,7 +698,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('6. Valores atípicos', 14, 13);
+  doc.text('7. Valores atípicos', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -673,7 +780,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('7. Gráficos comparativos por área', 14, 13);
+  doc.text('8. Gráficos comparativos por área', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -759,7 +866,7 @@ export const generatePDF = (data) => {
       doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('7. Gráficos comparativos por área (continuación)', 14, 13);
+      doc.text('8. Gráficos comparativos por área (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');
       
@@ -778,7 +885,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('8. Gráficos comparativos por grado', 14, 13);
+  doc.text('9. Gráficos comparativos por grado', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -814,7 +921,7 @@ export const generatePDF = (data) => {
     doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('8. Gráficos comparativos por grado (continuación)', 14, 13);
+      doc.text('9. Gráficos comparativos por grado (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');    yPos = 28;
   }
