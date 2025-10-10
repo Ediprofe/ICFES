@@ -26,7 +26,7 @@ export default function ChartsPanel({ data }) {
     <div className="bg-white rounded-lg shadow p-6">
       {/* Toggle para mostrar/ocultar comparación */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Promedios por Área</h2>
+        <h2 className="text-2xl font-bold">Promedios por área</h2>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Comparar con/sin PIAR:</span>
           <button
@@ -37,7 +37,7 @@ export default function ChartsPanel({ data }) {
                 : 'bg-gray-200 text-gray-700'
             }`}
           >
-            {showPIAR ? 'Comparación Activa' : 'Comparación Desactivada'}
+            {showPIAR ? 'Comparación activa' : 'Comparación desactivada'}
           </button>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function ChartsPanel({ data }) {
         </BarChart>
       </ResponsiveContainer>
       
-      <h2 className="text-2xl font-bold mt-8 mb-4">Desviación Estándar por Área</h2>
+      <h2 className="text-2xl font-bold mt-8 mb-4">Desviación estándar por área</h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartDataDesviacion}>
           <CartesianGrid strokeDasharray="3 3" />

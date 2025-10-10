@@ -32,7 +32,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <header className="mb-8">
-        <h1 className="text-4xl font-bold text-primary">ICFES Analyzer</h1>
+        <h1 className="text-4xl font-bold text-primary">Análisis ICFES</h1>
         <p className="text-gray-600">Análisis interactivo de resultados académicos</p>
       </header>
       

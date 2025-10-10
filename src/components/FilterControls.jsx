@@ -38,7 +38,7 @@ export default function FilterControls({ filters, setFilters, grades }) {
 
         {/* Puntaje Mínimo */}
         <div>
-          <label className="block text-sm font-medium mb-1">Puntaje Mínimo</label>
+          <label className="block text-sm font-medium mb-1">Puntaje mínimo</label>
           <input
             type="number"
             value={filters.minScore}
@@ -51,7 +51,7 @@ export default function FilterControls({ filters, setFilters, grades }) {
 
         {/* Puntaje Máximo */}
         <div>
-          <label className="block text-sm font-medium mb-1">Puntaje Máximo</label>
+          <label className="block text-sm font-medium mb-1">Puntaje máximo</label>
           <input
             type="number"
             value={filters.maxScore}

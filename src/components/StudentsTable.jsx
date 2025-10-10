@@ -43,7 +43,7 @@ export default function StudentsTable({ data }) {
     <div className="bg-white rounded-lg shadow p-6 overflow-x-auto">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-bold">Listado de Estudiantes</h2>
+          <h2 className="text-2xl font-bold">Listado de estudiantes</h2>
           <p className="text-sm text-gray-600">
             Mostrando {sortedData.length} de {data.length} estudiantes
           </p>
@@ -73,13 +73,13 @@ export default function StudentsTable({ data }) {
             </th>
             <th className="p-2 text-left cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Grupo')}>
               <div className="flex items-center gap-1">
-                Grupo <ArrowUpDown size={14} />
+                Grado <ArrowUpDown size={14} />
               </div>
             </th>
             <th className="p-2 text-left">PIAR</th>
             <th className="p-2 text-right cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Lectura')}>
               <div className="flex items-center justify-end gap-1">
-                Lectura <ArrowUpDown size={14} />
+                Lectura crítica <ArrowUpDown size={14} />
               </div>
             </th>
             <th className="p-2 text-right cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Matemáticas')}>
@@ -89,12 +89,12 @@ export default function StudentsTable({ data }) {
             </th>
             <th className="p-2 text-right cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Sociales')}>
               <div className="flex items-center justify-end gap-1">
-                Sociales <ArrowUpDown size={14} />
+                Sociales y ciudadanas <ArrowUpDown size={14} />
               </div>
             </th>
             <th className="p-2 text-right cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Naturales')}>
               <div className="flex items-center justify-end gap-1">
-                Naturales <ArrowUpDown size={14} />
+                Ciencias naturales <ArrowUpDown size={14} />
               </div>
             </th>
             <th className="p-2 text-right cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Inglés')}>

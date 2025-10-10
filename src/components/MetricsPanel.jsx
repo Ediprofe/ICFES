@@ -23,17 +23,17 @@ export default function MetricsPanel({ data }) {
     <div className="space-y-6">
       {/* Métrica Global - Comparación con/sin PIAR */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Métricas Globales</h2>
+        <h2 className="text-2xl font-bold mb-4">Métricas globales</h2>
         
         {/* Comparación Global con/sin PIAR */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-            <p className="text-sm text-gray-600 mb-1">Promedio Global (Con PIAR)</p>
+            <p className="text-sm text-gray-600 mb-1">Promedio global (con PIAR)</p>
             <p className="text-3xl font-bold text-primary">{globalAvgConPIAR}</p>
             <p className="text-xs text-gray-500 mt-1">{dataConPIAR.length} estudiantes</p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
-            <p className="text-sm text-gray-600 mb-1">Promedio Global (Sin PIAR)</p>
+            <p className="text-sm text-gray-600 mb-1">Promedio global (sin PIAR)</p>
             <p className="text-3xl font-bold text-green-600">{globalAvgSinPIAR}</p>
             <p className="text-xs text-gray-500 mt-1">{dataSinPIAR.length} estudiantes</p>
           </div>
@@ -42,11 +42,11 @@ export default function MetricsPanel({ data }) {
         {/* Otras métricas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-purple-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Total Estudiantes</p>
+            <p className="text-sm text-gray-600">Total de estudiantes</p>
             <p className="text-3xl font-bold text-purple-600">{data.length}</p>
           </div>
           <div className="bg-yellow-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Estudiantes Excepcionales</p>
+            <p className="text-sm text-gray-600">Estudiantes excepcionales</p>
             <p className="text-3xl font-bold text-yellow-600">{outliers.length}</p>
           </div>
         </div>
@@ -54,20 +54,20 @@ export default function MetricsPanel({ data }) {
 
       {/* Métricas por Área - Comparación con/sin PIAR */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Métricas por Área (Comparación Con/Sin PIAR)</h2>
+        <h2 className="text-2xl font-bold mb-4">Métricas por área (comparación con/sin PIAR)</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-2 text-left" rowSpan="2">Área</th>
                 <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Promedio</th>
-                <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Desviación Estándar</th>
+                <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Desviación estándar</th>
               </tr>
               <tr className="bg-gray-50">
-                <th className="p-2 text-right text-xs border-l-2 border-gray-300">Con PIAR</th>
-                <th className="p-2 text-right text-xs">Sin PIAR</th>
-                <th className="p-2 text-right text-xs border-l-2 border-gray-300">Con PIAR</th>
-                <th className="p-2 text-right text-xs">Sin PIAR</th>
+                <th className="p-2 text-right text-xs border-l-2 border-gray-300">con PIAR</th>
+                <th className="p-2 text-right text-xs">sin PIAR</th>
+                <th className="p-2 text-right text-xs border-l-2 border-gray-300">con PIAR</th>
+                <th className="p-2 text-right text-xs">sin PIAR</th>
               </tr>
             </thead>
             <tbody>
@@ -87,11 +87,11 @@ export default function MetricsPanel({ data }) {
 
       {/* Top 3 por Grado */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Top 3 por Grado</h2>
+        <h2 className="text-2xl font-bold mb-4">Top 3 por grado</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {top3ByGrade.map(({ grado, top }) => (
             <div key={grado} className="border rounded-lg p-4">
-              <h3 className="font-bold text-lg mb-2 text-primary">Grado: {grado}</h3>
+              <h3 className="font-bold text-lg mb-2 text-primary">Grado {grado}</h3>
               <ol className="space-y-2">
                 {top.map((student, index) => (
                   <li key={index} className="flex justify-between items-center">
@@ -109,7 +109,7 @@ export default function MetricsPanel({ data }) {
 
       {/* Top 5 por Área */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Top 5 por Área</h2>
+        <h2 className="text-2xl font-bold mb-4">Top 5 por área</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {subjects.map(subject => {
             const top5 = getTop5BySubject(data, subject);
@@ -135,7 +135,7 @@ export default function MetricsPanel({ data }) {
       {/* Outliers */}
       {outliers.length > 0 && (
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">Estudiantes con Desempeño Excepcional (±3σ)</h2>
+          <h2 className="text-2xl font-bold mb-4">Estudiantes con desempeño excepcional (±3σ)</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
