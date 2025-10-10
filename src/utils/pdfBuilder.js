@@ -3,10 +3,28 @@ import autoTable from 'jspdf-autotable';
 import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, getGradeAverages, findOutliers, mean, stdDev, zScore } from './calculations';
 
 // Función auxiliar para dibujar gráfico de barras en el PDF
-const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, showComparison = true) => {
+const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, showComparison = true, useDynamicScale = false) => {
   const barWidth = width / (data.length * (showComparison ? 2.5 : 1.5));
   const chartHeight = height - 35; // Dejar espacio para título y ejes
   const barSpacing = barWidth * 0.3;
+  
+  // Calcular escala dinámica si se solicita
+  let dynamicMin = 0;
+  let dynamicMax = yAxisMax;
+  
+  if (useDynamicScale) {
+    const allValues = data.flatMap(d => [d.conPIAR, d.sinPIAR]).filter(v => v !== undefined && v > 0);
+    if (allValues.length > 0) {
+      const minValue = Math.min(...allValues);
+      const maxValue = Math.max(...allValues);
+      const padding = (maxValue - minValue) * 0.15; // 15% de padding
+      dynamicMin = Math.max(0, Math.floor(minValue - padding));
+      dynamicMax = Math.ceil(maxValue + padding);
+    }
+  }
+  
+  const scaleMin = useDynamicScale ? dynamicMin : 0;
+  const scaleMax = useDynamicScale ? dynamicMax : yAxisMax;
   
   // Título del gráfico
   doc.setFontSize(11);
@@ -24,10 +42,10 @@ const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, sho
     const yLine = y + chartHeight - (i * chartHeight / 5);
     doc.line(x, yLine, x + width, yLine);
     
-    // Etiquetas del eje Y
+    // Etiquetas del eje Y (usar escala dinámica)
     doc.setFontSize(8);
     doc.setTextColor(100);
-    const label = ((yAxisMax / 5) * i).toFixed(0);
+    const label = (scaleMin + ((scaleMax - scaleMin) / 5) * i).toFixed(0);
     doc.text(label, x - 5, yLine + 1, { align: 'right' });
   }
   
@@ -53,7 +71,8 @@ const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, sho
     
     if (showComparison && item.conPIAR !== undefined) {
       // Barra con PIAR (gris, más tenue)
-      const barHeightConPIAR = (item.conPIAR / yAxisMax) * chartHeight;
+      const normalizedConPIAR = (item.conPIAR - scaleMin) / (scaleMax - scaleMin);
+      const barHeightConPIAR = normalizedConPIAR * chartHeight;
       doc.setFillColor(156, 163, 175); // Gris
       doc.setDrawColor(107, 114, 128);
       doc.setLineWidth(0.5);
@@ -68,7 +87,8 @@ const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, sho
     
     // Barra sin PIAR (color del área)
     const xPosSinPIAR = showComparison ? xPos + barWidth : xPos;
-    const barHeightSinPIAR = (item.sinPIAR / yAxisMax) * chartHeight;
+    const normalizedSinPIAR = (item.sinPIAR - scaleMin) / (scaleMax - scaleMin);
+    const barHeightSinPIAR = normalizedSinPIAR * chartHeight;
     doc.setFillColor(color[0], color[1], color[2]);
     doc.setDrawColor(color[0] * 0.8, color[1] * 0.8, color[2] * 0.8);
     doc.setLineWidth(0.5);
@@ -753,7 +773,7 @@ export const generatePDF = (data) => {
   
   // Gráfico 1: Promedios globales por grado
   yPos = 28;
-  drawBarChart(doc, chartDataByGrade, 20, yPos, pageWidth - 40, 70, 'Promedios globales por grado', 100, true);
+  drawBarChart(doc, chartDataByGrade, 20, yPos, pageWidth - 40, 70, 'Promedios globales por grado', 100, true, true);
   
   // Gráfico 2: Desviación estándar por grado
   yPos += 95;
@@ -775,7 +795,7 @@ export const generatePDF = (data) => {
     yPos = 28;
   }
   
-  drawBarChart(doc, chartDataDesviacionByGrade, 20, yPos, pageWidth - 40, 70, 'Desviación estándar por grado', 30, true);
+  drawBarChart(doc, chartDataDesviacionByGrade, 20, yPos, pageWidth - 40, 70, 'Desviación estándar por grado', 30, true, true);
   
   // Generar nombre de archivo con fecha
   const fechaArchivo = new Date().toISOString().split('T')[0];
