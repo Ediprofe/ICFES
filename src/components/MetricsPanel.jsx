@@ -1,3 +1,4 @@
+import React from 'react';
 import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev } from '../utils/calculations';
 
 export default function MetricsPanel({ data }) {
@@ -174,6 +175,112 @@ export default function MetricsPanel({ data }) {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* NUEVA SECCIÓN: Análisis detallado por grado y área */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold mb-2">Análisis detallado: Grado por área</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Tabla comparativa de promedios y desviaciones estándar por grado en cada área, mostrando la diferencia con/sin PIAR
+        </p>
+        
+        {/* Tabla de Promedios */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold mb-3 text-blue-700">Promedios por grado y área</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="bg-blue-600 text-white">
+                  <th className="p-2 border border-blue-700 sticky left-0 bg-blue-600 z-10" rowSpan="2">Grado</th>
+                  {subjects.map(subject => (
+                    <th key={subject} className="p-2 border border-blue-700 text-center" colSpan="2">
+                      {subject.replace(' crítica', '')}
+                    </th>
+                  ))}
+                </tr>
+                <tr className="bg-blue-500 text-white text-xs">
+                  {subjects.map(subject => (
+                    <React.Fragment key={subject}>
+                      <th className="p-1 border border-blue-600 text-gray-200">con PIAR</th>
+                      <th className="p-1 border border-blue-600 font-bold">sin PIAR</th>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {metricsByGrade.map((gradeData, gradeIndex) => (
+                  <tr key={gradeIndex} className={gradeIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="p-3 font-bold text-gray-800 border border-gray-300 sticky left-0 bg-gray-100 z-10">
+                      {gradeData.grado}
+                    </td>
+                    {gradeData.metricsConPIAR.map((metricConPIAR, areaIndex) => {
+                      const metricSinPIAR = gradeData.metricsSinPIAR[areaIndex];
+                      return (
+                        <React.Fragment key={areaIndex}>
+                          <td className="p-2 text-center border border-gray-300 bg-gray-50 text-gray-600">
+                            {metricConPIAR.promedio}
+                          </td>
+                          <td className="p-2 text-center border border-gray-300 bg-green-50 text-green-700 font-bold">
+                            {metricSinPIAR.promedio}
+                          </td>
+                        </React.Fragment>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Tabla de Desviaciones Estándar */}
+        <div>
+          <h3 className="text-xl font-bold mb-3 text-purple-700">Desviación estándar por grado y área</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr className="bg-purple-600 text-white">
+                  <th className="p-2 border border-purple-700 sticky left-0 bg-purple-600 z-10" rowSpan="2">Grado</th>
+                  {subjects.map(subject => (
+                    <th key={subject} className="p-2 border border-purple-700 text-center" colSpan="2">
+                      {subject.replace(' crítica', '')}
+                    </th>
+                  ))}
+                </tr>
+                <tr className="bg-purple-500 text-white text-xs">
+                  {subjects.map(subject => (
+                    <React.Fragment key={subject}>
+                      <th className="p-1 border border-purple-600 text-gray-200">con PIAR</th>
+                      <th className="p-1 border border-purple-600 font-bold">sin PIAR</th>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {metricsByGrade.map((gradeData, gradeIndex) => (
+                  <tr key={gradeIndex} className={gradeIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="p-3 font-bold text-gray-800 border border-gray-300 sticky left-0 bg-gray-100 z-10">
+                      {gradeData.grado}
+                    </td>
+                    {gradeData.metricsConPIAR.map((metricConPIAR, areaIndex) => {
+                      const metricSinPIAR = gradeData.metricsSinPIAR[areaIndex];
+                      return (
+                        <React.Fragment key={areaIndex}>
+                          <td className="p-2 text-center border border-gray-300 bg-gray-50 text-gray-600">
+                            {metricConPIAR.desviacion}
+                          </td>
+                          <td className="p-2 text-center border border-gray-300 bg-green-50 text-green-700 font-bold">
+                            {metricSinPIAR.desviacion}
+                          </td>
+                        </React.Fragment>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

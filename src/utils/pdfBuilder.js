@@ -689,6 +689,185 @@ export const generatePDF = (data) => {
     }
   });
   
+  // NUEVA SECCIÓN: Análisis detallado por grado y área
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('7. Análisis detallado: Grado por área', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  // Descripción
+  yPos = 28;
+  doc.setFontSize(10);
+  doc.setTextColor(60);
+  doc.text('Tabla comparativa de promedios por grado en cada área, mostrando la diferencia con/sin PIAR', 14, yPos);
+  doc.setTextColor(0);
+  
+  yPos += 8;
+  
+  // Preparar datos para la tabla: cada fila es un grado, cada columna es un área
+  const metricsByGradeForTable = getMetricsByGrade(data);
+  
+  // Crear tabla con promedios
+  const tableHeaderPromedio = [
+    'Grado',
+    'Lectura\n(con PIAR)',
+    'Lectura\n(sin PIAR)',
+    'Matemát.\n(con PIAR)',
+    'Matemát.\n(sin PIAR)',
+    'Sociales\n(con PIAR)',
+    'Sociales\n(sin PIAR)',
+    'Naturales\n(con PIAR)',
+    'Naturales\n(sin PIAR)',
+    'Inglés\n(con PIAR)',
+    'Inglés\n(sin PIAR)'
+  ];
+  
+  const tableBodyPromedio = metricsByGradeForTable.map(gradeData => {
+    const row = [gradeData.grado];
+    
+    gradeData.metricsConPIAR.forEach((metricConPIAR, index) => {
+      const metricSinPIAR = gradeData.metricsSinPIAR[index];
+      row.push(metricConPIAR.promedio);
+      row.push(metricSinPIAR.promedio);
+    });
+    
+    return row;
+  });
+  
+  doc.setFontSize(11);
+  doc.setFont(undefined, 'bold');
+  doc.text('Promedios por grado y área', 14, yPos);
+  doc.setFont(undefined, 'normal');
+  
+  doc.autoTable({
+    startY: yPos + 3,
+    head: [tableHeaderPromedio],
+    body: tableBodyPromedio,
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [37, 99, 235], 
+      fontStyle: 'bold',
+      fontSize: 7,
+      halign: 'center',
+      valign: 'middle'
+    },
+    columnStyles: {
+      0: { cellWidth: 20, fontStyle: 'bold', halign: 'center', fillColor: [245, 247, 250] },
+      1: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      2: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      3: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      4: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      5: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      6: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      7: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      8: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      9: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      10: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' }
+    },
+    styles: { fontSize: 7, cellPadding: 2 },
+    margin: { bottom: 25 },
+    didDrawPage: (data) => {
+      if (data.pageNumber > pageNumber) {
+        pageNumber = data.pageNumber;
+        addFooter();
+      }
+    }
+  });
+  
+  // Tabla de desviaciones estándar
+  yPos = doc.lastAutoTable.finalY + 12;
+  
+  // Si no cabe en la página, crear nueva
+  if (yPos > 220) {
+    addNewPage();
+    
+    // Repetir encabezado de sección
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, pageWidth, 20, 'F');
+    doc.setTextColor(255);
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.text('7. Análisis detallado: Grado por área (continuación)', 14, 13);
+    doc.setTextColor(0);
+    doc.setFont(undefined, 'normal');
+    
+    yPos = 28;
+  }
+  
+  const tableHeaderDesviacion = [
+    'Grado',
+    'Lectura\n(con PIAR)',
+    'Lectura\n(sin PIAR)',
+    'Matemát.\n(con PIAR)',
+    'Matemát.\n(sin PIAR)',
+    'Sociales\n(con PIAR)',
+    'Sociales\n(sin PIAR)',
+    'Naturales\n(con PIAR)',
+    'Naturales\n(sin PIAR)',
+    'Inglés\n(con PIAR)',
+    'Inglés\n(sin PIAR)'
+  ];
+  
+  const tableBodyDesviacion = metricsByGradeForTable.map(gradeData => {
+    const row = [gradeData.grado];
+    
+    gradeData.metricsConPIAR.forEach((metricConPIAR, index) => {
+      const metricSinPIAR = gradeData.metricsSinPIAR[index];
+      row.push(metricConPIAR.desviacion);
+      row.push(metricSinPIAR.desviacion);
+    });
+    
+    return row;
+  });
+  
+  doc.setFontSize(11);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(0);
+  doc.text('Desviación estándar por grado y área', 14, yPos);
+  doc.setFont(undefined, 'normal');
+  
+  doc.autoTable({
+    startY: yPos + 3,
+    head: [tableHeaderDesviacion],
+    body: tableBodyDesviacion,
+    theme: 'grid',
+    headStyles: { 
+      fillColor: [37, 99, 235], 
+      fontStyle: 'bold',
+      fontSize: 7,
+      halign: 'center',
+      valign: 'middle'
+    },
+    columnStyles: {
+      0: { cellWidth: 20, fontStyle: 'bold', halign: 'center', fillColor: [245, 247, 250] },
+      1: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      2: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      3: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      4: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      5: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      6: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      7: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      8: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' },
+      9: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [243, 244, 246], textColor: [107, 114, 128] },
+      10: { cellWidth: 16, halign: 'center', fontSize: 7, fillColor: [240, 253, 244], textColor: [22, 101, 52], fontStyle: 'bold' }
+    },
+    styles: { fontSize: 7, cellPadding: 2 },
+    margin: { bottom: 25 },
+    didDrawPage: (data) => {
+      if (data.pageNumber > pageNumber) {
+        pageNumber = data.pageNumber;
+        addFooter();
+      }
+    }
+  });
+  
   // PÁGINA: Valores Atípicos (Outliers)
   addNewPage();
   
@@ -698,7 +877,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('7. Valores atípicos', 14, 13);
+  doc.text('8. Valores atípicos', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -780,7 +959,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('8. Gráficos comparativos por área', 14, 13);
+  doc.text('9. Gráficos comparativos por área', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -866,7 +1045,7 @@ export const generatePDF = (data) => {
       doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('8. Gráficos comparativos por área (continuación)', 14, 13);
+      doc.text('9. Gráficos comparativos por área (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');
       
@@ -885,7 +1064,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('9. Gráficos comparativos por grado', 14, 13);
+  doc.text('10. Gráficos comparativos por grado', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -921,7 +1100,7 @@ export const generatePDF = (data) => {
     doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('9. Gráficos comparativos por grado (continuación)', 14, 13);
+      doc.text('10. Gráficos comparativos por grado (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');    yPos = 28;
   }
