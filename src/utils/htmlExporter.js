@@ -10,8 +10,8 @@ export function generateInteractiveHTML(data) {
   const dataConPIAR = data;
   const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
   
-  // Preparar listado de estudiantes ordenado (sin PIAR)
-  const studentsList = dataSinPIAR
+  // Preparar listado de TODOS los estudiantes (incluyendo PIAR)
+  const allStudentsList = data
     .map(s => ({
       nombre: s.Nombre || '',
       apellido: s.Apellido || '',
@@ -23,7 +23,7 @@ export function generateInteractiveHTML(data) {
       sociales: s['Sociales'] || 0,
       naturales: s['Naturales'] || 0,
       ingles: s['Inglés'] || 0,
-      piar: s['¿PIAR?'] || 'No'
+      piar: s['¿PIAR?'] === 'Sí' ? 'Sí' : 'No'
     }))
     .sort((a, b) => b.global - a.global);
   
@@ -109,14 +109,27 @@ export function generateInteractiveHTML(data) {
     sinPIAR: parseFloat(g.desviacionSinPIAR.toFixed(2))
   }));
   
-  // Preparar datos para gráfico integrado de todas las áreas por grado
-  const chartDataIntegrado = [];
+  // Preparar datos para gráfico integrado de todas las áreas por grado (CON y SIN PIAR)
+  const chartDataIntegradoConPIAR = [];
+  const chartDataIntegradoSinPIAR = [];
   const grades = [...new Set(data.map(s => s.Grupo))].sort();
   
   grades.forEach(grado => {
     const gradoData = metricsByGrade.find(g => g.grado === grado);
     if (gradoData) {
-      const dataPoint = {
+      // Con PIAR
+      const dataPointConPIAR = {
+        grado: `Grado ${grado}`,
+        'Lectura': parseFloat(gradoData.metricsConPIAR.find(m => m.subject === 'Lectura crítica')?.promedio || 0),
+        'Matemáticas': parseFloat(gradoData.metricsConPIAR.find(m => m.subject === 'Matemáticas')?.promedio || 0),
+        'Sociales': parseFloat(gradoData.metricsConPIAR.find(m => m.subject === 'Sociales')?.promedio || 0),
+        'Naturales': parseFloat(gradoData.metricsConPIAR.find(m => m.subject === 'Naturales')?.promedio || 0),
+        'Inglés': parseFloat(gradoData.metricsConPIAR.find(m => m.subject === 'Inglés')?.promedio || 0)
+      };
+      chartDataIntegradoConPIAR.push(dataPointConPIAR);
+      
+      // Sin PIAR
+      const dataPointSinPIAR = {
         grado: `Grado ${grado}`,
         'Lectura': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Lectura crítica')?.promedio || 0),
         'Matemáticas': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Matemáticas')?.promedio || 0),
@@ -124,7 +137,7 @@ export function generateInteractiveHTML(data) {
         'Naturales': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Naturales')?.promedio || 0),
         'Inglés': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Inglés')?.promedio || 0)
       };
-      chartDataIntegrado.push(dataPoint);
+      chartDataIntegradoSinPIAR.push(dataPointSinPIAR);
     }
   });
   
@@ -393,6 +406,11 @@ export function generateInteractiveHTML(data) {
       padding: 15px;
       text-align: left;
       font-weight: 600;
+      user-select: none;
+    }
+    
+    th:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     }
     
     td {
@@ -402,6 +420,16 @@ export function generateInteractiveHTML(data) {
     
     tr:hover {
       background: #f1f5f9;
+    }
+    
+    #studentsTable tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    #studentsTable tbody tr:hover {
+      background: #f1f5f9 !important;
+      transform: scale(1.01);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .grade-section {
@@ -558,50 +586,82 @@ export function generateInteractiveHTML(data) {
         </div>
       </div>
       
-      <!-- SECCIÓN 1.5: LISTADO DE ESTUDIANTES -->
+      <!-- SECCIÓN 1.5: LISTADO DE ESTUDIANTES CON FILTROS -->
       <div class="section">
-        <h2>📋 Listado de Estudiantes (sin PIAR)</h2>
-        <p style="color: #64748b; margin-bottom: 20px;">
-          Total: <strong>${studentsList.length}</strong> estudiantes ordenados por puntaje global de mayor a menor
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0;">📋 Listado de Estudiantes</h2>
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-weight: 600; color: #64748b;">Mostrar PIAR:</label>
+              <button class="toggle-button" id="togglePIARTable" onclick="togglePIARTable()" style="padding: 8px 16px;">
+                No
+              </button>
+            </div>
+            <div>
+              <input 
+                type="text" 
+                id="searchTable" 
+                placeholder="🔍 Buscar estudiante..." 
+                style="padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; width: 250px;"
+                onkeyup="filterTable()"
+              />
+            </div>
+          </div>
+        </div>
+        
+        <p style="color: #64748b; margin-bottom: 15px;" id="studentsCount">
+          Mostrando: <strong id="visibleCount">${dataSinPIAR.length}</strong> de <strong>${data.length}</strong> estudiantes
         </p>
         
         <div style="overflow-x: auto;">
-          <table>
+          <table id="studentsTable">
             <thead>
               <tr>
-                <th style="width: 50px; text-align: center;">#</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Grado</th>
-                <th style="text-align: center;">Global</th>
-                <th style="text-align: center;">Lectura</th>
-                <th style="text-align: center;">Matemáticas</th>
-                <th style="text-align: center;">Sociales</th>
-                <th style="text-align: center;">Naturales</th>
-                <th style="text-align: center;">Inglés</th>
+                <th style="width: 50px; text-align: center; cursor: pointer;" onclick="sortTable(0)">#</th>
+                <th style="cursor: pointer;" onclick="sortTable(1)">
+                  Nombre ↕
+                </th>
+                <th style="cursor: pointer;" onclick="sortTable(2)">
+                  Apellido ↕
+                </th>
+                <th style="cursor: pointer; text-align: center;" onclick="sortTable(3)">
+                  Grado ↕
+                </th>
+                <th style="text-align: center; cursor: pointer;" onclick="sortTable(4)">
+                  Global ↕
+                </th>
+                <th style="text-align: center; cursor: pointer;" onclick="sortTable(5)">
+                  Lectura ↕
+                </th>
+                <th style="text-align: center; cursor: pointer;" onclick="sortTable(6)">
+                  Matemáticas ↕
+                </th>
+                <th style="text-align: center; cursor: pointer;" onclick="sortTable(7)">
+                  Sociales ↕
+                </th>
+                <th style="text-align: center; cursor: pointer;" onclick="sortTable(8)">
+                  Naturales ↕
+                </th>
+                <th style="text-align: center; cursor: pointer;" onclick="sortTable(9)">
+                  Inglés ↕
+                </th>
+                <th style="text-align: center; width: 80px;">PIAR</th>
               </tr>
             </thead>
-            <tbody>
-              ${studentsList.map((student, index) => `
-                <tr style="${index < 3 ? 'background: #fef3c7; font-weight: 600;' : ''}">
-                  <td style="text-align: center; color: #64748b; font-weight: bold;">${index + 1}</td>
-                  <td>${student.nombre}</td>
-                  <td>${student.apellido}</td>
-                  <td style="text-align: center; font-weight: 600;">${student.grupo}</td>
-                  <td style="text-align: center; font-weight: bold; color: #2563eb; font-size: 1.05em;">${student.global.toFixed(2)}</td>
-                  <td style="text-align: center; color: #3b82f6;">${student.lectura.toFixed(2)}</td>
-                  <td style="text-align: center; color: #ef4444;">${student.matematicas.toFixed(2)}</td>
-                  <td style="text-align: center; color: #f97316;">${student.sociales.toFixed(2)}</td>
-                  <td style="text-align: center; color: #22c55e;">${student.naturales.toFixed(2)}</td>
-                  <td style="text-align: center; color: #a855f7;">${student.ingles.toFixed(2)}</td>
-                </tr>
-              `).join('')}
+            <tbody id="studentsTableBody">
+              <!-- Filas generadas dinámicamente por JavaScript -->
             </tbody>
           </table>
         </div>
         
         <div class="info-box" style="margin-top: 20px;">
-          <p><strong>🏆 Los 3 primeros estudiantes</strong> están destacados en amarillo</p>
+          <p><strong>💡 Funcionalidades:</strong></p>
+          <ul style="margin: 10px 0 0 20px;">
+            <li>Haz clic en los encabezados para <strong>ordenar</strong> la tabla</li>
+            <li>Usa el buscador para <strong>filtrar</strong> por nombre, apellido o grado</li>
+            <li>Activa "Mostrar PIAR" para incluir estudiantes con PIAR (aparecen resaltados en azul en la parte superior)</li>
+            <li>Los <strong>3 primeros</strong> estudiantes están destacados en amarillo</li>
+          </ul>
         </div>
       </div>
       
@@ -897,6 +957,12 @@ export function generateInteractiveHTML(data) {
     // Estado global
     let showPIAR = true;
     let charts = {};
+    let showPIARInTable = false;
+    let currentSortColumn = 4; // Global por defecto
+    let currentSortDirection = 'desc';
+    
+    // Datos de estudiantes
+    const allStudentsData = ${JSON.stringify(allStudentsList)};
     
     // Colores por área
     const areaColors = {
@@ -906,6 +972,146 @@ export function generateInteractiveHTML(data) {
       'Naturales': '#22c55e',
       'Inglés': '#a855f7'
     };
+    
+    // Funciones de la tabla de estudiantes
+    function renderStudentsTable() {
+      const searchTerm = document.getElementById('searchTable').value.toLowerCase();
+      const tbody = document.getElementById('studentsTableBody');
+      
+      // Filtrar estudiantes
+      let filteredStudents = allStudentsData.filter(student => {
+        // Filtro PIAR
+        if (!showPIARInTable && student.piar === 'Sí') {
+          return false;
+        }
+        
+        // Filtro búsqueda
+        if (searchTerm) {
+          const fullName = (student.nombre + ' ' + student.apellido + ' ' + student.grupo).toLowerCase();
+          return fullName.includes(searchTerm);
+        }
+        
+        return true;
+      });
+      
+      // Ordenar con PIAR al inicio si está activado
+      if (showPIARInTable) {
+        filteredStudents.sort((a, b) => {
+          // Primero por PIAR (Sí primero)
+          if (a.piar === 'Sí' && b.piar !== 'Sí') return -1;
+          if (a.piar !== 'Sí' && b.piar === 'Sí') return 1;
+          // Luego por columna actual
+          return sortByColumn(a, b, currentSortColumn, currentSortDirection);
+        });
+      } else {
+        filteredStudents.sort((a, b) => sortByColumn(a, b, currentSortColumn, currentSortDirection));
+      }
+      
+      // Actualizar contador
+      document.getElementById('visibleCount').textContent = filteredStudents.length;
+      
+      // Generar HTML
+      tbody.innerHTML = filteredStudents.map((student, index) => {
+        const isPIAR = student.piar === 'Sí';
+        const isTop3 = !showPIARInTable && index < 3;
+        
+        let rowStyle = '';
+        if (isPIAR && showPIARInTable) {
+          rowStyle = 'background: #dbeafe; border-left: 4px solid #3b82f6;';
+        } else if (isTop3) {
+          rowStyle = 'background: #fef3c7; font-weight: 600;';
+        }
+        
+        return \`
+          <tr style="\${rowStyle}">
+            <td style="text-align: center; color: #64748b; font-weight: bold;">\${index + 1}</td>
+            <td>\${student.nombre}</td>
+            <td>\${student.apellido}</td>
+            <td style="text-align: center; font-weight: 600;">\${student.grupo}</td>
+            <td style="text-align: center; font-weight: bold; color: #2563eb; font-size: 1.05em;">\${student.global.toFixed(2)}</td>
+            <td style="text-align: center; color: #3b82f6;">\${student.lectura.toFixed(2)}</td>
+            <td style="text-align: center; color: #ef4444;">\${student.matematicas.toFixed(2)}</td>
+            <td style="text-align: center; color: #f97316;">\${student.sociales.toFixed(2)}</td>
+            <td style="text-align: center; color: #22c55e;">\${student.naturales.toFixed(2)}</td>
+            <td style="text-align: center; color: #a855f7;">\${student.ingles.toFixed(2)}</td>
+            <td style="text-align: center;">
+              <span style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; \${isPIAR ? 'background: #3b82f6; color: white;' : 'background: #e5e7eb; color: #6b7280;'}">
+                \${student.piar}
+              </span>
+            </td>
+          </tr>
+        \`;
+      }).join('');
+    }
+    
+    function sortByColumn(a, b, column, direction) {
+      let aVal, bVal;
+      
+      switch(column) {
+        case 0: return 0; // # no se ordena
+        case 1: aVal = a.nombre; bVal = b.nombre; break;
+        case 2: aVal = a.apellido; bVal = b.apellido; break;
+        case 3: aVal = a.grupo; bVal = b.grupo; break;
+        case 4: aVal = a.global; bVal = b.global; break;
+        case 5: aVal = a.lectura; bVal = b.lectura; break;
+        case 6: aVal = a.matematicas; bVal = b.matematicas; break;
+        case 7: aVal = a.sociales; bVal = b.sociales; break;
+        case 8: aVal = a.naturales; bVal = b.naturales; break;
+        case 9: aVal = a.ingles; bVal = b.ingles; break;
+        default: return 0;
+      }
+      
+      if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+      
+      if (direction === 'asc') {
+        return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+      } else {
+        return aVal < bVal ? 1 : aVal > bVal ? -1 : 0;
+      }
+    }
+    
+    function sortTable(column) {
+      if (column === 0) return; // No ordenar por #
+      
+      if (currentSortColumn === column) {
+        currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc';
+      } else {
+        currentSortColumn = column;
+        currentSortDirection = 'desc';
+      }
+      
+      renderStudentsTable();
+    }
+    
+    function filterTable() {
+      renderStudentsTable();
+    }
+    
+    function togglePIARTable() {
+      showPIARInTable = !showPIARInTable;
+      const button = document.getElementById('togglePIARTable');
+      
+      if (showPIARInTable) {
+        button.textContent = 'Sí';
+        button.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+        button.style.color = 'white';
+      } else {
+        button.textContent = 'No';
+        button.style.background = 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)';
+        button.style.color = 'white';
+      }
+      
+      currentSortColumn = 4; // Reset a Global
+      currentSortDirection = 'desc';
+      document.getElementById('searchTable').value = ''; // Limpiar búsqueda
+      renderStudentsTable();
+    }
+    
+    // Registrar el plugin DataLabels globalmente
+    Chart.register(ChartDataLabels);
     
     // Datos
     const dataPromedios = ${JSON.stringify(chartDataPromedios)};
@@ -1214,54 +1420,63 @@ export function generateInteractiveHTML(data) {
         }
       });
       
-      // Gráfico integrado: Todas las áreas por grado
+      // Gráfico integrado: Todas las áreas por grado (con comparación PIAR)
       const ctxIntegrado = document.getElementById('chartIntegrado').getContext('2d');
-      const dataIntegrado = ${JSON.stringify(chartDataIntegrado)};
+      const dataIntegradoConPIAR = ${JSON.stringify(chartDataIntegradoConPIAR)};
+      const dataIntegradoSinPIAR = ${JSON.stringify(chartDataIntegradoSinPIAR)};
+      
+      // Colores por área (sólidos)
+      const areaColorsIntegrado = {
+        'Lectura': '#3b82f6',      // Azul
+        'Matemáticas': '#ef4444',  // Rojo
+        'Sociales': '#f97316',     // Naranja
+        'Naturales': '#22c55e',    // Verde
+        'Inglés': '#a855f7'        // Morado
+      };
+      
+      // Crear datasets agrupados por área (con PIAR y sin PIAR juntos)
+      function createIntegradoDatasets() {
+        const areas = ['Lectura', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+        const datasets = [];
+        
+        areas.forEach(area => {
+          const color = areaColorsIntegrado[area];
+          
+          if (showPIAR) {
+            // Dataset CON PIAR (barra tenue)
+            datasets.push({
+              label: \`\${area} (con PIAR)\`,
+              data: dataIntegradoConPIAR.map(d => d[area]),
+              backgroundColor: color.replace(')', ', 0.4)').replace('rgb', 'rgba'),
+              borderColor: color,
+              borderWidth: 2,
+              order: 1
+            });
+          }
+          
+          // Dataset SIN PIAR (barra sólida)
+          datasets.push({
+            label: area,
+            data: dataIntegradoSinPIAR.map(d => d[area]),
+            backgroundColor: color.replace(')', ', 0.85)').replace('rgb', 'rgba'),
+            borderColor: color,
+            borderWidth: 2,
+            order: 2
+          });
+        });
+        
+        return datasets;
+      }
       
       charts.integrado = new Chart(ctxIntegrado, {
         type: 'bar',
         data: {
-          labels: dataIntegrado.map(d => d.grado),
-          datasets: [
-            {
-              label: 'Lectura Crítica',
-              data: dataIntegrado.map(d => d['Lectura']),
-              backgroundColor: 'rgba(59, 130, 246, 0.8)',
-              borderColor: '#3b82f6',
-              borderWidth: 2
-            },
-            {
-              label: 'Matemáticas',
-              data: dataIntegrado.map(d => d['Matemáticas']),
-              backgroundColor: 'rgba(239, 68, 68, 0.8)',
-              borderColor: '#ef4444',
-              borderWidth: 2
-            },
-            {
-              label: 'Sociales',
-              data: dataIntegrado.map(d => d['Sociales']),
-              backgroundColor: 'rgba(249, 115, 22, 0.8)',
-              borderColor: '#f97316',
-              borderWidth: 2
-            },
-            {
-              label: 'Naturales',
-              data: dataIntegrado.map(d => d['Naturales']),
-              backgroundColor: 'rgba(34, 197, 94, 0.8)',
-              borderColor: '#22c55e',
-              borderWidth: 2
-            },
-            {
-              label: 'Inglés',
-              data: dataIntegrado.map(d => d['Inglés']),
-              backgroundColor: 'rgba(168, 85, 247, 0.8)',
-              borderColor: '#a855f7',
-              borderWidth: 2
-            }
-          ]
+          labels: dataIntegradoSinPIAR.map(d => d.grado),
+          datasets: createIntegradoDatasets()
         },
         options: {
-          ...commonOptions,
+          responsive: true,
+          maintainAspectRatio: false,
           scales: {
             y: {
               beginAtZero: false,
@@ -1276,14 +1491,13 @@ export function generateInteractiveHTML(data) {
             }
           },
           plugins: {
-            ...commonOptions.plugins,
             datalabels: {
               display: true,
               anchor: 'end',
               align: 'end',
               offset: 2,
               font: {
-                size: 10,
+                size: 9,
                 weight: 'bold'
               },
               formatter: (value) => value ? value.toFixed(1) : '',
@@ -1293,12 +1507,88 @@ export function generateInteractiveHTML(data) {
               display: true,
               position: 'bottom',
               labels: {
-                font: { size: 13, weight: 'bold' },
-                padding: 15,
+                font: { size: 10, weight: 'bold' },
+                padding: 8,
                 usePointStyle: true,
-                pointStyle: 'rect'
+                pointStyle: 'circle',
+                generateLabels: function(chart) {
+                  const datasets = chart.data.datasets;
+                  const labels = [];
+                  const areas = ['Lectura', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+                  const areaColors = {
+                    'Lectura': '#3b82f6',
+                    'Matemáticas': '#ef4444',
+                    'Sociales': '#f97316',
+                    'Naturales': '#22c55e',
+                    'Inglés': '#a855f7'
+                  };
+                  
+                  // Primera línea: Colores por área
+                  areas.forEach(area => {
+                    labels.push({
+                      text: area,
+                      fillStyle: areaColors[area],
+                      strokeStyle: areaColors[area],
+                      lineWidth: 2,
+                      hidden: false,
+                      pointStyle: 'circle'
+                    });
+                  });
+                  
+                  // Segunda línea: Indicadores de PIAR (solo si está activo)
+                  if (showPIAR) {
+                    labels.push({
+                      text: '  ', // Separador visual
+                      fillStyle: 'transparent',
+                      strokeStyle: 'transparent',
+                      hidden: true,
+                      pointStyle: 'circle'
+                    });
+                    
+                    labels.push({
+                      text: 'Con PIAR',
+                      fillStyle: 'rgba(156, 163, 175, 0.4)',  // Gris claro
+                      strokeStyle: '#9ca3af',
+                      lineWidth: 2,
+                      hidden: false,
+                      pointStyle: 'circle'
+                    });
+                    
+                    labels.push({
+                      text: 'Sin PIAR',
+                      fillStyle: 'rgba(71, 85, 105, 0.85)',  // Gris oscuro
+                      strokeStyle: '#475569',
+                      lineWidth: 2,
+                      hidden: false,
+                      pointStyle: 'circle'
+                    });
+                  }
+                  
+                  return labels;
+                }
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: 12,
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 13 },
+              cornerRadius: 8,
+              callbacks: {
+                title: function(context) {
+                  return context[0].label;
+                },
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const value = context.parsed.y.toFixed(1);
+                  return label + ': ' + value;
+                }
               }
             }
+          },
+          animation: {
+            duration: 800,
+            easing: 'easeInOutQuart'
           }
         }
       });
@@ -1326,6 +1616,7 @@ export function generateInteractiveHTML(data) {
     
     // Inicializar al cargar
     window.addEventListener('load', () => {
+      renderStudentsTable();
       initCharts();
     });
   </script>
