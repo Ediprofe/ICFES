@@ -43,6 +43,31 @@ export default function FileUploader({ onFileLoaded }) {
         <p className="text-sm text-gray-500 mt-4">Soporta archivos .xlsx y .xlsm</p>
       </div>
       
+      {/* Video de demostración */}
+      <div className="bg-gradient-to-br from-purple-50 to-blue-50 border-2 border-purple-300 rounded-lg p-6 shadow-lg">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-purple-600 text-white rounded-full p-2">
+            <BarChart3 size={24} />
+          </div>
+          <h2 className="text-2xl font-bold text-purple-900">
+            🎥 Video de demostración
+          </h2>
+        </div>
+        <p className="text-purple-800 mb-4">
+          Mira cómo funciona: carga del Excel, visualización del reporte en la web, descarga del PDF y vista previa del informe
+        </p>
+        <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+          <iframe
+            className="absolute top-0 left-0 w-full h-full rounded-lg shadow-md"
+            src="https://www.youtube.com/embed/XQ3rpX4eLEM"
+            title="Video de demostración - Analizador ICFES"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      </div>
+      
       {/* Instrucciones */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h2 className="text-2xl font-bold text-blue-900 mb-4 flex items-center gap-2">
