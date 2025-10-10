@@ -77,6 +77,11 @@ export default function StudentsTable({ data }) {
                 Apellido <ArrowUpDown size={14} />
               </div>
             </th>
+            <th className="p-2 text-right cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Global')}>
+              <div className="flex items-center justify-end gap-1 font-bold">
+                Global <ArrowUpDown size={14} />
+              </div>
+            </th>
             <th className="p-2 text-left cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Grupo')}>
               <div className="flex items-center gap-1">
                 Grado <ArrowUpDown size={14} />
@@ -108,11 +113,6 @@ export default function StudentsTable({ data }) {
                 Inglés <ArrowUpDown size={14} />
               </div>
             </th>
-            <th className="p-2 text-right cursor-pointer hover:bg-gray-200" onClick={() => handleSort('Global')}>
-              <div className="flex items-center justify-end gap-1 font-bold">
-                Global <ArrowUpDown size={14} />
-              </div>
-            </th>
           </tr>
         </thead>
         <tbody>
@@ -121,6 +121,7 @@ export default function StudentsTable({ data }) {
               <td className="p-2 text-gray-500">{index + 1}</td>
               <td className="p-2">{student.Nombre}</td>
               <td className="p-2">{student.Apellido}</td>
+              <td className="p-2 text-right font-bold text-blue-600">{student.Global?.toFixed(2)}</td>
               <td className="p-2">{student.Grupo}</td>
               <td className="p-2">
                 {student['¿PIAR?'] === 'Sí' && (
@@ -132,7 +133,6 @@ export default function StudentsTable({ data }) {
               <td className="p-2 text-right">{student.Sociales?.toFixed(2)}</td>
               <td className="p-2 text-right">{student.Naturales?.toFixed(2)}</td>
               <td className="p-2 text-right">{student.Inglés?.toFixed(2)}</td>
-              <td className="p-2 text-right font-bold text-blue-600">{student.Global?.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>

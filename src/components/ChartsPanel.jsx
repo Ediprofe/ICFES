@@ -43,30 +43,46 @@ export default function ChartsPanel({ data }) {
   const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
   
   const chartDataPercentiles = subjects.map(subject => {
-    const percentileKey = `% ${subject}`;
+    const percentileKey = `Percentil ${subject}`;
     const area = subject.replace(' crítica', '');
     
-    // Filtrar estudiantes que tienen percentiles para esta área
-    const studentsWithPercentiles = dataSinPIAR.filter(s => 
+    // Calcular promedio CON PIAR
+    const studentsWithPercentilesConPIAR = data.filter(s => 
       s[percentileKey] !== undefined && 
       s[percentileKey] !== null && 
       s[percentileKey] !== ''
     );
     
-    // Si hay percentiles, calcular promedio
-    let avgPercentile = null;
-    if (studentsWithPercentiles.length > 0) {
-      const sum = studentsWithPercentiles.reduce((acc, s) => {
+    let avgPercentileConPIAR = null;
+    if (studentsWithPercentilesConPIAR.length > 0) {
+      const sum = studentsWithPercentilesConPIAR.reduce((acc, s) => {
         const value = parseFloat(s[percentileKey]);
         return acc + (isNaN(value) ? 0 : value);
       }, 0);
-      avgPercentile = sum / studentsWithPercentiles.length;
+      avgPercentileConPIAR = sum / studentsWithPercentilesConPIAR.length;
+    }
+    
+    // Calcular promedio SIN PIAR
+    const studentsWithPercentilesSinPIAR = dataSinPIAR.filter(s => 
+      s[percentileKey] !== undefined && 
+      s[percentileKey] !== null && 
+      s[percentileKey] !== ''
+    );
+    
+    let avgPercentileSinPIAR = null;
+    if (studentsWithPercentilesSinPIAR.length > 0) {
+      const sum = studentsWithPercentilesSinPIAR.reduce((acc, s) => {
+        const value = parseFloat(s[percentileKey]);
+        return acc + (isNaN(value) ? 0 : value);
+      }, 0);
+      avgPercentileSinPIAR = sum / studentsWithPercentilesSinPIAR.length;
     }
     
     return {
       area,
-      percentil: avgPercentile,
-      hasData: avgPercentile !== null
+      'Con PIAR': avgPercentileConPIAR,
+      'Sin PIAR': avgPercentileSinPIAR,
+      hasData: avgPercentileConPIAR !== null || avgPercentileSinPIAR !== null
     };
   });
   
@@ -158,7 +174,7 @@ export default function ChartsPanel({ data }) {
       {hasPercentileData && (
         <>
           <h2 className="text-2xl font-bold mt-8 mb-4">
-            Percentiles promedio por área (sin PIAR)
+            Percentiles promedio por área
           </h2>
           <p className="text-sm text-gray-600 mb-4">
             {chartDataPercentiles.filter(d => d.hasData).length === subjects.length 
@@ -175,17 +191,36 @@ export default function ChartsPanel({ data }) {
                 labelFormatter={(label) => `Área: ${label}`}
               />
               <Legend />
-              <Bar dataKey="percentil" name="Percentil promedio" strokeWidth={2}>
-                {chartDataPercentiles.filter(d => d.hasData).map((entry, index) => (
-                  <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
-                ))}
-                <LabelList 
-                  dataKey="percentil" 
-                  position="top" 
-                  style={{ fontSize: '12px', fontWeight: 'bold' }} 
-                  formatter={(value) => `${value.toFixed(1)}%`} 
-                />
-              </Bar>
+              {showPIAR ? (
+                <>
+                  <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                    <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value ? `${value.toFixed(1)}%` : ''} />
+                  </Bar>
+                  <Bar dataKey="Sin PIAR" strokeWidth={2}>
+                    {chartDataPercentiles.filter(d => d.hasData).map((entry, index) => (
+                      <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                    ))}
+                    <LabelList 
+                      dataKey="Sin PIAR" 
+                      position="top" 
+                      style={{ fontSize: '12px', fontWeight: 'bold' }} 
+                      formatter={(value) => value ? `${value.toFixed(1)}%` : ''} 
+                    />
+                  </Bar>
+                </>
+              ) : (
+                <Bar dataKey="Sin PIAR" strokeWidth={2}>
+                  {chartDataPercentiles.filter(d => d.hasData).map((entry, index) => (
+                    <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                  ))}
+                  <LabelList 
+                    dataKey="Sin PIAR" 
+                    position="top" 
+                    style={{ fontSize: '12px', fontWeight: 'bold' }} 
+                    formatter={(value) => value ? `${value.toFixed(1)}%` : ''} 
+                  />
+                </Bar>
+              )}
             </BarChart>
           </ResponsiveContainer>
         </>

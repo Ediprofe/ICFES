@@ -122,10 +122,13 @@ export const generatePDF = (data) => {
   const sortedData = [...data].sort((a, b) => b.Global - a.Global);
   doc.autoTable({
     startY: 28,
-    head: [['Pos', 'Nombre', 'Apellido', 'Grupo', 'Global']],
-    body: sortedData.map((s, i) => [i + 1, s.Nombre, s.Apellido, s.Grupo, s.Global.toFixed(2)]),
+    head: [['Pos', 'Nombre', 'Apellido', 'Global', 'Grupo']],
+    body: sortedData.map((s, i) => [i + 1, s.Nombre, s.Apellido, s.Global.toFixed(2), s.Grupo]),
     theme: 'striped',
     headStyles: { fillColor: [37, 99, 235], fontStyle: 'bold' },
+    columnStyles: {
+      3: { fontStyle: 'bold', textColor: [37, 99, 235] }
+    },
     alternateRowStyles: { fillColor: [245, 247, 250] },
     margin: { bottom: 25 },
     didDrawPage: (data) => {

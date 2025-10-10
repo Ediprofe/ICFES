@@ -44,7 +44,7 @@ export const calculateAreaMetrics = (data, excludePIAR = false) => {
     area: subject,
     promedio: mean(filtered.map(s => s[subject])).toFixed(2),
     desviacion: stdDev(filtered.map(s => s[subject])).toFixed(2),
-    percentil: mean(filtered.map(s => parseFloat(s[`% ${subject}`] || 0))).toFixed(2)
+    percentil: mean(filtered.map(s => parseFloat(s[`Percentil ${subject}`] || 0))).toFixed(2)
   }));
 };
 
