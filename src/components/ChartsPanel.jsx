@@ -121,20 +121,20 @@ export default function ChartsPanel({ data }) {
           <Legend />
           {showPIAR ? (
             <>
-              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+              <Bar dataKey="Con PIAR" fill="#9ca3af">
                 <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
-              <Bar dataKey="Sin PIAR" strokeWidth={2}>
+              <Bar dataKey="Sin PIAR">
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
                 ))}
                 <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
             </>
           ) : (
-            <Bar dataKey="Sin PIAR" strokeWidth={2}>
+            <Bar dataKey="Sin PIAR">
               {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
               ))}
               <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
             </Bar>
@@ -152,20 +152,20 @@ export default function ChartsPanel({ data }) {
           <Legend />
           {showPIAR ? (
             <>
-              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+              <Bar dataKey="Con PIAR" fill="#9ca3af">
                 <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
-              <Bar dataKey="Sin PIAR" strokeWidth={2}>
+              <Bar dataKey="Sin PIAR">
                 {chartDataDesviacion.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
                 ))}
                 <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
             </>
           ) : (
-            <Bar dataKey="Sin PIAR" strokeWidth={2}>
+            <Bar dataKey="Sin PIAR">
               {chartDataDesviacion.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                <Cell key={`cell-${index}`} fill={getBarColor(entry)} />
               ))}
               <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
             </Bar>
@@ -196,12 +196,12 @@ export default function ChartsPanel({ data }) {
               <Legend />
               {showPIAR ? (
                 <>
-                  <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                  <Bar dataKey="Con PIAR" fill="#9ca3af">
                     <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value ? `${value.toFixed(2)}%` : ''} />
                   </Bar>
-                  <Bar dataKey="Sin PIAR" strokeWidth={2}>
+                  <Bar dataKey="Sin PIAR">
                     {chartDataPercentiles.filter(d => d.hasData).map((entry, index) => (
-                      <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                      <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} />
                     ))}
                     <LabelList 
                       dataKey="Sin PIAR" 
@@ -212,9 +212,9 @@ export default function ChartsPanel({ data }) {
                   </Bar>
                 </>
               ) : (
-                <Bar dataKey="Sin PIAR" strokeWidth={2}>
+                <Bar dataKey="Sin PIAR">
                   {chartDataPercentiles.filter(d => d.hasData).map((entry, index) => (
-                    <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                    <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} />
                   ))}
                   <LabelList 
                     dataKey="Sin PIAR" 
@@ -275,15 +275,15 @@ export default function ChartsPanel({ data }) {
                   <Legend />
                   {showPIAR ? (
                     <>
-                      <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                      <Bar dataKey="Con PIAR" fill="#9ca3af">
                         <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
-                      <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                      <Bar dataKey="Sin PIAR" fill={gradeColor}>
                         <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
                     </>
                   ) : (
-                    <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                    <Bar dataKey="Sin PIAR" fill={gradeColor}>
                       <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                     </Bar>
                   )}
@@ -300,15 +300,15 @@ export default function ChartsPanel({ data }) {
                   <Legend />
                   {showPIAR ? (
                     <>
-                      <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                      <Bar dataKey="Con PIAR" fill="#9ca3af">
                         <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
-                      <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                      <Bar dataKey="Sin PIAR" fill={gradeColor}>
                         <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
                     </>
                   ) : (
-                    <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
+                    <Bar dataKey="Sin PIAR" fill={gradeColor}>
                       <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                     </Bar>
                   )}
