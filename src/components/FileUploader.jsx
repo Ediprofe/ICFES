@@ -28,7 +28,7 @@ export default function FileUploader({ onFileLoaded }) {
           <h1 className="text-4xl font-bold">Analiza los resultados ICFES de tu colegio</h1>
         </div>
         <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-          Carga tu archivo Excel y obtén análisis interactivos en vivo, informes HTML para presentaciones sin internet, y reportes PDF profesionales
+          Carga tu archivo Excel y obtén análisis interactivos en vivo, archivo HTML para presentaciones sin internet, y reporte PDF.
         </p>
       </div>
       
