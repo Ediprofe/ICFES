@@ -16,7 +16,7 @@ export default function FileUploader({ onFileLoaded }) {
   
   const handleDownloadTemplate = () => {
     // Link directo a Google Drive para descargar
-    window.open('https://docs.google.com/spreadsheets/d/1i1iCkpWKxqsWx9uirh_DV-DJbqgtoSne/export?format=xlsx', '_blank');
+    window.open('https://docs.google.com/spreadsheets/d/1ba14ZzprrrO2q1f57BQikLpnCCLatJTE/export?format=xlsx', '_blank');
   };
   
   return (
@@ -87,7 +87,7 @@ export default function FileUploader({ onFileLoaded }) {
               </p>
               <button
                 onClick={handleDownloadTemplate}
-                className="mt-2 inline-flex items-center gap-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition-colors border border-blue-300 font-semibold"
+                className="mt-2 inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md hover:shadow-lg"
               >
                 <Download size={18} />
                 Descargar plantilla de ejemplo
