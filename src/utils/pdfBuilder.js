@@ -233,7 +233,7 @@ export const generatePDF = (data) => {
   
   addFooter();
   
-  // PÁGINA 2: Listado ordenado
+  // PÁGINA 2: Detalle completo de estudiantes con promedios por área
   addNewPage();
   
   // Encabezado de sección
@@ -242,22 +242,48 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('1. Listado de estudiantes por puntaje global', 14, 13);
+  doc.text('1. Detalle de puntajes por estudiante', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
   const sortedData = [...data].sort((a, b) => b.Global - a.Global);
+  
+  // Crear tabla con todos los puntajes por área
   doc.autoTable({
     startY: 28,
-    head: [['Pos', 'Nombre', 'Apellido', 'Global', 'Grupo']],
-    body: sortedData.map((s, i) => [i + 1, s.Nombre, s.Apellido, s.Global.toFixed(2), s.Grupo]),
+    head: [['#', 'Nombre Completo', 'Grupo', 'Lectura', 'Matemát.', 'Sociales', 'Naturales', 'Inglés', 'Global']],
+    body: sortedData.map((s, i) => [
+      i + 1,
+      `${s.Nombre} ${s.Apellido}`,
+      s.Grupo,
+      s['Lectura crítica'] !== null ? s['Lectura crítica'].toFixed(1) : 'N/A',
+      s['Matemáticas'] !== null ? s['Matemáticas'].toFixed(1) : 'N/A',
+      s['Sociales'] !== null ? s['Sociales'].toFixed(1) : 'N/A',
+      s['Naturales'] !== null ? s['Naturales'].toFixed(1) : 'N/A',
+      s['Inglés'] !== null ? s['Inglés'].toFixed(1) : 'N/A',
+      s.Global.toFixed(2)
+    ]),
     theme: 'striped',
-    headStyles: { fillColor: [37, 99, 235], fontStyle: 'bold' },
-    columnStyles: {
-      3: { fontStyle: 'bold', textColor: [37, 99, 235] }
+    headStyles: { 
+      fillColor: [37, 99, 235], 
+      fontStyle: 'bold',
+      fontSize: 8,
+      halign: 'center'
     },
     alternateRowStyles: { fillColor: [245, 247, 250] },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center', fontSize: 7 },
+      1: { cellWidth: 50, fontSize: 8 },
+      2: { cellWidth: 20, halign: 'center', fontSize: 8 },
+      3: { cellWidth: 18, halign: 'center', fontSize: 8 },
+      4: { cellWidth: 18, halign: 'center', fontSize: 8 },
+      5: { cellWidth: 18, halign: 'center', fontSize: 8 },
+      6: { cellWidth: 18, halign: 'center', fontSize: 8 },
+      7: { cellWidth: 18, halign: 'center', fontSize: 8 },
+      8: { cellWidth: 20, halign: 'center', fontStyle: 'bold', textColor: [37, 99, 235], fontSize: 9 }
+    },
     margin: { bottom: 25 },
+    styles: { fontSize: 8 },
     didDrawPage: (data) => {
       if (data.pageNumber > pageNumber) {
         pageNumber = data.pageNumber;
@@ -786,13 +812,11 @@ export const generatePDF = (data) => {
     doc.setFillColor(37, 99, 235);
     doc.rect(0, 0, pageWidth, 20, 'F');
     doc.setTextColor(255);
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('8. Gráficos comparativos por grado (continuación)', 14, 13);
-    doc.setTextColor(0);
-    doc.setFont(undefined, 'normal');
-    
-    yPos = 28;
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('8. Gráficos comparativos por grado (continuación)', 14, 13);
+      doc.setTextColor(0);
+      doc.setFont(undefined, 'normal');    yPos = 28;
   }
   
   drawBarChart(doc, chartDataDesviacionByGrade, 20, yPos, pageWidth - 40, 70, 'Desviación estándar por grado', 30, true, true);
