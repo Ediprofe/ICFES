@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import FileUploader from './components/FileUploader';
 import StudentsTable from './components/StudentsTable';
-import ChartsPanel from './components/ChartsPanel';
 import MetricsPanel from './components/MetricsPanel';
 import FilterControls from './components/FilterControls';
 import PDFGenerator from './components/PDFGenerator';
 import GradeAreaCharts from './components/GradeAreaCharts';
 import { addPercentiles } from './utils/percentiles';
-import { Youtube, Music2, Globe } from 'lucide-react';
+import { Youtube, Music2, Globe, RefreshCw } from 'lucide-react';
 
 function App() {
   const [data, setData] = useState(null);
@@ -32,20 +31,37 @@ function App() {
   }).sort((a, b) => b.Global - a.Global) : [];
   
   const handleResetApp = () => {
+    if (data && !confirm('¿Deseas iniciar un nuevo análisis? Los datos actuales se perderán.')) {
+      return;
+    }
     setData(null);
+    setFilters({
+      excludePIAR: false,
+      selectedGrade: 'Todos',
+      minScore: 0,
+      maxScore: 500
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-center justify-between">
-          <h1 
-            className="text-4xl font-bold text-blue-600 cursor-pointer hover:text-blue-700 transition-colors"
-            onClick={handleResetApp}
-            title="Volver al inicio"
-          >
-            Análisis ICFES
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold text-blue-600">
+              Análisis ICFES
+            </h1>
+            {data && (
+              <button
+                onClick={handleResetApp}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+                title="Iniciar nuevo análisis"
+              >
+                <RefreshCw size={20} />
+                <span className="font-semibold">Nuevo Análisis</span>
+              </button>
+            )}
+          </div>
           <div className="text-right">
             <p className="text-sm text-gray-500 mb-2">Desarrollado por</p>
             <a 
