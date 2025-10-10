@@ -10,6 +10,23 @@ export function generateInteractiveHTML(data) {
   const dataConPIAR = data;
   const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
   
+  // Preparar listado de estudiantes ordenado (sin PIAR)
+  const studentsList = dataSinPIAR
+    .map(s => ({
+      nombre: s.Nombre || '',
+      apellido: s.Apellido || '',
+      nombreCompleto: s.nombreCompleto || `${s.Nombre || ''} ${s.Apellido || ''}`.trim(),
+      grupo: s.Grupo || '',
+      global: s.Global || 0,
+      lectura: s['Lectura crítica'] || 0,
+      matematicas: s['Matemáticas'] || 0,
+      sociales: s['Sociales'] || 0,
+      naturales: s['Naturales'] || 0,
+      ingles: s['Inglés'] || 0,
+      piar: s['¿PIAR?'] || 'No'
+    }))
+    .sort((a, b) => b.global - a.global);
+  
   const globalAvgConPIAR = mean(dataConPIAR.map(s => s.Global)).toFixed(2);
   const globalAvgSinPIAR = mean(dataSinPIAR.map(s => s.Global)).toFixed(2);
   
@@ -92,6 +109,25 @@ export function generateInteractiveHTML(data) {
     sinPIAR: parseFloat(g.desviacionSinPIAR.toFixed(2))
   }));
   
+  // Preparar datos para gráfico integrado de todas las áreas por grado
+  const chartDataIntegrado = [];
+  const grades = [...new Set(data.map(s => s.Grupo))].sort();
+  
+  grades.forEach(grado => {
+    const gradoData = metricsByGrade.find(g => g.grado === grado);
+    if (gradoData) {
+      const dataPoint = {
+        grado: `Grado ${grado}`,
+        'Lectura': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Lectura crítica')?.promedio || 0),
+        'Matemáticas': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Matemáticas')?.promedio || 0),
+        'Sociales': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Sociales')?.promedio || 0),
+        'Naturales': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Naturales')?.promedio || 0),
+        'Inglés': parseFloat(gradoData.metricsSinPIAR.find(m => m.subject === 'Inglés')?.promedio || 0)
+      };
+      chartDataIntegrado.push(dataPoint);
+    }
+  });
+  
   // Generar el HTML
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -100,6 +136,7 @@ export function generateInteractiveHTML(data) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Análisis ICFES - Presentación Interactiva</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -521,6 +558,53 @@ export function generateInteractiveHTML(data) {
         </div>
       </div>
       
+      <!-- SECCIÓN 1.5: LISTADO DE ESTUDIANTES -->
+      <div class="section">
+        <h2>📋 Listado de Estudiantes (sin PIAR)</h2>
+        <p style="color: #64748b; margin-bottom: 20px;">
+          Total: <strong>${studentsList.length}</strong> estudiantes ordenados por puntaje global de mayor a menor
+        </p>
+        
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 50px; text-align: center;">#</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Grado</th>
+                <th style="text-align: center;">Global</th>
+                <th style="text-align: center;">Lectura</th>
+                <th style="text-align: center;">Matemáticas</th>
+                <th style="text-align: center;">Sociales</th>
+                <th style="text-align: center;">Naturales</th>
+                <th style="text-align: center;">Inglés</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${studentsList.map((student, index) => `
+                <tr style="${index < 3 ? 'background: #fef3c7; font-weight: 600;' : ''}">
+                  <td style="text-align: center; color: #64748b; font-weight: bold;">${index + 1}</td>
+                  <td>${student.nombre}</td>
+                  <td>${student.apellido}</td>
+                  <td style="text-align: center; font-weight: 600;">${student.grupo}</td>
+                  <td style="text-align: center; font-weight: bold; color: #2563eb; font-size: 1.05em;">${student.global.toFixed(2)}</td>
+                  <td style="text-align: center; color: #3b82f6;">${student.lectura.toFixed(2)}</td>
+                  <td style="text-align: center; color: #ef4444;">${student.matematicas.toFixed(2)}</td>
+                  <td style="text-align: center; color: #f97316;">${student.sociales.toFixed(2)}</td>
+                  <td style="text-align: center; color: #22c55e;">${student.naturales.toFixed(2)}</td>
+                  <td style="text-align: center; color: #a855f7;">${student.ingles.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="info-box" style="margin-top: 20px;">
+          <p><strong>🏆 Los 3 primeros estudiantes</strong> están destacados en amarillo</p>
+        </div>
+      </div>
+      
       <!-- SECCIÓN 2: PROMEDIOS POR ÁREA -->
       <div class="section">
         <h2>📊 Análisis por Área</h2>
@@ -592,6 +676,20 @@ export function generateInteractiveHTML(data) {
       <!-- SECCIÓN 3: ANÁLISIS POR GRADO -->
       <div class="section">
         <h2>🎓 Análisis por Grado</h2>
+        
+        <div class="info-box">
+          <p><strong>📊 Gráfico Integrado:</strong> Vista completa de todas las áreas académicas por grado (sin PIAR)</p>
+        </div>
+        
+        <div class="chart-container">
+          <h3>Análisis Detallado: Todas las Áreas por Grado</h3>
+          <p style="color: #64748b; font-size: 0.9em; margin-bottom: 15px;">
+            Comparación de promedios en las 5 áreas académicas agrupadas por grado
+          </p>
+          <div class="chart-wrapper" style="height: 500px;">
+            <canvas id="chartIntegrado"></canvas>
+          </div>
+        </div>
         
         <div class="chart-container">
           <h3>Promedios Globales por Grado</h3>
@@ -835,6 +933,18 @@ export function generateInteractiveHTML(data) {
           titleFont: { size: 14, weight: 'bold' },
           bodyFont: { size: 13 },
           cornerRadius: 8
+        },
+        datalabels: {
+          display: true,
+          anchor: 'end',
+          align: 'end',
+          offset: 4,
+          font: {
+            size: 11,
+            weight: 'bold'
+          },
+          formatter: (value) => value ? value.toFixed(2) : '',
+          color: '#1e293b'
         }
       },
       animation: {
@@ -899,8 +1009,7 @@ export function generateInteractiveHTML(data) {
             }
           },
           plugins: {
-            ...commonOptions.plugins,
-            datalabels: false
+            ...commonOptions.plugins
           }
         }
       });
@@ -1100,6 +1209,95 @@ export function generateInteractiveHTML(data) {
             x: {
               grid: { display: false },
               ticks: { font: { size: 12, weight: 'bold' } }
+            }
+          }
+        }
+      });
+      
+      // Gráfico integrado: Todas las áreas por grado
+      const ctxIntegrado = document.getElementById('chartIntegrado').getContext('2d');
+      const dataIntegrado = ${JSON.stringify(chartDataIntegrado)};
+      
+      charts.integrado = new Chart(ctxIntegrado, {
+        type: 'bar',
+        data: {
+          labels: dataIntegrado.map(d => d.grado),
+          datasets: [
+            {
+              label: 'Lectura Crítica',
+              data: dataIntegrado.map(d => d['Lectura']),
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+              borderColor: '#3b82f6',
+              borderWidth: 2
+            },
+            {
+              label: 'Matemáticas',
+              data: dataIntegrado.map(d => d['Matemáticas']),
+              backgroundColor: 'rgba(239, 68, 68, 0.8)',
+              borderColor: '#ef4444',
+              borderWidth: 2
+            },
+            {
+              label: 'Sociales',
+              data: dataIntegrado.map(d => d['Sociales']),
+              backgroundColor: 'rgba(249, 115, 22, 0.8)',
+              borderColor: '#f97316',
+              borderWidth: 2
+            },
+            {
+              label: 'Naturales',
+              data: dataIntegrado.map(d => d['Naturales']),
+              backgroundColor: 'rgba(34, 197, 94, 0.8)',
+              borderColor: '#22c55e',
+              borderWidth: 2
+            },
+            {
+              label: 'Inglés',
+              data: dataIntegrado.map(d => d['Inglés']),
+              backgroundColor: 'rgba(168, 85, 247, 0.8)',
+              borderColor: '#a855f7',
+              borderWidth: 2
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 0,
+              max: 100,
+              grid: { color: 'rgba(0, 0, 0, 0.05)' },
+              ticks: { font: { size: 12 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 12, weight: 'bold' } }
+            }
+          },
+          plugins: {
+            ...commonOptions.plugins,
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'end',
+              offset: 2,
+              font: {
+                size: 10,
+                weight: 'bold'
+              },
+              formatter: (value) => value ? value.toFixed(1) : '',
+              color: '#1e293b'
+            },
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                font: { size: 13, weight: 'bold' },
+                padding: 15,
+                usePointStyle: true,
+                pointStyle: 'rect'
+              }
             }
           }
         }
