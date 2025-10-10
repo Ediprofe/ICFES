@@ -54,7 +54,7 @@ export default function FileUploader({ onFileLoaded }) {
           </h2>
         </div>
         <p className="text-purple-800 mb-4">
-          Mira cómo funciona: carga del Excel, visualización del reporte en la web, descarga del PDF y vista previa del informe
+          Aprende a cargar el Excel, visualizar el análisis en vivo, exportar el informe HTML para presentaciones (offline, al abrir con un navegador), y generar el PDF para enviar
         </p>
         <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
           <iframe
