@@ -83,3 +83,42 @@ export const getTop3ByGrade = (data) => {
       }))
   }));
 };
+
+// Métricas por grado (con comparación con/sin PIAR)
+export const getMetricsByGrade = (data) => {
+  const subjects = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+  
+  // Agrupar por grado
+  const byGrade = data.reduce((acc, student) => {
+    const grade = student.Grupo;
+    if (!acc[grade]) acc[grade] = [];
+    acc[grade].push(student);
+    return acc;
+  }, {});
+  
+  // Calcular métricas para cada grado
+  return Object.entries(byGrade).map(([grade, students]) => {
+    const studentsConPIAR = students;
+    const studentsSinPIAR = students.filter(s => s['¿PIAR?'] !== 'Sí');
+    
+    const metricsConPIAR = subjects.map(subject => ({
+      subject,
+      promedio: mean(studentsConPIAR.map(s => s[subject])).toFixed(2),
+      desviacion: stdDev(studentsConPIAR.map(s => s[subject])).toFixed(2)
+    }));
+    
+    const metricsSinPIAR = subjects.map(subject => ({
+      subject,
+      promedio: mean(studentsSinPIAR.map(s => s[subject])).toFixed(2),
+      desviacion: stdDev(studentsSinPIAR.map(s => s[subject])).toFixed(2)
+    }));
+    
+    return {
+      grado: grade,
+      totalEstudiantes: studentsConPIAR.length,
+      estudiantesSinPIAR: studentsSinPIAR.length,
+      metricsConPIAR,
+      metricsSinPIAR
+    };
+  }).sort((a, b) => a.grado.localeCompare(b.grado));
+};

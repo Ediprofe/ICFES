@@ -1,4 +1,4 @@
-import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, findOutliers, mean, stdDev } from '../utils/calculations';
+import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev } from '../utils/calculations';
 
 export default function MetricsPanel({ data }) {
   // Calcular datos completos (todos los estudiantes)
@@ -13,6 +13,9 @@ export default function MetricsPanel({ data }) {
   // Métricas por área con y sin PIAR
   const metricsConPIAR = calculateAreaMetrics(dataConPIAR, false);
   const metricsSinPIAR = calculateAreaMetrics(dataSinPIAR, false);
+  
+  // Métricas por grado
+  const metricsByGrade = getMetricsByGrade(data);
   
   const outliers = findOutliers(data);
   const top3ByGrade = getTop3ByGrade(data);
@@ -119,6 +122,58 @@ export default function MetricsPanel({ data }) {
               })}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Métricas por Grado (comparación con/sin PIAR) */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold mb-4">Métricas por grado (comparación con/sin PIAR)</h2>
+        <div className="space-y-6">
+          {metricsByGrade.map((gradeData) => (
+            <div key={gradeData.grado} className="border-2 border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-300">
+                <h3 className="text-xl font-bold text-gray-800">Grado {gradeData.grado}</h3>
+                <div className="text-sm text-gray-600">
+                  <span className="font-semibold">{gradeData.totalEstudiantes}</span> estudiantes total
+                  {' | '}
+                  <span className="font-semibold text-green-600">{gradeData.estudiantesSinPIAR}</span> sin PIAR
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 text-left" rowSpan="2">Área</th>
+                      <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Promedio</th>
+                      <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Desviación estándar</th>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <th className="p-2 text-right text-xs border-l-2 border-gray-300 text-gray-500">con PIAR</th>
+                      <th className="p-2 text-right text-xs text-green-700 font-bold">sin PIAR</th>
+                      <th className="p-2 text-right text-xs border-l-2 border-gray-300 text-gray-500">con PIAR</th>
+                      <th className="p-2 text-right text-xs text-green-700 font-bold">sin PIAR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gradeData.metricsConPIAR.map((metric, index) => {
+                      const colors = areaColors[metric.subject] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-300', light: 'bg-gray-100' };
+                      const metricSinPIAR = gradeData.metricsSinPIAR[index];
+                      return (
+                        <tr key={index} className={`border-b hover:${colors.light} transition-colors`}>
+                          <td className={`p-3 font-semibold ${colors.text}`}>{metric.subject}</td>
+                          <td className="p-3 text-right border-l-2 border-gray-200 bg-gray-50 text-gray-500">{metric.promedio}</td>
+                          <td className={`p-3 text-right ${colors.light} ${colors.text} font-bold border-2 ${colors.border}`}>{metricSinPIAR.promedio}</td>
+                          <td className="p-3 text-right border-l-2 border-gray-200 bg-gray-50 text-gray-500">{metric.desviacion}</td>
+                          <td className={`p-3 text-right ${colors.light} ${colors.text} font-bold border-2 ${colors.border}`}>{metricSinPIAR.desviacion}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

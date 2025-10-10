@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, findOutliers, mean, stdDev, zScore } from './calculations';
+import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev, zScore } from './calculations';
 
 export const generatePDF = (data) => {
   console.log('Iniciando generación de PDF con', data.length, 'estudiantes');
@@ -348,7 +348,7 @@ export const generatePDF = (data) => {
     }
   });
   
-  // PÁGINA 6: Valores Atípicos (Outliers)
+  // NUEVA SECCIÓN: Métricas por Grado (comparación con/sin PIAR)
   addNewPage();
   
   // Encabezado de sección
@@ -357,7 +357,88 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('5. Valores atípicos', 14, 13);
+  doc.text('5. Métricas por grado (comparación con/sin PIAR)', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  const metricsByGrade = getMetricsByGrade(data);
+  let yGradeMetrics = 28;
+  
+  metricsByGrade.forEach(({ grado, totalEstudiantes, estudiantesSinPIAR, metricsConPIAR, metricsSinPIAR }, index) => {
+    // Título del grado
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(37, 99, 235);
+    doc.text(`Grado ${grado}`, 14, yGradeMetrics);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80);
+    doc.text(`${totalEstudiantes} estudiantes total | ${estudiantesSinPIAR} sin PIAR`, 14, yGradeMetrics + 5);
+    doc.setTextColor(0);
+    
+    // Tabla de métricas
+    doc.autoTable({
+      startY: yGradeMetrics + 8,
+      head: [
+        ['Área', 'Promedio\n(con PIAR)', 'Promedio\n(sin PIAR)', 'Desv. Est.\n(con PIAR)', 'Desv. Est.\n(sin PIAR)']
+      ],
+      body: metricsConPIAR.map((m, i) => [
+        m.subject,
+        m.promedio,
+        metricsSinPIAR[i].promedio,
+        m.desviacion,
+        metricsSinPIAR[i].desviacion
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: [37, 99, 235], fontStyle: 'bold', halign: 'center', fontSize: 8 },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 40 },
+        1: { halign: 'center', cellWidth: 30 },
+        2: { halign: 'center', cellWidth: 30, fillColor: [220, 252, 231], textColor: [22, 101, 52], fontStyle: 'bold' },
+        3: { halign: 'center', cellWidth: 30 },
+        4: { halign: 'center', cellWidth: 30, fillColor: [220, 252, 231], textColor: [22, 101, 52], fontStyle: 'bold' }
+      },
+      margin: { left: 14, right: 14, bottom: 25 },
+      styles: { fontSize: 9 },
+      didDrawPage: (data) => {
+        if (data.pageNumber > pageNumber) {
+          pageNumber = data.pageNumber;
+          addFooter();
+        }
+      }
+    });
+    
+    yGradeMetrics = doc.lastAutoTable.finalY + 10;
+    
+    // Si estamos muy abajo y no es el último grado, añadir nueva página
+    if (yGradeMetrics > 220 && index < metricsByGrade.length - 1) {
+      addNewPage();
+      
+      // Repetir encabezado de sección
+      doc.setFillColor(37, 99, 235);
+      doc.rect(0, 0, pageWidth, 20, 'F');
+      doc.setTextColor(255);
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('5. Métricas por grado (continuación)', 14, 13);
+      doc.setTextColor(0);
+      doc.setFont(undefined, 'normal');
+      
+      yGradeMetrics = 28;
+    }
+  });
+  
+  // PÁGINA: Valores Atípicos (Outliers)
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('6. Valores atípicos', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
