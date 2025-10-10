@@ -20,6 +20,14 @@ export default function StudentsTable({ data }) {
     if (sortConfig.key === 'Lectura') aValue = a['Lectura crítica'];
     if (sortConfig.key === 'Lectura') bValue = b['Lectura crítica'];
 
+    // Manejar valores null/undefined - ponerlos al final
+    const aIsNull = aValue === null || aValue === undefined;
+    const bIsNull = bValue === null || bValue === undefined;
+    
+    if (aIsNull && bIsNull) return 0;
+    if (aIsNull) return 1; // null al final
+    if (bIsNull) return -1; // null al final
+
     // Ordenar strings
     if (typeof aValue === 'string') {
       return sortConfig.direction === 'asc' 
@@ -121,18 +129,30 @@ export default function StudentsTable({ data }) {
               <td className="p-2 text-gray-500">{index + 1}</td>
               <td className="p-2">{student.Nombre}</td>
               <td className="p-2">{student.Apellido}</td>
-              <td className="p-2 text-right font-bold text-blue-600">{student.Global?.toFixed(2)}</td>
+              <td className="p-2 text-right font-bold text-blue-600">
+                {student.Global !== null && student.Global !== undefined ? student.Global.toFixed(2) : <span className="text-gray-400">N/A</span>}
+              </td>
               <td className="p-2">{student.Grupo}</td>
               <td className="p-2">
                 {student['¿PIAR?'] === 'Sí' && (
                   <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">PIAR</span>
                 )}
               </td>
-              <td className="p-2 text-right">{student['Lectura crítica']?.toFixed(2)}</td>
-              <td className="p-2 text-right">{student.Matemáticas?.toFixed(2)}</td>
-              <td className="p-2 text-right">{student.Sociales?.toFixed(2)}</td>
-              <td className="p-2 text-right">{student.Naturales?.toFixed(2)}</td>
-              <td className="p-2 text-right">{student.Inglés?.toFixed(2)}</td>
+              <td className="p-2 text-right">
+                {student['Lectura crítica'] !== null && student['Lectura crítica'] !== undefined ? student['Lectura crítica'].toFixed(2) : <span className="text-gray-400">N/A</span>}
+              </td>
+              <td className="p-2 text-right">
+                {student.Matemáticas !== null && student.Matemáticas !== undefined ? student.Matemáticas.toFixed(2) : <span className="text-gray-400">N/A</span>}
+              </td>
+              <td className="p-2 text-right">
+                {student.Sociales !== null && student.Sociales !== undefined ? student.Sociales.toFixed(2) : <span className="text-gray-400">N/A</span>}
+              </td>
+              <td className="p-2 text-right">
+                {student.Naturales !== null && student.Naturales !== undefined ? student.Naturales.toFixed(2) : <span className="text-gray-400">N/A</span>}
+              </td>
+              <td className="p-2 text-right">
+                {student.Inglés !== null && student.Inglés !== undefined ? student.Inglés.toFixed(2) : <span className="text-gray-400">N/A</span>}
+              </td>
             </tr>
           ))}
         </tbody>
