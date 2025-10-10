@@ -117,18 +117,18 @@ export default function ChartsPanel({ data }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="area" />
           <YAxis domain={[0, 100]} />
-          <Tooltip />
+          <Tooltip formatter={(value) => value.toFixed(2)} />
           <Legend />
           {showPIAR ? (
             <>
               <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
-                <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+                <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
               <Bar dataKey="Sin PIAR" strokeWidth={2}>
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
                 ))}
-                <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
             </>
           ) : (
@@ -136,7 +136,7 @@ export default function ChartsPanel({ data }) {
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
               ))}
-              <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+              <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
             </Bar>
           )}
         </BarChart>
@@ -148,18 +148,18 @@ export default function ChartsPanel({ data }) {
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="area" />
           <YAxis domain={[0, 30]} />
-          <Tooltip />
+          <Tooltip formatter={(value) => value.toFixed(2)} />
           <Legend />
           {showPIAR ? (
             <>
               <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
-                <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+                <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
               <Bar dataKey="Sin PIAR" strokeWidth={2}>
                 {chartDataDesviacion.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
                 ))}
-                <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
               </Bar>
             </>
           ) : (
@@ -167,7 +167,7 @@ export default function ChartsPanel({ data }) {
               {chartDataDesviacion.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
               ))}
-              <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+              <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
             </Bar>
           )}
         </BarChart>
@@ -190,14 +190,14 @@ export default function ChartsPanel({ data }) {
               <XAxis dataKey="area" />
               <YAxis domain={[0, 100]} />
               <Tooltip 
-                formatter={(value) => `${value.toFixed(1)}%`}
+                formatter={(value) => `${value.toFixed(2)}%`}
                 labelFormatter={(label) => `Área: ${label}`}
               />
               <Legend />
               {showPIAR ? (
                 <>
                   <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
-                    <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value ? `${value.toFixed(1)}%` : ''} />
+                    <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value ? `${value.toFixed(2)}%` : ''} />
                   </Bar>
                   <Bar dataKey="Sin PIAR" strokeWidth={2}>
                     {chartDataPercentiles.filter(d => d.hasData).map((entry, index) => (
@@ -207,7 +207,7 @@ export default function ChartsPanel({ data }) {
                       dataKey="Sin PIAR" 
                       position="top" 
                       style={{ fontSize: '12px', fontWeight: 'bold' }} 
-                      formatter={(value) => value ? `${value.toFixed(1)}%` : ''} 
+                      formatter={(value) => value ? `${value.toFixed(2)}%` : ''} 
                     />
                   </Bar>
                 </>
@@ -220,7 +220,7 @@ export default function ChartsPanel({ data }) {
                     dataKey="Sin PIAR" 
                     position="top" 
                     style={{ fontSize: '12px', fontWeight: 'bold' }} 
-                    formatter={(value) => value ? `${value.toFixed(1)}%` : ''} 
+                    formatter={(value) => value ? `${value.toFixed(2)}%` : ''} 
                   />
                 </Bar>
               )}
@@ -237,15 +237,28 @@ export default function ChartsPanel({ data }) {
         {(() => {
           const chartDataByGrade = gradeAverages.map(g => ({
             grado: `Grado ${g.grado}`,
-            'Con PIAR': g.promedioConPIAR,
-            'Sin PIAR': g.promedioSinPIAR
+            'Con PIAR': parseFloat(g.promedioConPIAR.toFixed(2)),
+            'Sin PIAR': parseFloat(g.promedioSinPIAR.toFixed(2))
           }));
           
           const chartDataDesviacionByGrade = gradeAverages.map(g => ({
             grado: `Grado ${g.grado}`,
-            'Con PIAR': g.desviacionConPIAR,
-            'Sin PIAR': g.desviacionSinPIAR
+            'Con PIAR': parseFloat(g.desviacionConPIAR.toFixed(2)),
+            'Sin PIAR': parseFloat(g.desviacionSinPIAR.toFixed(2))
           }));
+          
+          // Calcular dominio dinámico para promedios (valores de Global ~200-500)
+          const allPromedios = chartDataByGrade.flatMap(d => [d['Con PIAR'], d['Sin PIAR']]).filter(v => v > 0);
+          const minPromedio = Math.min(...allPromedios);
+          const maxPromedio = Math.max(...allPromedios);
+          const paddingPromedio = (maxPromedio - minPromedio) * 0.15; // 15% de padding
+          const domainMinPromedio = Math.max(0, Math.floor(minPromedio - paddingPromedio));
+          const domainMaxPromedio = Math.ceil(maxPromedio + paddingPromedio);
+          
+          // Calcular dominio dinámico para desviaciones
+          const allDesviaciones = chartDataDesviacionByGrade.flatMap(d => [d['Con PIAR'], d['Sin PIAR']]).filter(v => v > 0);
+          const maxDesviacion = Math.max(...allDesviaciones);
+          const domainMaxDesviacion = Math.ceil(maxDesviacion * 1.2); // 20% más alto
           
           // Color único para todos los grados (índigo)
           const gradeColor = '#6366f1';
@@ -257,21 +270,21 @@ export default function ChartsPanel({ data }) {
                 <BarChart data={chartDataByGrade}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="grado" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
+                  <YAxis domain={[domainMinPromedio, domainMaxPromedio]} />
+                  <Tooltip formatter={(value) => value.toFixed(2)} />
                   <Legend />
                   {showPIAR ? (
                     <>
                       <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
-                        <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+                        <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
                       <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
-                        <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                        <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
                     </>
                   ) : (
                     <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
-                      <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                      <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                     </Bar>
                   )}
                 </BarChart>
@@ -282,21 +295,21 @@ export default function ChartsPanel({ data }) {
                 <BarChart data={chartDataDesviacionByGrade}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="grado" />
-                  <YAxis domain={[0, 30]} />
-                  <Tooltip />
+                  <YAxis domain={[0, domainMaxDesviacion]} />
+                  <Tooltip formatter={(value) => value.toFixed(2)} />
                   <Legend />
                   {showPIAR ? (
                     <>
                       <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
-                        <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+                        <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
                       <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
-                        <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                        <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                       </Bar>
                     </>
                   ) : (
                     <Bar dataKey="Sin PIAR" fill={gradeColor} strokeWidth={2} stroke={gradeColor} strokeOpacity={0.8}>
-                      <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+                      <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(2)} />
                     </Bar>
                   )}
                 </BarChart>
