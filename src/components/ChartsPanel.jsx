@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
 import { calculateAreaMetrics } from '../utils/calculations';
 
 export default function ChartsPanel({ data }) {
@@ -9,18 +9,69 @@ export default function ChartsPanel({ data }) {
   const metricsConPIAR = calculateAreaMetrics(data, false);
   const metricsSinPIAR = calculateAreaMetrics(data, true);
   
+  // Colores por área
+  const areaColors = {
+    'Lectura': '#3b82f6', // Azul
+    'Matemáticas': '#ef4444', // Rojo
+    'Sociales': '#f97316', // Naranja
+    'Naturales': '#22c55e', // Verde
+    'Inglés': '#a855f7' // Morado
+  };
+  
   // Preparar datos para el gráfico comparativo
   const chartData = metricsConPIAR.map((m, index) => ({
     area: m.area.replace(' crítica', ''),
+    areaFull: m.area,
     'Con PIAR': parseFloat(m.promedio),
     'Sin PIAR': parseFloat(metricsSinPIAR[index].promedio)
   }));
   
   const chartDataDesviacion = metricsConPIAR.map((m, index) => ({
     area: m.area.replace(' crítica', ''),
+    areaFull: m.area,
     'Con PIAR': parseFloat(m.desviacion),
     'Sin PIAR': parseFloat(metricsSinPIAR[index].desviacion)
   }));
+  
+  // Función para obtener el color de la barra según el área
+  const getBarColor = (entry) => {
+    return areaColors[entry.area] || '#10b981';
+  };
+  
+  // Preparar datos de percentiles por área
+  const subjects = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+  const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
+  
+  const chartDataPercentiles = subjects.map(subject => {
+    const percentileKey = `% ${subject}`;
+    const area = subject.replace(' crítica', '');
+    
+    // Filtrar estudiantes que tienen percentiles para esta área
+    const studentsWithPercentiles = dataSinPIAR.filter(s => 
+      s[percentileKey] !== undefined && 
+      s[percentileKey] !== null && 
+      s[percentileKey] !== ''
+    );
+    
+    // Si hay percentiles, calcular promedio
+    let avgPercentile = null;
+    if (studentsWithPercentiles.length > 0) {
+      const sum = studentsWithPercentiles.reduce((acc, s) => {
+        const value = parseFloat(s[percentileKey]);
+        return acc + (isNaN(value) ? 0 : value);
+      }, 0);
+      avgPercentile = sum / studentsWithPercentiles.length;
+    }
+    
+    return {
+      area,
+      percentil: avgPercentile,
+      hasData: avgPercentile !== null
+    };
+  });
+  
+  // Verificar si hay datos de percentiles
+  const hasPercentileData = chartDataPercentiles.some(d => d.hasData);
   
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -51,11 +102,23 @@ export default function ChartsPanel({ data }) {
           <Legend />
           {showPIAR ? (
             <>
-              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5} />
-              <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
+              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+              </Bar>
+              <Bar dataKey="Sin PIAR" strokeWidth={2}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                ))}
+                <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+              </Bar>
             </>
           ) : (
-            <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
+            <Bar dataKey="Sin PIAR" strokeWidth={2}>
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+              ))}
+              <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+            </Bar>
           )}
         </BarChart>
       </ResponsiveContainer>
@@ -70,14 +133,63 @@ export default function ChartsPanel({ data }) {
           <Legend />
           {showPIAR ? (
             <>
-              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5} />
-              <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
+              <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.5}>
+                <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+              </Bar>
+              <Bar dataKey="Sin PIAR" strokeWidth={2}>
+                {chartDataDesviacion.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                ))}
+                <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+              </Bar>
             </>
           ) : (
-            <Bar dataKey="Sin PIAR" fill="#10b981" strokeWidth={2} stroke="#059669" />
+            <Bar dataKey="Sin PIAR" strokeWidth={2}>
+              {chartDataDesviacion.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+              ))}
+              <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value.toFixed(1)} />
+            </Bar>
           )}
         </BarChart>
       </ResponsiveContainer>
+
+      {/* Gráfico de Percentiles por área */}
+      {hasPercentileData && (
+        <>
+          <h2 className="text-2xl font-bold mt-8 mb-4">
+            Percentiles promedio por área (sin PIAR)
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            {chartDataPercentiles.filter(d => d.hasData).length === subjects.length 
+              ? 'Mostrando percentiles para todas las áreas' 
+              : 'Mostrando solo las áreas con datos de percentiles disponibles'}
+          </p>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartDataPercentiles.filter(d => d.hasData)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="area" />
+              <YAxis domain={[0, 100]} />
+              <Tooltip 
+                formatter={(value) => `${value.toFixed(1)}%`}
+                labelFormatter={(label) => `Área: ${label}`}
+              />
+              <Legend />
+              <Bar dataKey="percentil" name="Percentil promedio" strokeWidth={2}>
+                {chartDataPercentiles.filter(d => d.hasData).map((entry, index) => (
+                  <Cell key={`cell-percentile-${index}`} fill={getBarColor(entry)} stroke={getBarColor(entry)} strokeOpacity={0.8} />
+                ))}
+                <LabelList 
+                  dataKey="percentil" 
+                  position="top" 
+                  style={{ fontSize: '12px', fontWeight: 'bold' }} 
+                  formatter={(value) => `${value.toFixed(1)}%`} 
+                />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </>
+      )}
     </div>
   );
 }
