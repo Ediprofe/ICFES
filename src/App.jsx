@@ -6,6 +6,7 @@ import MetricsPanel from './components/MetricsPanel';
 import FilterControls from './components/FilterControls';
 import PDFGenerator from './components/PDFGenerator';
 import { addPercentiles } from './utils/percentiles';
+import { Youtube, Music2, Globe } from 'lucide-react';
 
 function App() {
   const [data, setData] = useState(null);
@@ -32,7 +33,49 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h1 className="text-4xl font-bold text-blue-600">Análisis ICFES</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-4xl font-bold text-blue-600">Análisis ICFES</h1>
+          <div className="text-right">
+            <p className="text-sm text-gray-500 mb-2">Desarrollado por</p>
+            <a 
+              href="https://ediprofe.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors block mb-3"
+            >
+              ediprofe.com
+            </a>
+            <div className="flex items-center justify-end gap-3">
+              <a
+                href="https://www.youtube.com/@ProfeEdi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-red-600 hover:text-red-700 transition-colors"
+                title="YouTube"
+              >
+                <Youtube size={24} fill="currentColor" />
+              </a>
+              <a
+                href="https://www.tiktok.com/@ediprofe"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-gray-900 hover:text-gray-700 transition-colors"
+                title="TikTok"
+              >
+                <Music2 size={24} />
+              </a>
+              <a
+                href="https://ediprofe.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors"
+                title="Sitio Web"
+              >
+                <Globe size={24} />
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
       
       {!data ? (
@@ -53,6 +96,55 @@ function App() {
           <ChartsPanel data={data} />
           
           <PDFGenerator data={data} />
+          
+          {/* Footer */}
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <p className="text-gray-600 text-sm mb-3">
+              Desarrollado por{' '}
+              <a 
+                href="https://ediprofe.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="font-bold text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                ediprofe.com
+              </a>
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <a
+                href="https://www.youtube.com/@ProfeEdi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 transition-colors"
+                title="YouTube"
+              >
+                <Youtube size={28} fill="currentColor" />
+                <span className="text-sm font-semibold">YouTube</span>
+              </a>
+              <span className="text-gray-300">|</span>
+              <a
+                href="https://www.tiktok.com/@ediprofe"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-gray-900 hover:text-gray-700 transition-colors"
+                title="TikTok"
+              >
+                <Music2 size={28} />
+                <span className="text-sm font-semibold">TikTok</span>
+              </a>
+              <span className="text-gray-300">|</span>
+              <a
+                href="https://ediprofe.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                title="Sitio Web"
+              >
+                <Globe size={28} />
+                <span className="text-sm font-semibold">Web</span>
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </div>
