@@ -1434,35 +1434,48 @@ export function generateInteractiveHTML(data) {
         'Inglés': '#a855f7'        // Morado
       };
       
-      // Crear datasets agrupados por área (con PIAR y sin PIAR juntos)
+      // Crear datasets: cada área genera sus propias barras con PIAR y sin PIAR
       function createIntegradoDatasets() {
         const areas = ['Lectura', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
         const datasets = [];
         
-        areas.forEach(area => {
+        areas.forEach((area, index) => {
           const color = areaColorsIntegrado[area];
           
           if (showPIAR) {
-            // Dataset CON PIAR (barra tenue)
+            // Dataset CON PIAR para esta área (barra GRIS)
             datasets.push({
               label: \`\${area} (con PIAR)\`,
               data: dataIntegradoConPIAR.map(d => d[area]),
-              backgroundColor: color.replace(')', ', 0.4)').replace('rgb', 'rgba'),
+              backgroundColor: '#9ca3af',
+              borderColor: '#6b7280',
+              borderWidth: 1,
+              barThickness: 'flex',
+              maxBarThickness: 50
+            });
+            
+            // Dataset SIN PIAR para esta área (barra A COLOR SÓLIDO)
+            datasets.push({
+              label: \`\${area} (sin PIAR)\`,
+              data: dataIntegradoSinPIAR.map(d => d[area]),
+              backgroundColor: color,
               borderColor: color,
               borderWidth: 2,
-              order: 1
+              barThickness: 'flex',
+              maxBarThickness: 50
+            });
+          } else {
+            // Solo SIN PIAR
+            datasets.push({
+              label: area,
+              data: dataIntegradoSinPIAR.map(d => d[area]),
+              backgroundColor: color,
+              borderColor: color,
+              borderWidth: 1,
+              barThickness: 'flex',
+              maxBarThickness: 50
             });
           }
-          
-          // Dataset SIN PIAR (barra sólida)
-          datasets.push({
-            label: area,
-            data: dataIntegradoSinPIAR.map(d => d[area]),
-            backgroundColor: color.replace(')', ', 0.85)').replace('rgb', 'rgba'),
-            borderColor: color,
-            borderWidth: 2,
-            order: 2
-          });
         });
         
         return datasets;
@@ -1477,6 +1490,10 @@ export function generateInteractiveHTML(data) {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
           scales: {
             y: {
               beginAtZero: false,
@@ -1486,8 +1503,11 @@ export function generateInteractiveHTML(data) {
               ticks: { font: { size: 12 } }
             },
             x: {
+              stacked: false,
               grid: { display: false },
-              ticks: { font: { size: 12, weight: 'bold' } }
+              ticks: { 
+                font: { size: 12, weight: 'bold' }
+              }
             }
           },
           plugins: {
@@ -1507,13 +1527,12 @@ export function generateInteractiveHTML(data) {
               display: true,
               position: 'bottom',
               labels: {
-                font: { size: 10, weight: 'bold' },
-                padding: 8,
+                font: { size: 12, weight: 'bold' },
+                padding: 15,
                 usePointStyle: true,
-                pointStyle: 'circle',
+                boxWidth: 20,
+                boxHeight: 20,
                 generateLabels: function(chart) {
-                  const datasets = chart.data.datasets;
-                  const labels = [];
                   const areas = ['Lectura', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
                   const areaColors = {
                     'Lectura': '#3b82f6',
@@ -1523,44 +1542,51 @@ export function generateInteractiveHTML(data) {
                     'Inglés': '#a855f7'
                   };
                   
-                  // Primera línea: Colores por área
+                  const labels = [];
+                  
+                  // Primera fila: colores de áreas (Sin PIAR - colores sólidos)
                   areas.forEach(area => {
                     labels.push({
                       text: area,
                       fillStyle: areaColors[area],
                       strokeStyle: areaColors[area],
-                      lineWidth: 2,
+                      lineWidth: 0,
                       hidden: false,
-                      pointStyle: 'circle'
+                      pointStyle: 'circle',
+                      datasetIndex: -1
                     });
                   });
                   
-                  // Segunda línea: Indicadores de PIAR (solo si está activo)
+                  // Segunda fila: indicadores Con/Sin PIAR
                   if (showPIAR) {
+                    // Separador visual
                     labels.push({
-                      text: '  ', // Separador visual
+                      text: '  ',
                       fillStyle: 'transparent',
                       strokeStyle: 'transparent',
-                      hidden: true,
-                      pointStyle: 'circle'
+                      hidden: false,
+                      pointStyle: 'line',
+                      datasetIndex: -1
                     });
                     
                     labels.push({
                       text: 'Con PIAR',
-                      fillStyle: 'rgba(156, 163, 175, 0.4)',  // Gris claro
-                      strokeStyle: '#9ca3af',
-                      lineWidth: 2,
+                      fillStyle: '#9ca3af',
+                      strokeStyle: '#6b7280',
+                      lineWidth: 1,
                       hidden: false,
-                      pointStyle: 'circle'
+                      pointStyle: 'rect',
+                      datasetIndex: -1
                     });
                     
                     labels.push({
                       text: 'Sin PIAR',
-                      fillStyle: 'rgba(71, 85, 105, 0.85)',  // Gris oscuro
+                      fillStyle: '#475569',
                       strokeStyle: '#475569',
-                      lineWidth: 2,
+                      lineWidth: 0,
                       hidden: false,
-                      pointStyle: 'circle'
+                      pointStyle: 'rect',
+                      datasetIndex: -1
                     });
                   }
                   

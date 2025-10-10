@@ -147,7 +147,7 @@ export default function GradeAreaCharts({ data }) {
                 />
                 {showPIAR ? (
                   <>
-                    <Bar dataKey="Con PIAR" fill="#9ca3af" fillOpacity={0.6} radius={[8, 8, 0, 0]}>
+                    <Bar dataKey="Con PIAR" fill={areaData.color} fillOpacity={0.3} radius={[8, 8, 0, 0]}>
                       <LabelList 
                         dataKey="Con PIAR" 
                         position="top" 
@@ -155,7 +155,7 @@ export default function GradeAreaCharts({ data }) {
                         formatter={(value) => value.toFixed(1)} 
                       />
                     </Bar>
-                    <Bar dataKey="Sin PIAR" fill={areaData.color} radius={[8, 8, 0, 0]}>
+                    <Bar dataKey="Sin PIAR" fill={areaData.color} fillOpacity={1} radius={[8, 8, 0, 0]}>
                       <LabelList 
                         dataKey="Sin PIAR" 
                         position="top" 
@@ -165,7 +165,7 @@ export default function GradeAreaCharts({ data }) {
                     </Bar>
                   </>
                 ) : (
-                  <Bar dataKey="Sin PIAR" fill={areaData.color} radius={[8, 8, 0, 0]}>
+                  <Bar dataKey="Sin PIAR" fill={areaData.color} fillOpacity={1} radius={[8, 8, 0, 0]}>
                     <LabelList 
                       dataKey="Sin PIAR" 
                       position="top" 
