@@ -84,7 +84,7 @@ export default function ChartsPanel({ data }) {
             onClick={() => setShowPIAR(!showPIAR)}
             className={`px-4 py-2 rounded-lg transition-all ${
               showPIAR 
-                ? 'bg-primary text-white' 
+                ? 'bg-blue-600 text-white' 
                 : 'bg-gray-200 text-gray-700'
             }`}
           >

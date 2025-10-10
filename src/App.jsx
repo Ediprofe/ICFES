@@ -31,10 +31,9 @@ function App() {
   
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold text-primary">Análisis ICFES</h1>
-        <p className="text-gray-600">Análisis interactivo de resultados académicos</p>
-      </header>
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h1 className="text-4xl font-bold text-blue-600">Análisis ICFES</h1>
+      </div>
       
       {!data ? (
         <FileUploader onFileLoaded={handleFileLoaded} />
@@ -53,7 +52,7 @@ function App() {
           <MetricsPanel data={data} />
           <ChartsPanel data={data} />
           
-          <PDFGenerator data={data} filters={filters} />
+          <PDFGenerator data={data} />
         </div>
       )}
     </div>

@@ -15,9 +15,9 @@ export default function FileUploader({ onFileLoaded }) {
   };
   
   return (
-    <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-primary rounded-lg bg-white">
-      <Upload size={48} className="text-primary mb-4" />
-      <label className="cursor-pointer bg-primary text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+    <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-blue-600 rounded-lg bg-white">
+      <Upload size={48} className="text-blue-600 mb-4" />
+      <label className="cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
         Seleccionar archivo Excel
         <input type="file" accept=".xlsx,.xlsm" onChange={handleFile} className="hidden" />
       </label>

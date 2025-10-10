@@ -4,7 +4,7 @@ export default function FilterControls({ filters, setFilters, grades }) {
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center gap-2 mb-4">
-        <Filter size={24} className="text-primary" />
+        <Filter size={24} className="text-blue-600" />
         <h2 className="text-2xl font-bold">Filtros</h2>
       </div>
       
@@ -16,7 +16,7 @@ export default function FilterControls({ filters, setFilters, grades }) {
             id="excludePIAR"
             checked={filters.excludePIAR}
             onChange={(e) => setFilters({ ...filters, excludePIAR: e.target.checked })}
-            className="w-4 h-4 text-primary"
+            className="w-4 h-4 text-blue-600 accent-blue-600"
           />
           <label htmlFor="excludePIAR" className="text-sm">Excluir estudiantes con PIAR</label>
         </div>

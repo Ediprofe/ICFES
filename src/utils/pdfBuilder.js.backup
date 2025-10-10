@@ -1,20 +1,15 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, findOutliers, mean, stdDev, zScore } from './calculations';
 
 export const generatePDF = (data) => {
-  console.log('Iniciando generación de PDF con', data.length, 'estudiantes');
-  
-  const doc = new jsPDF();
-  
-  // Asignar autoTable al documento para compatibilidad con jsPDF 3.x
-  if (!doc.autoTable && autoTable) {
-    doc.autoTable = autoTable.bind(null, doc);
-  }
-  
-  const pageWidth = doc.internal.pageSize.width;
-  const pageHeight = doc.internal.pageSize.height;
-  let pageNumber = 0;
+  try {
+    console.log('Iniciando generación de PDF con', data.length, 'estudiantes');
+    
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    let pageNumber = 0;
   
   // Función para agregar pie de página
   const addFooter = () => {
@@ -27,7 +22,7 @@ export const generatePDF = (data) => {
     doc.line(14, footerY - 5, pageWidth - 14, footerY - 5);
     
     // Texto del pie de página
-    doc.text('Análisis de puntajes - Informe de resultados', 14, footerY);
+    doc.text('ICFES Analyzer - Informe de Resultados', 14, footerY);
     doc.text(`Página ${pageNumber}`, pageWidth - 14, footerY, { align: 'right' });
     doc.text(`Generado: ${new Date().toLocaleDateString('es-ES', { 
       year: 'numeric', 
@@ -59,10 +54,10 @@ export const generatePDF = (data) => {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(28);
   doc.setFont(undefined, 'bold');
-  doc.text('Análisis de puntajes', pageWidth / 2, 25, { align: 'center' });
+  doc.text('Informe ICFES Analyzer', pageWidth / 2, 25, { align: 'center' });
   doc.setFont(undefined, 'normal');
   doc.setFontSize(12);
-  doc.text('Informe de resultados académicos', pageWidth / 2, 38, { align: 'center' });
+  doc.text('Análisis de Resultados Académicos', pageWidth / 2, 38, { align: 'center' });
   
   // Información general
   doc.setTextColor(0);
@@ -75,7 +70,7 @@ export const generatePDF = (data) => {
   
   doc.setFontSize(14);
   doc.setFont(undefined, 'bold');
-  doc.text('Información general', pageWidth / 2, yPos + 10, { align: 'center' });
+  doc.text('Información General', pageWidth / 2, yPos + 10, { align: 'center' });
   
   doc.setFont(undefined, 'normal');
   doc.setFontSize(12);
@@ -115,7 +110,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('1. Listado de estudiantes por puntaje global', 14, 13);
+  doc.text('1. Listado de Estudiantes por Puntaje Global', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -145,7 +140,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('2. Métricas por área', 14, 13);
+  doc.text('2. Métricas por Área', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -153,7 +148,7 @@ export const generatePDF = (data) => {
   yPos = 30;
   doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
-  doc.text('Promedios globales', 14, yPos);
+  doc.text('Promedios Globales', 14, yPos);
   doc.setFont(undefined, 'normal');
   
   const allData = data;
@@ -173,7 +168,7 @@ export const generatePDF = (data) => {
   yPos += 18;
   doc.setFontSize(12);
   doc.setFont(undefined, 'bold');
-  doc.text('Comparación por área (con/sin PIAR)', 14, yPos);
+  doc.text('Comparación por Área (con/sin PIAR)', 14, yPos);
   doc.setFont(undefined, 'normal');
   
   const metricsConPIAR = calculateAreaMetrics(data, false);
@@ -217,7 +212,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('3. Top 5 estudiantes por área', 14, 13);
+  doc.text('3. Top 5 Estudiantes por Área', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -274,7 +269,7 @@ export const generatePDF = (data) => {
       doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('3. Top 5 estudiantes por área (continuación)', 14, 13);
+      doc.text('3. Top 5 Estudiantes por Área (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');
       
@@ -291,7 +286,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('4. Top 3 estudiantes por grado', 14, 13);
+  doc.text('4. Top 3 Estudiantes por Grado', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -337,7 +332,7 @@ export const generatePDF = (data) => {
       doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('4. Top 3 estudiantes por grado (continuación)', 14, 13);
+      doc.text('4. Top 3 Estudiantes por Grado (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');
       
@@ -345,7 +340,7 @@ export const generatePDF = (data) => {
     }
   });
   
-  // PÁGINA 6: Valores Atípicos (Outliers)
+  // PÁGINA 6: Outliers
   addNewPage();
   
   // Encabezado de sección
@@ -354,15 +349,14 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('5. Valores atípicos', 14, 13);
+  doc.text('5. Estudiantes con Desempeño Excepcional', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
   yPos = 30;
   doc.setFontSize(11);
   doc.setTextColor(60);
-  doc.text('Estudiantes cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio,', 14, yPos);
-  doc.text('ya sea por encima (rendimiento sobresaliente) o por debajo (bajo rendimiento).', 14, yPos + 5);
+  doc.text('Estudiantes que se encuentran a más de 3 desviaciones estándar (±3σ) del promedio global', 14, yPos);
   doc.setTextColor(0);
   
   const outliers = findOutliers(data);
@@ -371,16 +365,9 @@ export const generatePDF = (data) => {
     const avg = mean(globals);
     const sd = stdDev(globals);
     
-    // Separar en sobresalientes y bajo rendimiento
-    const sobresalientes = outliers.filter(s => zScore(s.Global, avg, sd) > 0);
-    const bajoRendimiento = outliers.filter(s => zScore(s.Global, avg, sd) < 0);
-    
-    yPos += 10;
-    
-    // Tabla de valores atípicos
     doc.autoTable({
-      startY: yPos,
-      head: [['Nombre', 'Apellido', 'Grupo', 'Puntaje global', 'Z-Score', 'Categoría']],
+      startY: yPos + 8,
+      head: [['Nombre', 'Apellido', 'Grupo', 'Global', 'Z-Score', 'Tipo']],
       body: outliers.map(s => {
         const z = zScore(s.Global, avg, sd);
         return [
@@ -389,7 +376,7 @@ export const generatePDF = (data) => {
           s.Grupo,
           s.Global.toFixed(2),
           z.toFixed(2),
-          z > 0 ? 'Sobresaliente ↑' : 'Bajo rendimiento ↓'
+          z > 0 ? 'Excepcional ↑' : 'Bajo rendimiento ↓'
         ];
       }),
       theme: 'striped',
@@ -398,7 +385,7 @@ export const generatePDF = (data) => {
       columnStyles: {
         3: { halign: 'center', fontStyle: 'bold' },
         4: { halign: 'center', fontStyle: 'bold' },
-        5: { halign: 'center', fontSize: 9 }
+        5: { halign: 'center' }
       },
       margin: { bottom: 25 },
       didDrawPage: (data) => {
@@ -408,30 +395,24 @@ export const generatePDF = (data) => {
         }
       }
     });
-    
-    // Resumen estadístico
-    yPos = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text('Resumen:', 14, yPos);
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
-    doc.text(`• Total de valores atípicos: ${outliers.length} (${((outliers.length / data.length) * 100).toFixed(1)}% del total)`, 14, yPos + 7);
-    doc.text(`• Rendimiento sobresaliente: ${sobresalientes.length} estudiante${sobresalientes.length !== 1 ? 's' : ''}`, 14, yPos + 14);
-    doc.text(`• Bajo rendimiento: ${bajoRendimiento.length} estudiante${bajoRendimiento.length !== 1 ? 's' : ''}`, 14, yPos + 21);
   } else {
     doc.setFontSize(12);
-    doc.text('✓ No se encontraron valores atípicos', 14, yPos + 15);
+    doc.text('✓ No se encontraron estudiantes con desempeño excepcional', 14, yPos + 15);
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text('Todos los estudiantes se encuentran dentro del rango normal (±3σ)', 14, yPos + 25);
   }
   
-  // Generar nombre de archivo con fecha
-  const fechaArchivo = new Date().toISOString().split('T')[0];
-  const nombreArchivo = `informe-icfes-${fechaArchivo}.pdf`;
-  
-  console.log('PDF generado, descargando como:', nombreArchivo);
-  doc.save(nombreArchivo);
-  console.log('Descarga completada');
+    // Generar nombre de archivo con fecha
+    const fechaArchivo = new Date().toISOString().split('T')[0];
+    const nombreArchivo = `informe-icfes-${fechaArchivo}.pdf`;
+    
+    console.log('PDF generado, descargando como:', nombreArchivo);
+    doc.save(nombreArchivo);
+    console.log('Descarga completada');
+    
+  } catch (error) {
+    console.error('Error al generar PDF:', error);
+    alert(`Error al generar el PDF: ${error.message}`);
+  }
 };

@@ -132,7 +132,7 @@ export default function StudentsTable({ data }) {
               <td className="p-2 text-right">{student.Sociales?.toFixed(2)}</td>
               <td className="p-2 text-right">{student.Naturales?.toFixed(2)}</td>
               <td className="p-2 text-right">{student.Inglés?.toFixed(2)}</td>
-              <td className="p-2 text-right font-bold text-primary">{student.Global?.toFixed(2)}</td>
+              <td className="p-2 text-right font-bold text-blue-600">{student.Global?.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>

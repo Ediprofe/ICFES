@@ -1,4 +1,4 @@
-import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, findOutliers, mean } from '../utils/calculations';
+import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, findOutliers, mean, stdDev } from '../utils/calculations';
 
 export default function MetricsPanel({ data }) {
   // Calcular datos completos (todos los estudiantes)
@@ -170,34 +170,103 @@ export default function MetricsPanel({ data }) {
         </div>
       </div>
 
-      {/* Outliers */}
-      {outliers.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-2xl font-bold mb-4">Estudiantes con desempeño excepcional (±3σ)</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-yellow-50">
-                  <th className="p-2 text-left">Nombre</th>
-                  <th className="p-2 text-left">Apellido</th>
-                  <th className="p-2 text-left">Grupo</th>
-                  <th className="p-2 text-right">Global</th>
-                </tr>
-              </thead>
-              <tbody>
-                {outliers.map((student, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="p-2">{student.Nombre}</td>
-                    <td className="p-2">{student.Apellido}</td>
-                    <td className="p-2">{student.Grupo}</td>
-                    <td className="p-2 text-right font-bold">{student.Global.toFixed(2)}</td>
+      {/* Valores Atípicos */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold mb-2">Valores atípicos (outliers)</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Estudiantes cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio
+        </p>
+        
+        {outliers.length > 0 ? (
+          <>
+            {/* Resumen estadístico */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="bg-yellow-50 p-4 rounded-lg border-2 border-yellow-300">
+                <p className="text-sm text-gray-600 mb-1">Total de valores atípicos</p>
+                <p className="text-3xl font-bold text-yellow-600">{outliers.length}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {((outliers.length / data.length) * 100).toFixed(1)}% del total
+                </p>
+              </div>
+              <div className="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+                <p className="text-sm text-gray-600 mb-1">Rendimiento sobresaliente</p>
+                <p className="text-3xl font-bold text-green-600">
+                  {outliers.filter(s => {
+                    const globals = data.map(st => st.Global);
+                    const avg = mean(globals);
+                    const sd = stdDev(globals);
+                    return (s.Global - avg) / sd > 0;
+                  }).length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Por encima de +3σ</p>
+              </div>
+              <div className="bg-red-50 p-4 rounded-lg border-2 border-red-300">
+                <p className="text-sm text-gray-600 mb-1">Bajo rendimiento</p>
+                <p className="text-3xl font-bold text-red-600">
+                  {outliers.filter(s => {
+                    const globals = data.map(st => st.Global);
+                    const avg = mean(globals);
+                    const sd = stdDev(globals);
+                    return (s.Global - avg) / sd < 0;
+                  }).length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Por debajo de -3σ</p>
+              </div>
+            </div>
+
+            {/* Tabla de valores atípicos */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-yellow-50">
+                    <th className="p-3 text-left">Nombre</th>
+                    <th className="p-3 text-left">Apellido</th>
+                    <th className="p-3 text-left">Grupo</th>
+                    <th className="p-3 text-right">Puntaje global</th>
+                    <th className="p-3 text-right">Z-Score</th>
+                    <th className="p-3 text-center">Categoría</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {outliers.map((student, index) => {
+                    const globals = data.map(s => s.Global);
+                    const avg = mean(globals);
+                    const sd = stdDev(globals);
+                    const z = (student.Global - avg) / sd;
+                    const isSobresaliente = z > 0;
+                    
+                    return (
+                      <tr key={index} className={`border-b hover:bg-gray-50 ${isSobresaliente ? 'bg-green-50' : 'bg-red-50'}`}>
+                        <td className="p-3">{student.Nombre}</td>
+                        <td className="p-3">{student.Apellido}</td>
+                        <td className="p-3">{student.Grupo}</td>
+                        <td className="p-3 text-right font-bold">{student.Global.toFixed(2)}</td>
+                        <td className="p-3 text-right font-bold">{z.toFixed(2)}</td>
+                        <td className="p-3 text-center">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${
+                            isSobresaliente 
+                              ? 'bg-green-200 text-green-800' 
+                              : 'bg-red-200 text-red-800'
+                          }`}>
+                            {isSobresaliente ? 'Sobresaliente ↑' : 'Bajo rendimiento ↓'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-600 mb-2">✓ No se encontraron valores atípicos</p>
+            <p className="text-sm text-gray-500">
+              Todos los estudiantes se encuentran dentro del rango normal (±3σ)
+            </p>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
