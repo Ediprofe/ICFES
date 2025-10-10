@@ -5,6 +5,7 @@ import MetricsPanel from './components/MetricsPanel';
 import FilterControls from './components/FilterControls';
 import PDFGenerator from './components/PDFGenerator';
 import GradeAreaCharts from './components/GradeAreaCharts';
+import HTMLExporter from './components/HTMLExporter';
 import { addPercentiles } from './utils/percentiles';
 import { Youtube, Music2, Globe, RefreshCw } from 'lucide-react';
 
@@ -124,7 +125,11 @@ function App() {
           {/* 3. Análisis detallado: Grado por área (gráficos interactivos) */}
           <GradeAreaCharts data={data} />
           
-          <PDFGenerator data={data} />
+          {/* Exportadores */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PDFGenerator data={data} />
+            <HTMLExporter data={data} />
+          </div>
           
           {/* Footer */}
           <div className="bg-white rounded-lg shadow p-6 text-center">
