@@ -60,12 +60,6 @@ export const REQUIRED_COLUMNS = [
     errorMessage: 'Naturales debe estar entre 0 y 100'
   },
   {
-    name: 'Inglés',
-    type: COLUMN_TYPES.NUMBER,
-    validation: (val) => val >= 0 && val <= 100,
-    errorMessage: 'Inglés debe estar entre 0 y 100'
-  },
-  {
     name: 'Global',
     type: COLUMN_TYPES.NUMBER,
     validation: (val) => val >= 0 && val <= 500,
@@ -79,6 +73,12 @@ export const OPTIONAL_COLUMNS = [
     type: COLUMN_TYPES.YEAR,
     validation: (val) => val >= 2000 && val <= 2100,
     errorMessage: 'Año debe estar entre 2000 y 2100'
+  },
+  {
+    name: 'Inglés',
+    type: COLUMN_TYPES.NUMBER,
+    validation: (val) => val >= 0 && val <= 100,
+    errorMessage: 'Inglés debe estar entre 0 y 100'
   },
   {
     name: 'Percentil Lectura crítica',
@@ -174,7 +174,8 @@ export const ACADEMIC_AREAS = [
     color: '#a855f7',      // purple-500
     lightColor: '#f3e8ff', // purple-100
     darkColor: '#6b21a8',  // purple-800
-    icon: '🗣️'
+    icon: '🗣️',
+    optional: true  // Algunos años pueden no tener datos de Inglés
   }
 ];
 
