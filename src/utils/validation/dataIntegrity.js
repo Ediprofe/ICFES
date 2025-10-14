@@ -167,28 +167,38 @@ export const validateNoDuplicateStudents = (data) => {
 };
 
 /**
- * Valida que todos los estudiantes tengan el mismo año
+ * Valida que todos los estudiantes tengan el mismo año (si la columna existe)
+ * NOTA: La columna Año es OPCIONAL. Si no existe, se usará etiqueta manual.
  */
 export const validateConsistentYear = (data) => {
   const errors = [];
   const warnings = [];
   const years = new Set();
   
-  data.forEach((row, index) => {
-    const rowNumber = index + 2;
+  // Verificar si la columna Año existe en los datos
+  const hasYearColumn = data.length > 0 && 'Año' in data[0];
+  
+  if (!hasYearColumn) {
+    // La columna Año no existe - esto es válido, se usará etiqueta manual
+    return {
+      valid: true,
+      errors: [],
+      warnings: ['Columna "Año" no encontrada. Se usará etiqueta manual al cargar el archivo.'],
+      year: null
+    };
+  }
+  
+  // Si la columna existe, validar consistencia
+  data.forEach((row) => {
     const year = row['Año'];
     
     if (year !== null && year !== undefined && year !== '') {
       years.add(Number(year));
-    } else {
-      warnings.push(`Fila ${rowNumber}: Falta el año`);
     }
   });
   
   if (years.size > 1) {
     errors.push(`Los datos contienen múltiples años: ${Array.from(years).join(', ')}. Todos los estudiantes deben ser del mismo año.`);
-  } else if (years.size === 0) {
-    errors.push('No se encontró información de año en los datos');
   }
   
   return {
