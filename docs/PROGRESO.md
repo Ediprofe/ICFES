@@ -149,6 +149,27 @@
 
 **Commit:** `9595ae9` - "feat: Sprint 6 - Componentes UI Refactorizados completado"
 
+### Mejora Adicional: Sistema de Etiquetas de Año (Completado - 14 Oct 2025)
+
+- [x] **Implementación de etiquetas manuales de año** ✅
+  - excelParser.js acepta yearLabel opcional
+  - analysisStore.js: loadBaseYear y loadComparisonYear con yearLabel
+  - FileUploaderNew.jsx: Diálogo de etiqueta de año
+  - ComparisonYearUploader.jsx: Carga de años adicionales
+  - Auto-detección de año desde nombre de archivo
+  - Validación de duplicados
+  - Prevención de años inválidos
+  
+- [x] **Documentación completa** ✅
+  - Creado GUIA-USO-MULTIANIO.md
+  - Flujo completo documentado
+  - Ejemplos prácticos
+  - Solución de problemas
+
+**Commit:** `c3cb718` - "feat: Implementar sistema de etiquetas de año"
+
+**Justificación:** Los archivos reales (SJ2024.xlsx, SJ2025.xlsx) NO tienen columna "Año", por lo que se implementó un sistema de etiquetado manual que permite al usuario asignar el año al cargar cada archivo.
+
 ---
 
 ## 🚧 EN PROGRESO
