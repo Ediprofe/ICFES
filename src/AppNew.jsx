@@ -8,13 +8,13 @@ import { FileUploaderNew } from './components/FileUploaderNew.jsx';
 import { ComparisonYearUploader } from './components/ComparisonYearUploader.jsx';
 import { DataPreview } from './components/DataPreview.jsx';
 import { ExportButtons } from './components/ExportButtons.jsx';
-import { useHasData, useComparisonMode } from './stores/analysisStore.js';
+import { useAnalysisStore } from './stores/analysisStore.js';
 import { Youtube, Music2, Globe } from 'lucide-react';
 import { BRANDING } from './config/visualConfig.js';
 
 function AppContent() {
-  const hasData = useHasData();
-  const comparisonMode = useComparisonMode();
+  const hasData = useAnalysisStore((state) => state.hasData());
+  const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
   
   return (
     <div className="min-h-screen bg-gray-50">
