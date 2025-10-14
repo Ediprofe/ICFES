@@ -12,12 +12,6 @@ export const COLUMN_TYPES = {
 
 export const REQUIRED_COLUMNS = [
   {
-    name: 'Año',
-    type: COLUMN_TYPES.YEAR,
-    validation: (val) => val >= 2000 && val <= 2100,
-    errorMessage: 'Año debe estar entre 2000 y 2100'
-  },
-  {
     name: '¿PIAR?',
     type: COLUMN_TYPES.TEXT,
     validation: (val) => ['Sí', 'No'].includes(val),
@@ -80,6 +74,12 @@ export const REQUIRED_COLUMNS = [
 ];
 
 export const OPTIONAL_COLUMNS = [
+  {
+    name: 'Año',
+    type: COLUMN_TYPES.YEAR,
+    validation: (val) => val >= 2000 && val <= 2100,
+    errorMessage: 'Año debe estar entre 2000 y 2100'
+  },
   {
     name: 'Percentil Lectura crítica',
     type: COLUMN_TYPES.NUMBER,
