@@ -13,6 +13,11 @@ export const validateGlobalScoreConsistency = (data, tolerance = 5) => {
   const warnings = [];
   
   data.forEach((row, index) => {
+    // Verificar que row existe y es un objeto
+    if (!row || typeof row !== 'object') {
+      return;
+    }
+    
     const rowNumber = index + 2;
     
     // Obtener puntajes de áreas
@@ -49,6 +54,11 @@ export const validateNoNegativeScores = (data) => {
   const errors = [];
   
   data.forEach((row, index) => {
+    // Verificar que row existe y es un objeto
+    if (!row || typeof row !== 'object') {
+      return;
+    }
+    
     const rowNumber = index + 2;
     
     // Verificar áreas
@@ -81,9 +91,19 @@ export const validatePercentileRange = (data) => {
   const warnings = [];
   
   data.forEach((row, index) => {
+    // Verificar que row existe y es un objeto
+    if (!row || typeof row !== 'object') {
+      return;
+    }
+    
     const rowNumber = index + 2;
     
     ACADEMIC_AREAS.forEach(area => {
+      // Solo validar si la columna de percentil existe en el objeto
+      if (!(area.percentileColumn in row)) {
+        return; // Columna no existe, es opcional
+      }
+      
       const percentile = row[area.percentileColumn];
       
       if (percentile !== null && percentile !== undefined && percentile !== '') {
@@ -115,6 +135,11 @@ export const validatePIARValues = (data) => {
   const validValues = ['Sí', 'No', 'SI', 'NO', 'Si', 'si', 'no'];
   
   data.forEach((row, index) => {
+    // Verificar que row existe y es un objeto
+    if (!row || typeof row !== 'object') {
+      return;
+    }
+    
     const rowNumber = index + 2;
     const piarValue = row['¿PIAR?'];
     
@@ -147,6 +172,11 @@ export const validateNoDuplicateStudents = (data) => {
   const seen = new Set();
   
   data.forEach((row, index) => {
+    // Verificar que row existe y es un objeto
+    if (!row || typeof row !== 'object') {
+      return;
+    }
+    
     const rowNumber = index + 2;
     const key = `${row.Nombre}-${row.Apellido}-${row.Grupo}`.toLowerCase().trim();
     
