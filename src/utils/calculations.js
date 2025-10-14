@@ -20,15 +20,21 @@ export const zScore = (value, avg, sd) => {
   return sd === 0 ? 0 : (value - avg) / sd;
 };
 
-// Outliers (±3σ)
+// Outliers (±3σ) - Basado en muestra SIN PIAR
 export const findOutliers = (data) => {
-  // Filtrar solo estudiantes con puntaje global válido
-  const validStudents = data.filter(s => s.Global !== null && s.Global !== undefined && !isNaN(s.Global));
-  const globals = validStudents.map(s => s.Global);
+  // Filtrar solo estudiantes SIN PIAR con puntaje global válido
+  const validStudentsSinPIAR = data.filter(s => 
+    s['¿PIAR?'] !== 'Sí' && 
+    s.Global !== null && 
+    s.Global !== undefined && 
+    !isNaN(s.Global)
+  );
+  const globals = validStudentsSinPIAR.map(s => s.Global);
   const avg = mean(globals);
   const sd = stdDev(globals);
   
-  return validStudents.filter(student => {
+  // Buscar outliers solo en la muestra sin PIAR
+  return validStudentsSinPIAR.filter(student => {
     const z = Math.abs(zScore(student.Global, avg, sd));
     return z >= 3;
   });
@@ -172,4 +178,64 @@ export const getGradeAverages = (data) => {
       desviacionSinPIAR: globalsSinPIAR.length > 0 ? stdDev(globalsSinPIAR) : 0
     };
   }).sort((a, b) => a.grado.localeCompare(b.grado));
+};
+
+// Obtener datos sin outliers (solo de la muestra sin PIAR)
+export const getDataWithoutOutliers = (data) => {
+  // Primero filtrar solo estudiantes sin PIAR
+  const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
+  const outliers = findOutliers(data);
+  const outlierIds = new Set(outliers.map(o => `${o.Nombre}-${o.Apellido}-${o.Grupo}`));
+  return dataSinPIAR.filter(s => !outlierIds.has(`${s.Nombre}-${s.Apellido}-${s.Grupo}`));
+};
+
+// Métricas globales y por área con/sin outliers (basado en muestra SIN PIAR)
+export const getMetricsComparison = (data) => {
+  // Muestra sin PIAR (con outliers)
+  const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
+  // Muestra sin PIAR y sin outliers
+  const dataWithoutOutliers = getDataWithoutOutliers(data);
+  const subjects = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+  
+  // Métricas globales
+  const globalsWithOutliers = dataSinPIAR.map(s => s.Global).filter(v => v !== null && v !== undefined && !isNaN(v));
+  const globalsWithoutOutliers = dataWithoutOutliers.map(s => s.Global).filter(v => v !== null && v !== undefined && !isNaN(v));
+  
+  const globalMetrics = {
+    conOutliers: {
+      promedio: globalsWithOutliers.length > 0 ? mean(globalsWithOutliers) : 0,
+      desviacion: globalsWithOutliers.length > 0 ? stdDev(globalsWithOutliers) : 0,
+      cantidad: globalsWithOutliers.length
+    },
+    sinOutliers: {
+      promedio: globalsWithoutOutliers.length > 0 ? mean(globalsWithoutOutliers) : 0,
+      desviacion: globalsWithoutOutliers.length > 0 ? stdDev(globalsWithoutOutliers) : 0,
+      cantidad: globalsWithoutOutliers.length
+    }
+  };
+  
+  // Métricas por área
+  const areaMetrics = subjects.map(subject => {
+    const valuesWithOutliers = dataSinPIAR.map(s => s[subject]).filter(v => v !== null && v !== undefined && !isNaN(v));
+    const valuesWithoutOutliers = dataWithoutOutliers.map(s => s[subject]).filter(v => v !== null && v !== undefined && !isNaN(v));
+    
+    return {
+      area: subject,
+      conOutliers: {
+        promedio: valuesWithOutliers.length > 0 ? mean(valuesWithOutliers) : 0,
+        desviacion: valuesWithOutliers.length > 0 ? stdDev(valuesWithOutliers) : 0,
+        cantidad: valuesWithOutliers.length
+      },
+      sinOutliers: {
+        promedio: valuesWithoutOutliers.length > 0 ? mean(valuesWithoutOutliers) : 0,
+        desviacion: valuesWithoutOutliers.length > 0 ? stdDev(valuesWithoutOutliers) : 0,
+        cantidad: valuesWithoutOutliers.length
+      }
+    };
+  });
+  
+  return {
+    global: globalMetrics,
+    areas: areaMetrics
+  };
 };

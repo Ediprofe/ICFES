@@ -1,4 +1,4 @@
-import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev, getGradeAverages } from './calculations';
+import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev, getGradeAverages, getMetricsComparison } from './calculations';
 
 /**
  * Genera un archivo HTML interactivo completo con todos los gráficos y métricas
@@ -36,6 +36,7 @@ export function generateInteractiveHTML(data) {
   const gradeAverages = getGradeAverages(data);
   const outliers = findOutliers(data);
   const top3ByGrade = getTop3ByGrade(data);
+  const metricsComparison = getMetricsComparison(data);
   
   const subjects = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
   
@@ -107,6 +108,30 @@ export function generateInteractiveHTML(data) {
     grado: `Grado ${g.grado}`,
     conPIAR: parseFloat(g.desviacionConPIAR.toFixed(2)),
     sinPIAR: parseFloat(g.desviacionSinPIAR.toFixed(2))
+  }));
+  
+  // Preparar datos para comparación con/sin outliers
+  // Gráfico 1: Métricas Globales
+  const chartDataOutliersGlobal = [
+    {
+      metrica: 'Promedio',
+      conOutliers: metricsComparison.global.conOutliers.promedio,
+      sinOutliers: metricsComparison.global.sinOutliers.promedio
+    },
+    {
+      metrica: 'Desv. Estándar',
+      conOutliers: metricsComparison.global.conOutliers.desviacion,
+      sinOutliers: metricsComparison.global.sinOutliers.desviacion
+    }
+  ];
+  
+  // Gráfico 2: Métricas por Área (solo áreas, sin global)
+  const chartDataOutliersAreas = metricsComparison.areas.map(area => ({
+    area: area.area.replace(' crítica', ''),
+    promConOutliers: area.conOutliers.promedio,
+    promSinOutliers: area.sinOutliers.promedio,
+    desvConOutliers: area.conOutliers.desviacion,
+    desvSinOutliers: area.sinOutliers.desviacion
   }));
   
   // Preparar datos para gráfico integrado de todas las áreas por grado (CON y SIN PIAR)
@@ -851,27 +876,28 @@ export function generateInteractiveHTML(data) {
           }).join('')}
         </div>
       </div>
-      
-      <!-- SECCIÓN 6: VALORES ATÍPICOS -->
-      ${outliers.length > 0 ? `
-      <div class="section">
-        <h2>⚡ Valores atípicos (outliers)</h2>
-        <div class="info-box">
-          <p><strong>Definición:</strong> Estudiantes cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio.</p>
-          <p>Estos valores indican rendimiento excepcional (positivo) o que requiere atención especial (negativo).</p>
-        </div>
+    </div>
+    
+    <!-- SECCIÓN 6: VALORES ATÍPICOS (MOVIDA AL FINAL) -->
+    ${outliers.length > 0 ? `
+    <div class="section">
+      <h2>⚡ Valores atípicos (outliers)</h2>
+      <div class="info-box">
+        <p><strong>Definición:</strong> Estudiantes sin PIAR cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio de la muestra sin PIAR.</p>
+        <p>Estos valores indican rendimiento excepcional (positivo) o que requiere atención especial (negativo).</p>
+      </div>
         
         <div class="metrics-grid">
           <div class="metric-card">
             <div class="metric-label">Total de outliers</div>
             <div class="metric-value">${outliers.length}</div>
-            <div class="metric-subtitle">${((outliers.length / data.length) * 100).toFixed(1)}% del total</div>
+            <div class="metric-subtitle">${((outliers.length / dataSinPIAR.length) * 100).toFixed(1)}% de estudiantes sin PIAR</div>
           </div>
           <div class="metric-card" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-color: #6ee7b7;">
             <div class="metric-label">Sobresalientes</div>
             <div class="metric-value" style="color: #059669;">
               ${outliers.filter(s => {
-                const globals = data.map(st => st.Global);
+                const globals = dataSinPIAR.map(st => st.Global);
                 const avg = mean(globals);
                 const sd = stdDev(globals);
                 return (s.Global - avg) / sd > 0;
@@ -883,7 +909,7 @@ export function generateInteractiveHTML(data) {
             <div class="metric-label">Bajo rendimiento</div>
             <div class="metric-value" style="color: #dc2626;">
               ${outliers.filter(s => {
-                const globals = data.map(st => st.Global);
+                const globals = dataSinPIAR.map(st => st.Global);
                 const avg = mean(globals);
                 const sd = stdDev(globals);
                 return (s.Global - avg) / sd < 0;
@@ -895,7 +921,7 @@ export function generateInteractiveHTML(data) {
         
         <div style="margin-top: 30px;">
           ${outliers.map(student => {
-            const globals = data.map(s => s.Global);
+            const globals = dataSinPIAR.map(s => s.Global);
             const avg = mean(globals);
             const sd = stdDev(globals);
             const z = (student.Global - avg) / sd;
@@ -923,17 +949,41 @@ export function generateInteractiveHTML(data) {
             `;
           }).join('')}
         </div>
+    </div>
+    ` : `
+    <div class="section">
+      <h2>⚡ Valores atípicos (outliers)</h2>
+      <div style="text-align: center; padding: 40px; background: #f0fdf4; border-radius: 15px; border: 2px solid #86efac;">
+        <div style="font-size: 3em; margin-bottom: 15px;">✓</div>
+        <h3 style="color: #059669; margin: 0 0 10px 0;">No se encontraron valores atípicos</h3>
+        <p style="color: #64748b;">Todos los estudiantes se encuentran dentro del rango normal (±3σ)</p>
       </div>
-      ` : `
-      <div class="section">
-        <h2>⚡ Valores atípicos (outliers)</h2>
-        <div style="text-align: center; padding: 40px; background: #f0fdf4; border-radius: 15px; border: 2px solid #86efac;">
-          <div style="font-size: 3em; margin-bottom: 15px;">✓</div>
-          <h3 style="color: #059669; margin: 0 0 10px 0;">No se encontraron valores atípicos</h3>
-          <p style="color: #64748b;">Todos los estudiantes se encuentran dentro del rango normal (±3σ)</p>
+    </div>
+    `}
+    
+    <!-- SECCIÓN 6.1: COMPARACIÓN CON/SIN OUTLIERS - DIVIDIDA EN DOS -->
+    <div class="section">
+      <h2>📊 Comparación de métricas con/sin valores atípicos</h2>
+      <div class="info-box">
+        <p><strong>Análisis del impacto:</strong> Comparación de estadísticas de la muestra sin PIAR, con y sin valores atípicos.</p>
+        <p>Esto permite evaluar cómo los outliers afectan las métricas globales y por área.</p>
+      </div>
+      
+      <!-- Gráfico 1: Métricas Globales -->
+      <div class="chart-container">
+        <h3>Métricas Globales (con/sin outliers)</h3>
+        <div class="chart-wrapper">
+          <canvas id="chartOutliersGlobal"></canvas>
         </div>
       </div>
-      `}
+      
+      <!-- Gráfico 2: Métricas por Área -->
+      <div class="chart-container">
+        <h3>Métricas por Área (con/sin outliers)</h3>
+        <div class="chart-wrapper">
+          <canvas id="chartOutliersAreas"></canvas>
+        </div>
+      </div>
     </div>
     
     <footer>
@@ -1119,8 +1169,12 @@ export function generateInteractiveHTML(data) {
     const dataPercentiles = ${JSON.stringify(chartDataPercentiles.filter(d => d.hasData))};
     const dataGradosPromedios = ${JSON.stringify(chartDataGradosPromedios)};
     const dataGradosDesviacion = ${JSON.stringify(chartDataGradosDesviacion)};
+    const dataIntegradoConPIAR = ${JSON.stringify(chartDataIntegradoConPIAR)};
+    const dataIntegradoSinPIAR = ${JSON.stringify(chartDataIntegradoSinPIAR)};
+    const dataOutliersGlobal = ${JSON.stringify(chartDataOutliersGlobal)};
+    const dataOutliersAreas = ${JSON.stringify(chartDataOutliersAreas)};
     
-    // Configuración común de gráficos
+    // Opciones comunes para todos los gráficos
     const commonOptions = {
       responsive: true,
       maintainAspectRatio: false,
@@ -1615,6 +1669,138 @@ export function generateInteractiveHTML(data) {
           animation: {
             duration: 800,
             easing: 'easeInOutQuart'
+          }
+        }
+      });
+      
+      // Gráfico 1: Métricas Globales (con/sin outliers)
+      const ctxOutliersGlobal = document.getElementById('chartOutliersGlobal').getContext('2d');
+      
+      charts.outliersGlobal = new Chart(ctxOutliersGlobal, {
+        type: 'bar',
+        data: {
+          labels: dataOutliersGlobal.map(d => d.metrica),
+          datasets: [
+            {
+              label: 'Con outliers',
+              data: dataOutliersGlobal.map(d => d.conOutliers),
+              backgroundColor: 'rgba(156, 163, 175, 0.7)',
+              borderColor: '#9ca3af',
+              borderWidth: 2,
+              borderRadius: 8
+            },
+            {
+              label: 'Sin outliers',
+              data: dataOutliersGlobal.map(d => d.sinOutliers),
+              backgroundColor: 'rgba(16, 185, 129, 0.7)',
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderRadius: 8
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          plugins: {
+            ...commonOptions.plugins,
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'top',
+              formatter: (value) => value.toFixed(2),
+              font: { size: 11, weight: 'bold' },
+              color: '#374151'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0, 0, 0, 0.05)' },
+              ticks: { 
+                font: { size: 12 },
+                callback: function(value) {
+                  return Math.round(value);
+                }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 12, weight: 'bold' } }
+            }
+          }
+        }
+      });
+      
+      // Gráfico 2: Métricas por Área (con/sin outliers)
+      const ctxOutliersAreas = document.getElementById('chartOutliersAreas').getContext('2d');
+      
+      charts.outliersAreas = new Chart(ctxOutliersAreas, {
+        type: 'bar',
+        data: {
+          labels: dataOutliersAreas.map(d => d.area),
+          datasets: [
+            {
+              label: 'Prom. con outliers',
+              data: dataOutliersAreas.map(d => d.promConOutliers),
+              backgroundColor: 'rgba(156, 163, 175, 0.7)',
+              borderColor: '#9ca3af',
+              borderWidth: 2,
+              borderRadius: 8
+            },
+            {
+              label: 'Prom. sin outliers',
+              data: dataOutliersAreas.map(d => d.promSinOutliers),
+              backgroundColor: 'rgba(16, 185, 129, 0.7)',
+              borderColor: '#10b981',
+              borderWidth: 2,
+              borderRadius: 8
+            },
+            {
+              label: 'Desv. con outliers',
+              data: dataOutliersAreas.map(d => d.desvConOutliers),
+              backgroundColor: 'rgba(251, 146, 60, 0.5)',
+              borderColor: '#f59e0b',
+              borderWidth: 2,
+              borderRadius: 8
+            },
+            {
+              label: 'Desv. sin outliers',
+              data: dataOutliersAreas.map(d => d.desvSinOutliers),
+              backgroundColor: 'rgba(59, 130, 246, 0.5)',
+              borderColor: '#3b82f6',
+              borderWidth: 2,
+              borderRadius: 8
+            }
+          ]
+        },
+        options: {
+          ...commonOptions,
+          plugins: {
+            ...commonOptions.plugins,
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'top',
+              formatter: (value) => value.toFixed(1),
+              font: { size: 10, weight: 'bold' },
+              color: '#374151'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0, 0, 0, 0.05)' },
+              ticks: { 
+                font: { size: 12 },
+                callback: function(value) {
+                  return Math.round(value);
+                }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 11, weight: 'bold' } }
+            }
           }
         }
       });

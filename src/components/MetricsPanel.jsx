@@ -1,5 +1,6 @@
 import React from 'react';
-import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev } from '../utils/calculations';
+import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, findOutliers, mean, stdDev, getMetricsComparison } from '../utils/calculations';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 
 export default function MetricsPanel({ data }) {
   // Calcular datos completos (todos los estudiantes)
@@ -22,6 +23,9 @@ export default function MetricsPanel({ data }) {
   const top3ByGrade = getTop3ByGrade(data);
   
   const subjects = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
+  
+  // Métricas con/sin outliers
+  const metricsComparison = getMetricsComparison(data);
   
   // Colores por área
   const areaColors = {
@@ -336,7 +340,7 @@ export default function MetricsPanel({ data }) {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-2xl font-bold mb-2">Valores atípicos (outliers)</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Estudiantes cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio
+          Estudiantes sin PIAR cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio de la muestra sin PIAR
         </p>
         
         {outliers.length > 0 ? (
@@ -347,14 +351,14 @@ export default function MetricsPanel({ data }) {
                 <p className="text-sm text-gray-600 mb-1">Total de valores atípicos</p>
                 <p className="text-3xl font-bold text-yellow-600">{outliers.length}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {((outliers.length / data.length) * 100).toFixed(1)}% del total
+                  {((outliers.length / dataSinPIAR.length) * 100).toFixed(1)}% de estudiantes sin PIAR
                 </p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg border-2 border-green-300">
                 <p className="text-sm text-gray-600 mb-1">Rendimiento sobresaliente</p>
                 <p className="text-3xl font-bold text-green-600">
                   {outliers.filter(s => {
-                    const globals = data.map(st => st.Global);
+                    const globals = dataSinPIAR.map(st => st.Global);
                     const avg = mean(globals);
                     const sd = stdDev(globals);
                     return (s.Global - avg) / sd > 0;
@@ -366,7 +370,7 @@ export default function MetricsPanel({ data }) {
                 <p className="text-sm text-gray-600 mb-1">Bajo rendimiento</p>
                 <p className="text-3xl font-bold text-red-600">
                   {outliers.filter(s => {
-                    const globals = data.map(st => st.Global);
+                    const globals = dataSinPIAR.map(st => st.Global);
                     const avg = mean(globals);
                     const sd = stdDev(globals);
                     return (s.Global - avg) / sd < 0;
@@ -391,7 +395,7 @@ export default function MetricsPanel({ data }) {
                 </thead>
                 <tbody>
                   {outliers.map((student, index) => {
-                    const globals = data.map(s => s.Global);
+                    const globals = dataSinPIAR.map(s => s.Global);
                     const avg = mean(globals);
                     const sd = stdDev(globals);
                     const z = (student.Global - avg) / sd;
@@ -428,6 +432,203 @@ export default function MetricsPanel({ data }) {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Comparación de métricas con/sin outliers */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-2xl font-bold mb-2">Comparación de métricas con/sin valores atípicos (sin PIAR)</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Análisis del impacto de los valores atípicos en las estadísticas de la muestra sin PIAR (globales y por área)
+        </p>
+
+        {/* Métricas globales */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold mb-4 text-blue-700">Promedio y desviación estándar global</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300">
+              <p className="text-sm text-gray-600 mb-2 font-semibold">Sin PIAR (con outliers)</p>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Promedio:</span>
+                  <span className="text-2xl font-bold text-gray-700">
+                    {metricsComparison.global.conOutliers.promedio.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Desviación estándar:</span>
+                  <span className="text-xl font-bold text-gray-600">
+                    {metricsComparison.global.conOutliers.desviacion.toFixed(2)}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  {metricsComparison.global.conOutliers.cantidad} estudiantes
+                </div>
+              </div>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg border-4 border-green-500 shadow-lg">
+              <p className="text-sm text-green-800 mb-2 font-bold">Sin PIAR (sin outliers)</p>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-green-700">Promedio:</span>
+                  <span className="text-2xl font-bold text-green-700">
+                    {metricsComparison.global.sinOutliers.promedio.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-green-700">Desviación estándar:</span>
+                  <span className="text-xl font-bold text-green-600">
+                    {metricsComparison.global.sinOutliers.desviacion.toFixed(2)}
+                  </span>
+                </div>
+                <div className="text-xs text-green-700 mt-2 font-medium">
+                  {metricsComparison.global.sinOutliers.cantidad} estudiantes
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Métricas por área */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold mb-4 text-purple-700">Promedio y desviación estándar por área</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="p-2 text-left" rowSpan="2">Área</th>
+                  <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Promedio</th>
+                  <th className="p-2 text-center border-l-2 border-gray-300" colSpan="2">Desviación estándar</th>
+                </tr>
+                <tr className="bg-gray-50">
+                  <th className="p-2 text-right text-xs border-l-2 border-gray-300 text-gray-500">sin PIAR</th>
+                  <th className="p-2 text-right text-xs text-green-700 font-bold">sin PIAR y outliers</th>
+                  <th className="p-2 text-right text-xs border-l-2 border-gray-300 text-gray-500">sin PIAR</th>
+                  <th className="p-2 text-right text-xs text-green-700 font-bold">sin PIAR y outliers</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metricsComparison.areas.map((metric, index) => {
+                  const colors = areaColors[metric.area] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-300', light: 'bg-gray-100' };
+                  return (
+                    <tr key={index} className={`border-b hover:${colors.light} transition-colors`}>
+                      <td className={`p-3 font-semibold ${colors.text}`}>{metric.area}</td>
+                      <td className="p-3 text-right border-l-2 border-gray-200 bg-gray-50 text-gray-500">
+                        {metric.conOutliers.promedio.toFixed(2)}
+                      </td>
+                      <td className={`p-3 text-right ${colors.light} ${colors.text} font-bold border-2 ${colors.border}`}>
+                        {metric.sinOutliers.promedio.toFixed(2)}
+                      </td>
+                      <td className="p-3 text-right border-l-2 border-gray-200 bg-gray-50 text-gray-500">
+                        {metric.conOutliers.desviacion.toFixed(2)}
+                      </td>
+                      <td className={`p-3 text-right ${colors.light} ${colors.text} font-bold border-2 ${colors.border}`}>
+                        {metric.sinOutliers.desviacion.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Gráficos de comparación */}
+        <div className="space-y-8">
+          {/* Gráfico 1: Métricas Globales */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 text-indigo-700">Métricas Globales (con/sin outliers)</h3>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={[
+                  {
+                    name: 'Promedio',
+                    'Con outliers': metricsComparison.global.conOutliers.promedio,
+                    'Sin outliers': metricsComparison.global.sinOutliers.promedio
+                  },
+                  {
+                    name: 'Desv. Estándar',
+                    'Con outliers': metricsComparison.global.conOutliers.desviacion,
+                    'Sin outliers': metricsComparison.global.sinOutliers.desviacion
+                  }
+                ]}
+                margin={{ top: 30, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 11 }}
+                  domain={[0, 'auto']}
+                  tickFormatter={(value) => Math.round(value)}
+                />
+                <Tooltip 
+                  formatter={(value) => value.toFixed(2)}
+                  contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '2px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '10px' }}
+                  iconType="square"
+                />
+                <Bar dataKey="Con outliers" fill="#9ca3af" radius={[8, 8, 0, 0]}>
+                  <LabelList dataKey="Con outliers" position="top" style={{ fontSize: '11px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(2)} />
+                </Bar>
+                <Bar dataKey="Sin outliers" fill="#10b981" radius={[8, 8, 0, 0]}>
+                  <LabelList dataKey="Sin outliers" position="top" style={{ fontSize: '11px', fontWeight: 'bold', fill: '#059669' }} formatter={(value) => value.toFixed(2)} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Gráfico 2: Métricas por Área */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 text-orange-700">Métricas por Área (con/sin outliers)</h3>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={metricsComparison.areas.map(area => ({
+                  name: area.area.replace(' crítica', ''),
+                  'Prom. con outliers': area.conOutliers.promedio,
+                  'Prom. sin outliers': area.sinOutliers.promedio,
+                  'Desv. con outliers': area.conOutliers.desviacion,
+                  'Desv. sin outliers': area.sinOutliers.desviacion
+                }))}
+                margin={{ top: 30, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 11 }}
+                  domain={[0, 'auto']}
+                  tickFormatter={(value) => Math.round(value)}
+                />
+                <Tooltip 
+                  formatter={(value) => value.toFixed(2)}
+                  contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '2px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '10px' }}
+                  iconType="square"
+                />
+                <Bar dataKey="Prom. con outliers" fill="#9ca3af" radius={[8, 8, 0, 0]}>
+                  <LabelList dataKey="Prom. con outliers" position="top" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(value) => value.toFixed(1)} />
+                </Bar>
+                <Bar dataKey="Prom. sin outliers" fill="#10b981" radius={[8, 8, 0, 0]}>
+                  <LabelList dataKey="Prom. sin outliers" position="top" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#059669' }} formatter={(value) => value.toFixed(1)} />
+                </Bar>
+                <Bar dataKey="Desv. con outliers" fill="#f59e0b" radius={[8, 8, 0, 0]}>
+                  <LabelList dataKey="Desv. con outliers" position="top" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#d97706' }} formatter={(value) => value.toFixed(1)} />
+                </Bar>
+                <Bar dataKey="Desv. sin outliers" fill="#3b82f6" radius={[8, 8, 0, 0]}>
+                  <LabelList dataKey="Desv. sin outliers" position="top" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#2563eb' }} formatter={(value) => value.toFixed(1)} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
     </div>
   );

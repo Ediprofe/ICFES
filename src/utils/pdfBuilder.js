@@ -1,9 +1,9 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, getGradeAverages, findOutliers, mean, stdDev, zScore } from './calculations';
+import { calculateAreaMetrics, getTop5BySubject, getTop3ByGrade, getMetricsByGrade, getGradeAverages, findOutliers, mean, stdDev, zScore, getMetricsComparison } from './calculations';
 
 // Función auxiliar para dibujar gráfico de barras en el PDF
-const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, showComparison = true, useDynamicScale = false) => {
+const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, showComparison = true, useDynamicScale = false, isOutlierComparison = false) => {
   const barWidth = width / (data.length * (showComparison ? 2.5 : 1.5));
   const chartHeight = height - 35; // Dejar espacio para título y ejes
   const barSpacing = barWidth * 0.3;
@@ -113,17 +113,31 @@ const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, sho
     const legendY = y + chartHeight + 15;
     doc.setFontSize(8);
     
-    // Con PIAR
-    doc.setFillColor(156, 163, 175);
-    doc.rect(x + width / 2 - 35, legendY - 2, 4, 4, 'F');
-    doc.setTextColor(100);
-    doc.text('Con PIAR', x + width / 2 - 28, legendY + 1);
-    
-    // Sin PIAR
-    doc.setFillColor(34, 197, 94);
-    doc.rect(x + width / 2 + 5, legendY - 2, 4, 4, 'F');
-    doc.setTextColor(100);
-    doc.text('Sin PIAR', x + width / 2 + 12, legendY + 1);
+    if (isOutlierComparison) {
+      // Con outliers
+      doc.setFillColor(156, 163, 175);
+      doc.rect(x + width / 2 - 40, legendY - 2, 4, 4, 'F');
+      doc.setTextColor(100);
+      doc.text('Con outliers', x + width / 2 - 33, legendY + 1);
+      
+      // Sin outliers
+      doc.setFillColor(34, 197, 94);
+      doc.rect(x + width / 2 + 5, legendY - 2, 4, 4, 'F');
+      doc.setTextColor(100);
+      doc.text('Sin outliers', x + width / 2 + 12, legendY + 1);
+    } else {
+      // Con PIAR
+      doc.setFillColor(156, 163, 175);
+      doc.rect(x + width / 2 - 35, legendY - 2, 4, 4, 'F');
+      doc.setTextColor(100);
+      doc.text('Con PIAR', x + width / 2 - 28, legendY + 1);
+      
+      // Sin PIAR
+      doc.setFillColor(34, 197, 94);
+      doc.rect(x + width / 2 + 5, legendY - 2, 4, 4, 'F');
+      doc.setTextColor(100);
+      doc.text('Sin PIAR', x + width / 2 + 12, legendY + 1);
+    }
   }
   
   doc.setTextColor(0);
@@ -1013,88 +1027,6 @@ export const generatePDF = (data) => {
     chartCount++;
   });
   
-  // PÁGINA: Valores Atípicos (Outliers)
-  addNewPage();
-  
-  // Encabezado de sección
-  doc.setFillColor(37, 99, 235);
-  doc.rect(0, 0, pageWidth, 20, 'F');
-  doc.setTextColor(255);
-  doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
-  doc.text('8. Valores atípicos', 14, 13);
-  doc.setTextColor(0);
-  doc.setFont(undefined, 'normal');
-  
-  yPos = 30;
-  doc.setFontSize(11);
-  doc.setTextColor(60);
-  doc.text('Estudiantes cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ) del promedio,', 14, yPos);
-  doc.text('ya sea por encima (rendimiento sobresaliente) o por debajo (bajo rendimiento).', 14, yPos + 5);
-  doc.setTextColor(0);
-  
-  const outliers = findOutliers(data);
-  if (outliers.length > 0) {
-    const globals = data.map(s => s.Global);
-    const avg = mean(globals);
-    const sd = stdDev(globals);
-    
-    // Separar en sobresalientes y bajo rendimiento
-    const sobresalientes = outliers.filter(s => zScore(s.Global, avg, sd) > 0);
-    const bajoRendimiento = outliers.filter(s => zScore(s.Global, avg, sd) < 0);
-    
-    yPos += 10;
-    
-    // Tabla de valores atípicos
-    doc.autoTable({
-      startY: yPos,
-      head: [['Nombre', 'Apellido', 'Grupo', 'Puntaje global', 'Z-Score', 'Categoría']],
-      body: outliers.map(s => {
-        const z = zScore(s.Global, avg, sd);
-        return [
-          s.Nombre,
-          s.Apellido,
-          s.Grupo,
-          s.Global.toFixed(2),
-          z.toFixed(2),
-          z > 0 ? 'Sobresaliente ↑' : 'Bajo rendimiento ↓'
-        ];
-      }),
-      theme: 'striped',
-      headStyles: { fillColor: [234, 179, 8], fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [254, 252, 232] },
-      columnStyles: {
-        3: { halign: 'center', fontStyle: 'bold' },
-        4: { halign: 'center', fontStyle: 'bold' },
-        5: { halign: 'center', fontSize: 9 }
-      },
-      margin: { bottom: 25 },
-      didDrawPage: (data) => {
-        if (data.pageNumber > pageNumber) {
-          pageNumber = data.pageNumber;
-          addFooter();
-        }
-      }
-    });
-    
-    // Resumen estadístico
-    yPos = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text('Resumen:', 14, yPos);
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(10);
-    doc.text(`• Total de valores atípicos: ${outliers.length} (${((outliers.length / data.length) * 100).toFixed(1)}% del total)`, 14, yPos + 7);
-    doc.text(`• Rendimiento sobresaliente: ${sobresalientes.length} estudiante${sobresalientes.length !== 1 ? 's' : ''}`, 14, yPos + 14);
-    doc.text(`• Bajo rendimiento: ${bajoRendimiento.length} estudiante${bajoRendimiento.length !== 1 ? 's' : ''}`, 14, yPos + 21);
-  } else {
-    doc.setFontSize(12);
-    doc.text('✓ No se encontraron valores atípicos', 14, yPos + 15);
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text('Todos los estudiantes se encuentran dentro del rango normal (±3σ)', 14, yPos + 25);
-  }
-  
   // NUEVA SECCIÓN: Gráficos de barras por área
   addNewPage();
   
@@ -1104,7 +1036,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('9. Gráficos comparativos por área', 14, 13);
+  doc.text('8. Gráficos comparativos por área', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -1209,7 +1141,7 @@ export const generatePDF = (data) => {
   doc.setTextColor(255);
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  doc.text('10. Gráficos comparativos por grado', 14, 13);
+  doc.text('9. Gráficos comparativos por grado', 14, 13);
   doc.setTextColor(0);
   doc.setFont(undefined, 'normal');
   
@@ -1245,12 +1177,145 @@ export const generatePDF = (data) => {
     doc.setTextColor(255);
       doc.setFontSize(16);
       doc.setFont(undefined, 'bold');
-      doc.text('10. Gráficos comparativos por grado (continuación)', 14, 13);
+      doc.text('9. Gráficos comparativos por grado (continuación)', 14, 13);
       doc.setTextColor(0);
       doc.setFont(undefined, 'normal');    yPos = 28;
   }
   
   drawBarChart(doc, chartDataDesviacionByGrade, 20, yPos, pageWidth - 40, 70, 'Desviación estándar por grado', 30, true, true);
+  
+  // PÁGINA: Valores Atípicos (Outliers) - MOVIDO AL FINAL
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('10. Valores atípicos', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  yPos = 30;
+  doc.setFontSize(11);
+  doc.setTextColor(60);
+  doc.text('Estudiantes sin PIAR cuyo puntaje global se encuentra a más de 3 desviaciones estándar (±3σ)', 14, yPos);
+  doc.text('del promedio de la muestra sin PIAR, ya sea por encima (sobresaliente) o por debajo (bajo rendimiento).', 14, yPos + 5);
+  doc.setTextColor(0);
+  
+  const outliers = findOutliers(data);
+  if (outliers.length > 0) {
+    const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
+    const globals = dataSinPIAR.map(s => s.Global);
+    const avg = mean(globals);
+    const sd = stdDev(globals);
+    
+    // Separar en sobresalientes y bajo rendimiento
+    const sobresalientes = outliers.filter(s => zScore(s.Global, avg, sd) > 0);
+    const bajoRendimiento = outliers.filter(s => zScore(s.Global, avg, sd) < 0);
+    
+    yPos += 10;
+    
+    // Tabla de valores atípicos
+    doc.autoTable({
+      startY: yPos,
+      head: [['Nombre', 'Apellido', 'Grupo', 'Puntaje global', 'Z-Score', 'Categoría']],
+      body: outliers.map(s => {
+        const z = zScore(s.Global, avg, sd);
+        return [
+          s.Nombre,
+          s.Apellido,
+          s.Grupo,
+          s.Global.toFixed(2),
+          z.toFixed(2),
+          z > 0 ? 'Sobresaliente ↑' : 'Bajo rendimiento ↓'
+        ];
+      }),
+      theme: 'striped',
+      headStyles: { fillColor: [234, 179, 8], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [254, 252, 232] },
+      columnStyles: {
+        3: { halign: 'center', fontStyle: 'bold' },
+        4: { halign: 'center', fontStyle: 'bold' },
+        5: { halign: 'center', fontSize: 9 }
+      },
+      margin: { bottom: 25 },
+      didDrawPage: (data) => {
+        if (data.pageNumber > pageNumber) {
+          pageNumber = data.pageNumber;
+          addFooter();
+        }
+      }
+    });
+    
+    // Resumen estadístico
+    yPos = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text('Resumen:', 14, yPos);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    const dataSinPIARCount = dataSinPIAR.length;
+    doc.text(`• Total de valores atípicos: ${outliers.length} (${((outliers.length / dataSinPIARCount) * 100).toFixed(1)}% de estudiantes sin PIAR)`, 14, yPos + 7);
+    doc.text(`• Rendimiento sobresaliente: ${sobresalientes.length} estudiante${sobresalientes.length !== 1 ? 's' : ''}`, 14, yPos + 14);
+    doc.text(`• Bajo rendimiento: ${bajoRendimiento.length} estudiante${bajoRendimiento.length !== 1 ? 's' : ''}`, 14, yPos + 21);
+  } else {
+    doc.setFontSize(12);
+    doc.text('✓ No se encontraron valores atípicos', 14, yPos + 15);
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text('Todos los estudiantes se encuentran dentro del rango normal (±3σ)', 14, yPos + 25);
+  }
+  
+  // NUEVA SECCIÓN: Comparación con/sin outliers
+  addNewPage();
+  
+  // Encabezado de sección
+  doc.setFillColor(99, 102, 241); // Color índigo
+  doc.rect(0, 0, pageWidth, 20, 'F');
+  doc.setTextColor(255);
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.text('10.1. Comparación de métricas con/sin valores atípicos', 14, 13);
+  doc.setTextColor(0);
+  doc.setFont(undefined, 'normal');
+  
+  yPos = 28;
+  doc.setFontSize(10);
+  doc.setTextColor(60);
+  doc.text('Análisis del impacto de los valores atípicos en las estadísticas de la muestra sin PIAR', 14, yPos);
+  doc.setTextColor(0);
+  
+  // Obtener métricas de comparación
+  const metricsComparison = getMetricsComparison(data);
+  
+  // Gráfico 1: Métricas Globales (Promedio y Desviación)
+  const chartDataGlobal = [
+    {
+      area: 'Promedio',
+      conPIAR: metricsComparison.global.conOutliers.promedio,
+      sinPIAR: metricsComparison.global.sinOutliers.promedio
+    },
+    {
+      area: 'Desv. Est.',
+      conPIAR: metricsComparison.global.conOutliers.desviacion,
+      sinPIAR: metricsComparison.global.sinOutliers.desviacion
+    }
+  ];
+  
+  yPos += 8;
+  drawBarChart(doc, chartDataGlobal, 20, yPos, pageWidth - 40, 60, 'Métricas Globales (con/sin outliers)', null, true, true, true);
+  
+  // Gráfico 2: Métricas por Área (solo áreas, sin global)
+  const chartDataAreas = metricsComparison.areas.map(area => ({
+    area: area.area.replace(' crítica', ''),
+    conPIAR: area.conOutliers.promedio,
+    sinPIAR: area.sinOutliers.promedio
+  }));
+  
+  yPos += 85;
+  drawBarChart(doc, chartDataAreas, 20, yPos, pageWidth - 40, 60, 'Promedios por Área (con/sin outliers)', null, true, true, true);
   
   // Generar nombre de archivo con fecha
   const fechaArchivo = new Date().toISOString().split('T')[0];
