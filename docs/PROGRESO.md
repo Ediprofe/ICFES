@@ -132,23 +132,32 @@
 
 ---
 
+### Sprint 6: Componentes UI Refactorizados (Completado - 14 Oct 2025)
+
+- [x] **6.1** Crear componentes auxiliares ✅
+  - LoadingSpinner.jsx: Indicador de carga
+  - ExportButtons.jsx: Botones PDF y HTML conectados a generators
+  - DataPreview.jsx: Vista previa con métricas
+  - FileUploaderNew.jsx: Carga con drag & drop y Zustand
+  
+- [x] **6.2** Refactorizar App.jsx ✅
+  - AppNew.jsx: Versión simplificada con Zustand
+  - ErrorBoundary integrado
+  - Header y Footer con branding
+  - Estructura modular y limpia
+  - App.jsx original mantenido para compatibilidad
+
+**Commit:** `9595ae9` - "feat: Sprint 6 - Componentes UI Refactorizados completado"
+
+---
+
 ## 🚧 EN PROGRESO
 
-Ninguno - Listo para Sprint 6
+Ninguno - Listo para Sprint 7 (Final)
 
 ---
 
 ## ⏳ PENDIENTE
-
-### Sprint 6: Componentes UI Refactorizados (Estimado: 1 semana)
-- [ ] 6.1 Refactorizar App.jsx
-- [ ] 6.2 Crear FileUploader.jsx (simplificado)
-- [ ] 6.3 Crear nuevos componentes:
-  - DataPreview.jsx
-  - YearSelector.jsx
-  - ComparisonYearSelector.jsx
-  - ExportButtons.jsx
-  - LoadingSpinner.jsx
 
 ### Sprint 7: Testing y Optimización (Estimado: 1 semana)
 - [ ] 7.1 Tests unitarios para calculations/
