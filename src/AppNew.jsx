@@ -5,9 +5,9 @@
 
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { FileUploaderNew } from './components/FileUploaderNew.jsx';
+import { ComparisonYearUploader } from './components/ComparisonYearUploader.jsx';
 import { DataPreview } from './components/DataPreview.jsx';
 import { ExportButtons } from './components/ExportButtons.jsx';
-import { LoadingSpinner } from './components/LoadingSpinner.jsx';
 import { useHasData, useComparisonMode } from './stores/analysisStore.js';
 import { Youtube, Music2, Globe } from 'lucide-react';
 import { BRANDING } from './config/visualConfig.js';
@@ -55,18 +55,12 @@ function AppContent() {
         ) : (
           // Vista con datos cargados
           <>
+            <DataPreview />
+            
             {comparisonMode && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-blue-800 font-medium">
-                  📊 Modo Comparativo Activado
-                </p>
-                <p className="text-blue-700 text-sm mt-1">
-                  Puedes cargar datos de años adicionales para análisis comparativo
-                </p>
-              </div>
+              <ComparisonYearUploader />
             )}
             
-            <DataPreview />
             <ExportButtons />
             
             {/* TODO: Agregar más componentes aquí */}

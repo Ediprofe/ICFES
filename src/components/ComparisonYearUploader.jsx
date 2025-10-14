@@ -1,25 +1,24 @@
 /**
- * ✅ Componente: File Uploader (Nuevo - Simplificado)
- * Carga de archivos Excel con Zustand
+ * ✅ Componente: Cargador de Años para Comparación
+ * Permite cargar archivos adicionales para análisis multi-año
  */
 
 import { useState } from 'react';
-import { Upload, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle, X } from 'lucide-react';
 import { useAnalysisStore } from '../stores/analysisStore.js';
 import { LoadingSpinner } from './LoadingSpinner.jsx';
 
-export const FileUploaderNew = () => {
+export const ComparisonYearUploader = () => {
   const [dragActive, setDragActive] = useState(false);
-  const [showComparisonDialog, setShowComparisonDialog] = useState(false);
   const [showYearDialog, setShowYearDialog] = useState(false);
   const [pendingFile, setPendingFile] = useState(null);
   const [yearLabel, setYearLabel] = useState('');
   
   const loading = useAnalysisStore((state) => state.loading);
   const error = useAnalysisStore((state) => state.error);
-  const loadBaseYear = useAnalysisStore((state) => state.loadBaseYear);
-  const enableComparisonMode = useAnalysisStore((state) => state.enableComparisonMode);
+  const loadComparisonYear = useAnalysisStore((state) => state.loadComparisonYear);
   const clearError = useAnalysisStore((state) => state.clearError);
+  const availableYears = useAnalysisStore((state) => state.getAvailableYears());
   
   const handleDrag = (e) => {
     e.preventDefault();
@@ -49,7 +48,6 @@ export const FileUploaderNew = () => {
   };
   
   const handleFile = (file) => {
-    // Validar tipo de archivo
     const validTypes = [
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -60,15 +58,14 @@ export const FileUploaderNew = () => {
       return;
     }
     
-    // Guardar archivo y mostrar diálogo para etiqueta de año
     setPendingFile(file);
     
-    // Intentar extraer año del nombre del archivo (ej: SJ2024.xlsx -> 2024)
+    // Intentar extraer año del nombre del archivo
     const yearMatch = file.name.match(/(\d{4})/);
     if (yearMatch) {
       setYearLabel(yearMatch[1]);
     } else {
-      setYearLabel(new Date().getFullYear().toString());
+      setYearLabel('');
     }
     
     setShowYearDialog(true);
@@ -86,37 +83,36 @@ export const FileUploaderNew = () => {
       return;
     }
     
+    // Verificar que no esté ya cargado
+    if (availableYears.includes(year)) {
+      alert(`El año ${year} ya está cargado. Por favor, selecciona otro año.`);
+      return;
+    }
+    
     setShowYearDialog(false);
     clearError();
     
-    const result = await loadBaseYear(pendingFile, year);
+    const result = await loadComparisonYear(pendingFile, year);
     
     if (result.success) {
       setPendingFile(null);
       setYearLabel('');
-      // Mostrar diálogo para preguntar si quiere análisis comparativo
-      setShowComparisonDialog(true);
     }
   };
   
   if (loading) {
-    return <LoadingSpinner message="Procesando archivo Excel..." />;
+    return <LoadingSpinner message="Cargando año adicional..." />;
   }
   
   return (
     <>
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Cargar Datos ICFES
-          </h2>
-          <p className="text-gray-600">
-            Arrastra tu archivo Excel o haz clic para seleccionarlo
-          </p>
-        </div>
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">
+          Cargar Año Adicional para Comparación
+        </h3>
         
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
             <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="flex-1">
               <p className="text-red-800 font-medium">Error al cargar el archivo</p>
@@ -133,10 +129,10 @@ export const FileUploaderNew = () => {
           onSubmit={(e) => e.preventDefault()}
         >
           <label
-            htmlFor="file-upload"
+            htmlFor="comparison-file-upload"
             className={`
               relative flex flex-col items-center justify-center
-              w-full h-64 border-2 border-dashed rounded-lg
+              w-full h-48 border-2 border-dashed rounded-lg
               cursor-pointer transition-all
               ${dragActive 
                 ? 'border-blue-500 bg-blue-50' 
@@ -146,20 +142,20 @@ export const FileUploaderNew = () => {
           >
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
               {dragActive ? (
-                <Upload className="w-16 h-16 text-blue-500 mb-4" />
+                <Upload className="w-12 h-12 text-blue-500 mb-3" />
               ) : (
-                <FileSpreadsheet className="w-16 h-16 text-gray-400 mb-4" />
+                <FileSpreadsheet className="w-12 h-12 text-gray-400 mb-3" />
               )}
               
-              <p className="mb-2 text-lg font-semibold text-gray-700">
-                {dragActive ? 'Suelta el archivo aquí' : 'Haz clic o arrastra el archivo'}
+              <p className="mb-2 text-base font-semibold text-gray-700">
+                {dragActive ? 'Suelta el archivo aquí' : 'Cargar otro año'}
               </p>
               <p className="text-sm text-gray-500">
                 Archivo Excel (.xlsx o .xls)
               </p>
             </div>
             <input
-              id="file-upload"
+              id="comparison-file-upload"
               type="file"
               className="hidden"
               accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -168,32 +164,40 @@ export const FileUploaderNew = () => {
           </label>
         </form>
         
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>📋 Formato requerido:</strong> El archivo debe contener las columnas:
-            ¿PIAR?, Grupo, Nombre, Apellido, Lectura crítica, Matemáticas, Sociales, Naturales, Inglés, Global
-          </p>
-          <p className="text-sm text-blue-700 mt-2">
-            💡 <strong>Nota:</strong> Se te pedirá que etiquetes el año del archivo al cargarlo (ej: 2024, 2025).
-          </p>
-        </div>
+        <p className="mt-4 text-sm text-gray-600">
+          📊 Años cargados: <strong>{availableYears.join(', ')}</strong>
+        </p>
       </div>
       
       {/* Diálogo de etiqueta de año */}
       {showYearDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              📅 Etiqueta de Año
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">
+                📅 Etiqueta de Año
+              </h3>
+              <button
+                onClick={() => {
+                  setShowYearDialog(false);
+                  setPendingFile(null);
+                  setYearLabel('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
             <p className="text-gray-600 mb-4">
-              Por favor, ingresa el año correspondiente a estos datos:
+              Ingresa el año correspondiente a estos datos:
             </p>
+            
             <input
               type="number"
               value={yearLabel}
               onChange={(e) => setYearLabel(e.target.value)}
-              placeholder="Ej: 2024"
+              placeholder="Ej: 2023"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold text-center"
               min="1900"
               max="2100"
@@ -204,9 +208,15 @@ export const FileUploaderNew = () => {
                 }
               }}
             />
+            
             <p className="text-sm text-gray-500 mt-2">
               Archivo: <strong>{pendingFile?.name}</strong>
             </p>
+            
+            <p className="text-xs text-gray-500 mt-2">
+              Años ya cargados: {availableYears.join(', ')}
+            </p>
+            
             <div className="flex gap-4 mt-6">
               <button
                 onClick={handleConfirmYear}
@@ -223,37 +233,6 @@ export const FileUploaderNew = () => {
                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
               >
                 Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Diálogo de análisis comparativo */}
-      {showComparisonDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              ¿Análisis Comparativo?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              ¿Deseas cargar datos de años anteriores para realizar un análisis comparativo multi-año?
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  enableComparisonMode();
-                  setShowComparisonDialog(false);
-                }}
-                className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Sí, cargar más años
-              </button>
-              <button
-                onClick={() => setShowComparisonDialog(false)}
-                className="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-              >
-                No, continuar
               </button>
             </div>
           </div>

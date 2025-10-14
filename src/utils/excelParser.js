@@ -12,8 +12,10 @@ import { ACADEMIC_AREAS } from '../config/columnConfig.js';
 
 /**
  * Parsea un archivo Excel y retorna datos validados
+ * @param {File} file - Archivo Excel a parsear
+ * @param {number|string} yearLabel - Etiqueta de año opcional (si el archivo no tiene columna Año)
  */
-export const parseExcel = (file) => {
+export const parseExcel = (file, yearLabel = null) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
@@ -47,8 +49,16 @@ export const parseExcel = (file) => {
           throw error;
         }
         
-        // Extraer año
-        const year = integrityValidation.year || new Date().getFullYear();
+        // Extraer año: prioridad a yearLabel, luego integrityValidation, luego año actual
+        let year;
+        if (yearLabel !== null) {
+          year = parseInt(yearLabel);
+          if (isNaN(year)) {
+            throw new ParseError('La etiqueta de año debe ser un número válido');
+          }
+        } else {
+          year = integrityValidation.year || new Date().getFullYear();
+        }
         
         // Filtrar filas completamente vacías
         const validData = cleanedData.filter(row => 

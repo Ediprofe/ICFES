@@ -56,11 +56,11 @@ const useAnalysisStore = create(
         },
         
         // Actions
-        loadBaseYear: async (file) => {
+        loadBaseYear: async (file, yearLabel = null) => {
           set({ loading: true, error: null });
           
           try {
-            const result = await parseExcel(file);
+            const result = await parseExcel(file, yearLabel);
             const { year, data, warnings } = result;
             
             set((state) => {
@@ -78,11 +78,11 @@ const useAnalysisStore = create(
           }
         },
         
-        loadComparisonYear: async (file) => {
+        loadComparisonYear: async (file, yearLabel = null) => {
           set({ loading: true, error: null });
           
           try {
-            const result = await parseExcel(file);
+            const result = await parseExcel(file, yearLabel);
             const { year, data, warnings } = result;
             
             // Verificar que no sea el año base
