@@ -119,7 +119,7 @@ export function generateInteractiveHTML(data) {
       sinOutliers: metricsComparison.global.sinOutliers.promedio
     },
     {
-      metrica: 'Desv. Estándar',
+      metrica: 'Desv. estándar',
       conOutliers: metricsComparison.global.conOutliers.desviacion,
       sinOutliers: metricsComparison.global.sinOutliers.desviacion
     }
@@ -969,17 +969,17 @@ export function generateInteractiveHTML(data) {
         <p>Esto permite evaluar cómo los outliers afectan las métricas globales y por área.</p>
       </div>
       
-      <!-- Gráfico 1: Métricas Globales -->
+      <!-- Gráfico 1: Métricas globales -->
       <div class="chart-container">
-        <h3>Métricas Globales (con/sin outliers)</h3>
+        <h3>Métricas globales (con/sin outliers)</h3>
         <div class="chart-wrapper">
           <canvas id="chartOutliersGlobal"></canvas>
         </div>
       </div>
       
-      <!-- Gráfico 2: Métricas por Área -->
+      <!-- Gráfico 2: Métricas por área -->
       <div class="chart-container">
-        <h3>Métricas por Área (con/sin outliers)</h3>
+        <h3>Métricas por área (con/sin outliers)</h3>
         <div class="chart-wrapper">
           <canvas id="chartOutliersAreas"></canvas>
         </div>

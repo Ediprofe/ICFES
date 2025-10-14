@@ -536,7 +536,7 @@ export default function MetricsPanel({ data }) {
         <div className="space-y-8">
           {/* Gráfico 1: Métricas Globales */}
           <div>
-            <h3 className="text-xl font-bold mb-4 text-indigo-700">Métricas Globales (con/sin outliers)</h3>
+            <h3 className="text-xl font-bold mb-4 text-indigo-700">Métricas globales (con/sin outliers)</h3>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
                 data={[
@@ -546,7 +546,7 @@ export default function MetricsPanel({ data }) {
                     'Sin outliers': metricsComparison.global.sinOutliers.promedio
                   },
                   {
-                    name: 'Desv. Estándar',
+                    name: 'Desv. estándar',
                     'Con outliers': metricsComparison.global.conOutliers.desviacion,
                     'Sin outliers': metricsComparison.global.sinOutliers.desviacion
                   }
@@ -583,7 +583,7 @@ export default function MetricsPanel({ data }) {
 
           {/* Gráfico 2: Métricas por Área */}
           <div>
-            <h3 className="text-xl font-bold mb-4 text-orange-700">Métricas por Área (con/sin outliers)</h3>
+            <h3 className="text-xl font-bold mb-4 text-orange-700">Métricas por área (con/sin outliers)</h3>
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
                 data={metricsComparison.areas.map(area => ({

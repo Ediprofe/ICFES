@@ -1298,14 +1298,14 @@ export const generatePDF = (data) => {
       sinPIAR: metricsComparison.global.sinOutliers.promedio
     },
     {
-      area: 'Desv. Est.',
+      area: 'Desv. est.',
       conPIAR: metricsComparison.global.conOutliers.desviacion,
       sinPIAR: metricsComparison.global.sinOutliers.desviacion
     }
   ];
   
   yPos += 8;
-  drawBarChart(doc, chartDataGlobal, 20, yPos, pageWidth - 40, 60, 'Métricas Globales (con/sin outliers)', null, true, true, true);
+  drawBarChart(doc, chartDataGlobal, 20, yPos, pageWidth - 40, 60, 'Métricas globales (con/sin outliers)', null, true, true, true);
   
   // Gráfico 2: Métricas por Área (solo áreas, sin global)
   const chartDataAreas = metricsComparison.areas.map(area => ({
@@ -1315,7 +1315,7 @@ export const generatePDF = (data) => {
   }));
   
   yPos += 85;
-  drawBarChart(doc, chartDataAreas, 20, yPos, pageWidth - 40, 60, 'Promedios por Área (con/sin outliers)', null, true, true, true);
+  drawBarChart(doc, chartDataAreas, 20, yPos, pageWidth - 40, 60, 'Promedios por área (con/sin outliers)', null, true, true, true);
   
   // Generar nombre de archivo con fecha
   const fechaArchivo = new Date().toISOString().split('T')[0];
