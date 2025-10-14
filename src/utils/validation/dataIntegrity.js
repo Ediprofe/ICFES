@@ -206,7 +206,7 @@ export const validateConsistentYear = (data) => {
   const years = new Set();
   
   // Verificar si la columna Año existe en los datos
-  const hasYearColumn = data.length > 0 && 'Año' in data[0];
+  const hasYearColumn = data.length > 0 && data[0] && typeof data[0] === 'object' && 'Año' in data[0];
   
   if (!hasYearColumn) {
     // La columna Año no existe - esto es válido, se usará etiqueta manual
