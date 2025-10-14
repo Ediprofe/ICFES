@@ -34,27 +34,40 @@
 
 **Commit:** `f7dbe5c` - "feat: Sprint 1 - Fundamentos completado"
 
+### Sprint 2: Validación y Robustez (Completado - 14 Oct 2025)
+
+- [x] **2.1** Implementar sistema de validación ✅
+  - `schemaValidator.js`: validateExcelStructure, validateRowData, validateExcelComplete
+  - `dataIntegrity.js`: validateGlobalScoreConsistency, validateNoNegativeScores, validatePercentileRange, validatePIARValues, validateNoDuplicateStudents, validateConsistentYear
+  - `multiYearValidator.js`: validateNoDuplicateYear, validateColumnCompatibility, validateYearRange, validateMaxYearsLimit
+  
+- [x] **2.2** Crear sistema de errores ✅
+  - `customErrors.js`: ValidationError, DataIntegrityError, ExportError, ParseError, MultiYearError, CalculationError, ConfigurationError
+  - `ErrorHandler.js`: handle(), formatForUser(), getSuggestions(), log(), fromValidationResult()
+  
+- [x] **2.3** Crear ErrorBoundary component ✅
+  - Captura errores de React
+  - UI elegante con sugerencias
+  - Detalles técnicos en modo desarrollo
+  
+- [x] **2.4** Refactorizar excelParser.js ✅
+  - Usa sistema de validación centralizado
+  - Retorna {year, data, warnings, metadata}
+  - Normaliza PIAR automáticamente
+  - Nueva función getExcelInfo() para preview
+
+**Commit:** `8d2b4fc` - "feat: Sprint 2 - Sistema de validación y robustez completado"
+
 ---
 
 ## 🚧 EN PROGRESO
 
-**Sprint 2: Validación y Robustez**
-- Próxima tarea: Implementar sistema de validación
+**Sprint 3: Preparación de Datos para Gráficos**
+- Próxima tarea: Crear chartDataPreparation.js
 
 ---
 
 ## ⏳ PENDIENTE
-
-### Sprint 2: Validación y Robustez (Estimado: 1 semana)
-- [ ] 2.1 Implementar sistema de validación (validation/)
-  - schemaValidator.js
-  - dataIntegrity.js
-  - multiYearValidator.js
-- [ ] 2.2 Crear sistema de errores (errors/)
-  - customErrors.js
-  - ErrorHandler.js
-- [ ] 2.3 Crear ErrorBoundary component
-- [ ] 2.4 Refactorizar excelParser.js con validaciones
 
 ### Sprint 3: Preparación de Datos para Gráficos (Estimado: 1 semana)
 - [ ] 3.1 Crear chartDataPreparation.js
