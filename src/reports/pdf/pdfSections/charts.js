@@ -4,7 +4,7 @@
 
 import { drawSectionHeader, checkAndAddPage, getPageDimensions } from '../pdfCore.js';
 import { drawBarChart } from '../pdfHelpers.js';
-import { prepareAreaChartData, prepareGradeChartData } from '../../../charts/chartDataPreparation.js';
+import { prepareAreaChartData, prepareGradeChartData } from '../../charts/chartDataPreparation.js';
 
 export const generateCharts = (doc, analysis, sectionNumber) => {
   const { width } = getPageDimensions(doc);

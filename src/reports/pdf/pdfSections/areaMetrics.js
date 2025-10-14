@@ -4,7 +4,7 @@
 
 import { drawSectionHeader } from '../pdfCore.js';
 import { drawTable } from '../pdfHelpers.js';
-import { prepareAreaChartData } from '../../../charts/chartDataPreparation.js';
+import { prepareAreaChartData } from '../../charts/chartDataPreparation.js';
 
 export const generateAreaMetrics = (doc, analysis, sectionNumber) => {
   let y = 20;
