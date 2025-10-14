@@ -104,19 +104,41 @@
 
 ---
 
+### Sprint 5: Implementar HTML Export (Completado - 14 Oct 2025)
+
+- [x] **5.1** Crear htmlCore.js ✅
+  - generateHTMLTemplate(): Template completo con Tailwind y Chart.js
+  - generateSectionHeader(), generateMetricCard(), generateTable()
+  - generateChartContainer(), generateBadge(), generateToggleButton()
+  - Estilos CSS personalizados incluidos
+  
+- [x] **5.2** Crear htmlInteractivity.js ✅
+  - togglePIARComparison(): Toggle comparación en tiempo real
+  - createBarChart(), createLineChart(): Gráficos con Chart.js
+  - initCharts(), updateAllCharts(): Gestión de gráficos
+  - filterTable(), sortTable(), exportTableToCSV(): Utilidades
+  
+- [x] **5.3** Crear secciones HTML (htmlSections/) ✅
+  - coverSection.js: Portada con métricas destacadas
+  - interactiveCharts.js: Gráficos interactivos
+  - studentsTable.js: Tabla con búsqueda
+  
+- [x] **5.4** Crear HTMLReportGenerator.js ✅
+  - generateHTML(): Genera y descarga HTML completo
+  - generateHTMLString(): Para preview
+  - HTML interactivo con Chart.js y Tailwind CSS
+
+**Commit:** `e736c4d` - "feat: Sprint 5 - HTML Export completado"
+
+---
+
 ## 🚧 EN PROGRESO
 
-Ninguno - Listo para Sprint 5
+Ninguno - Listo para Sprint 6
 
 ---
 
 ## ⏳ PENDIENTE
-
-### Sprint 5: Implementar HTML Export (Estimado: 1 semana)
-- [ ] 5.1 Crear htmlCore.js
-- [ ] 5.2 Crear htmlInteractivity.js
-- [ ] 5.3 Crear secciones HTML (htmlSections/)
-- [ ] 5.4 Crear HTMLReportGenerator.js
 
 ### Sprint 6: Componentes UI Refactorizados (Estimado: 1 semana)
 - [ ] 6.1 Refactorizar App.jsx
