@@ -255,3 +255,6 @@ export const getMetricsComparison = (data) => {
     areas: areaMetrics
   };
 };
+
+// Alias para compatibilidad con código antiguo
+export const getMetricsByGrade = calculateGradeMetrics;
