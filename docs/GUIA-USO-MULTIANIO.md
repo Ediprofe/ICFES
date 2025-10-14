@@ -10,7 +10,7 @@ El sistema ICFES Analyzer permite realizar análisis comparativos de múltiples 
 
 ### Columnas Requeridas
 
-Los archivos Excel deben contener las siguientes columnas:
+Los archivos Excel deben contener las siguientes columnas **obligatorias**:
 
 - `¿PIAR?` - Indica si el estudiante tiene PIAR (Sí/No)
 - `Grupo` - Grado del estudiante (ej: 11°1, 11°2)
@@ -20,8 +20,28 @@ Los archivos Excel deben contener las siguientes columnas:
 - `Matemáticas` - Puntaje en Matemáticas
 - `Sociales` - Puntaje en Sociales
 - `Naturales` - Puntaje en Naturales
-- `Inglés` - Puntaje en Inglés
 - `Global` - Puntaje global
+
+### Columnas Opcionales
+
+Estas columnas son opcionales y el sistema las manejará correctamente si están vacías o ausentes:
+
+- `Año` - Año de los datos (si no existe, se usa etiqueta manual)
+- `Inglés` - Puntaje en Inglés (puede estar vacío para algunos estudiantes/años)
+- `Percentil Lectura crítica` - Percentil de Lectura
+- `Percentil Matemáticas` - Percentil de Matemáticas
+- `Percentil Sociales` - Percentil de Sociales
+- `Percentil Naturales` - Percentil de Naturales
+- `Percentil Inglés` - Percentil de Inglés
+- `Componente` - Componente evaluado
+- `Competencia` - Competencia evaluada
+- `% Acierto` - Porcentaje de acierto
+
+**Nota importante sobre Inglés:**
+- Es normal que algunos años tengan datos de Inglés vacíos
+- Esto puede ocurrir especialmente para estudiantes con PIAR
+- El sistema calculará las métricas de Inglés **solo con los estudiantes que tengan datos**
+- Si ningún estudiante tiene datos de Inglés, esa área se omitirá en los análisis
 
 ### Ejemplo de Archivos
 
