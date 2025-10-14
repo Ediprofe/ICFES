@@ -2,6 +2,7 @@
  * ✅ App Debug - Versión simplificada para debugging
  */
 
+import { useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { FileUploaderNew } from './components/FileUploaderNew.jsx';
 import { DataPreview } from './components/DataPreview.jsx';
@@ -10,6 +11,26 @@ import { ExportButtons } from './components/ExportButtons.jsx';
 import { useAnalysisStore } from './stores/analysisStore.js';
 
 function AppDebug() {
+  // Limpiar localStorage corrupto al iniciar
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('icfes-analysis-storage');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Si el formato es viejo o corrupto, limpiar
+        if (!parsed.state || !parsed.state.multiYearAnalysis) {
+          console.log('🧹 Limpiando localStorage corrupto...');
+          localStorage.removeItem('icfes-analysis-storage');
+          window.location.reload();
+        }
+      }
+    } catch {
+      console.log('🧹 Error en localStorage, limpiando...');
+      localStorage.removeItem('icfes-analysis-storage');
+      window.location.reload();
+    }
+  }, []);
+  
   const hasData = useAnalysisStore((state) => state.hasData());
   const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
   const availableYears = useAnalysisStore((state) => state.getAvailableYears());
