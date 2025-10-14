@@ -60,23 +60,21 @@ const useAnalysisStore = create(
           set({ loading: true, error: null });
           
           try {
-            const data = await parseExcel(file);
-            
-            // Extraer año de los datos (asumiendo que todos tienen el mismo año)
-            const year = data[0]?.Año || new Date().getFullYear();
+            const result = await parseExcel(file);
+            const { year, data, warnings } = result;
             
             set((state) => {
               state.multiYearAnalysis.addAnalysis(year, data);
               state.loading = false;
             });
             
-            return { success: true, year };
+            return { success: true, year, warnings };
           } catch (error) {
             set({ 
               loading: false, 
-              error: error.message || 'Error al cargar el archivo' 
+              error: error.userMessage || error.message || 'Error al cargar el archivo' 
             });
-            return { success: false, error: error.message };
+            return { success: false, error: error.userMessage || error.message };
           }
         },
         
@@ -84,8 +82,8 @@ const useAnalysisStore = create(
           set({ loading: true, error: null });
           
           try {
-            const data = await parseExcel(file);
-            const year = data[0]?.Año || new Date().getFullYear();
+            const result = await parseExcel(file);
+            const { year, data, warnings } = result;
             
             // Verificar que no sea el año base
             const baseYear = get().multiYearAnalysis.baseYear;
@@ -99,13 +97,13 @@ const useAnalysisStore = create(
               state.loading = false;
             });
             
-            return { success: true, year };
+            return { success: true, year, warnings };
           } catch (error) {
             set({ 
               loading: false, 
-              error: error.message || 'Error al cargar el archivo de comparación' 
+              error: error.userMessage || error.message || 'Error al cargar el archivo de comparación' 
             });
-            return { success: false, error: error.message };
+            return { success: false, error: error.userMessage || error.message };
           }
         },
         

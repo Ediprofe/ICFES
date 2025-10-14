@@ -4,6 +4,7 @@
  */
 
 import { mean, stdDev } from './basic.js';
+import { findOutliers } from './statistical.js';
 import { ACADEMIC_AREAS } from '../../config/columnConfig.js';
 import { METRIC_LIMITS } from '../../config/metricsConfig.js';
 
@@ -197,8 +198,6 @@ export const getAllTopByGrade = getTop3ByGrade;
 
 // Obtener datos sin outliers (solo de la muestra sin PIAR)
 export const getDataWithoutOutliers = (data) => {
-  const { findOutliers } = require('./statistical.js');
-  
   // Primero filtrar solo estudiantes sin PIAR
   const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
   const outliers = findOutliers(data);
