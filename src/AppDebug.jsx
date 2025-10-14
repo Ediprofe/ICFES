@@ -12,6 +12,8 @@ import { useAnalysisStore } from './stores/analysisStore.js';
 function AppDebug() {
   const hasData = useAnalysisStore((state) => state.hasData());
   const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
+  const availableYears = useAnalysisStore((state) => state.getAvailableYears());
+  const activeAnalysis = useAnalysisStore((state) => state.getActiveAnalysis());
   
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -26,9 +28,12 @@ function AppDebug() {
           <p className="text-sm text-gray-600 mt-2">
             🔄 Paso 3: Probando flujo completo con todos los componentes...
           </p>
-          <p className="text-xs text-gray-500 mt-2">
-            hasData: {hasData ? 'true' : 'false'} | comparisonMode: {comparisonMode ? 'true' : 'false'}
-          </p>
+          <div className="text-xs text-gray-500 mt-2 space-y-1">
+            <p>hasData: <strong>{hasData ? 'true' : 'false'}</strong></p>
+            <p>comparisonMode: <strong>{comparisonMode ? 'true' : 'false'}</strong></p>
+            <p>availableYears: <strong>{JSON.stringify(availableYears)}</strong></p>
+            <p>activeAnalysis: <strong>{activeAnalysis ? `Year ${activeAnalysis.year}` : 'null'}</strong></p>
+          </div>
         </div>
         
         {!hasData ? (

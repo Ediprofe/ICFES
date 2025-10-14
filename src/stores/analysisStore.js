@@ -47,7 +47,20 @@ const useAnalysisStore = create(
         
         hasData: () => {
           const state = get();
-          return state.multiYearAnalysis.getAvailableYears().length > 0;
+          // Verificar si multiYearAnalysis tiene analyses (array o Map)
+          if (!state.multiYearAnalysis) return false;
+          
+          // Si es un objeto rehidratado de localStorage
+          if (state.multiYearAnalysis.analyses && Array.isArray(state.multiYearAnalysis.analyses)) {
+            return state.multiYearAnalysis.analyses.length > 0;
+          }
+          
+          // Si es una instancia de MultiYearAnalysis
+          if (state.multiYearAnalysis.getAvailableYears) {
+            return state.multiYearAnalysis.getAvailableYears().length > 0;
+          }
+          
+          return false;
         },
         
         isYearLoaded: (year) => {
