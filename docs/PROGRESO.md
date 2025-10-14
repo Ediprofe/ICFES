@@ -60,27 +60,57 @@
 
 ---
 
+### Sprint 3: Preparación de Datos para Gráficos (Completado - 14 Oct 2025)
+
+- [x] **3.1** Crear chartDataPreparation.js ✅
+  - `prepareAreaChartData()`: Promedios, desviación, percentiles por área
+  - `prepareGradeChartData()`: Promedios y desviación por grado
+  - `prepareIntegratedGradeAreaData()`: Matriz grado x área
+  - `prepareComparisonChartData()`: Datos multi-año
+  - `prepareTrendChartData()`: Con regresión lineal
+  - `prepareDistributionChartData()`: Distribución de puntajes
+
+**Commit:** `a498586` - "feat: Sprint 3 - Preparación de datos para gráficos completado"
+
+### Sprint 4: Refactorizar PDF (Completado - 14 Oct 2025)
+
+- [x] **4.1** Crear pdfCore.js ✅
+  - initPDF(), getPageDimensions(), addNewPage()
+  - drawSectionHeader(), drawFooter(), checkAndAddPage()
+  - drawWrappedText(), drawSubsectionTitle(), drawHorizontalLine()
+  - drawMetricCard(), setPDFMetadata()
+  
+- [x] **4.2** Crear pdfHelpers.js ✅
+  - drawTable() usando autoTable
+  - drawBarChart() para gráficos de barras
+  - drawLineChart() para tendencias multi-año
+  - drawBadge() para etiquetas
+  
+- [x] **4.3** Crear secciones individuales (pdfSections/) ✅
+  - coverPage.js: Portada con información del análisis
+  - studentsList.js: Listado ordenado de estudiantes
+  - areaMetrics.js: Tabla de métricas por área
+  - charts.js: Gráficos por área y por grado
+  - topPerformers.js: Top 5 por área y Top 3 por grado
+  - outliers.js: Valores atípicos con z-scores
+  
+- [x] **4.4** Crear PDFReportGenerator.js ✅
+  - generatePDF(): Orquestador principal
+  - generatePDFBlob(): Para preview
+  - generatePDFDataURI(): Para iframe
+  - Sistema completamente modular (9 archivos vs 1 monolito de 800+ líneas)
+
+**Commits:** `6caa163`, `1cb75aa` - "feat: Sprint 4 - Refactorización PDF completado"
+
+---
+
 ## 🚧 EN PROGRESO
 
-**Sprint 3: Preparación de Datos para Gráficos**
-- Próxima tarea: Crear chartDataPreparation.js
+Ninguno - Listo para Sprint 5
 
 ---
 
 ## ⏳ PENDIENTE
-
-### Sprint 3: Preparación de Datos para Gráficos (Estimado: 1 semana)
-- [ ] 3.1 Crear chartDataPreparation.js
-  - prepareAreaChartData()
-  - prepareGradeChartData()
-  - prepareIntegratedGradeAreaData()
-  - prepareComparisonChartData()
-
-### Sprint 4: Refactorizar PDF (Estimado: 2 semanas)
-- [ ] 4.1 Crear pdfCore.js
-- [ ] 4.2 Crear pdfHelpers.js
-- [ ] 4.3 Crear secciones individuales (pdfSections/)
-- [ ] 4.4 Crear PDFReportGenerator.js
 
 ### Sprint 5: Implementar HTML Export (Estimado: 1 semana)
 - [ ] 5.1 Crear htmlCore.js

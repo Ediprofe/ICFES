@@ -89,24 +89,6 @@ export const generatePDF = (analysis, options = {}) => {
   };
 };
 
-/**
- * Genera un PDF y lo retorna como Blob (para preview o envío)
- */
-export const generatePDFBlob = (analysis, options = {}) => {
-  const doc = initPDF();
-  
-  // ... (mismo código que generatePDF pero sin save)
-  
-  return doc.output('blob');
-};
-
-/**
- * Genera un PDF y lo retorna como Data URI (para preview en iframe)
- */
-export const generatePDFDataURI = (analysis, options = {}) => {
-  const doc = initPDF();
-  
-  // ... (mismo código que generatePDF pero sin save)
-  
-  return doc.output('datauristring');
-};
+// TODO: Implementar funciones de preview
+// export const generatePDFBlob = (analysis) => { ... };
+// export const generatePDFDataURI = (analysis) => { ... };

@@ -2,7 +2,7 @@
  * ✅ Sección: Listado de Estudiantes
  */
 
-import { drawSectionHeader, checkAndAddPage } from '../pdfCore.js';
+import { drawSectionHeader } from '../pdfCore.js';
 import { drawTable } from '../pdfHelpers.js';
 
 export const generateStudentsList = (doc, analysis, sectionNumber, options = {}) => {
