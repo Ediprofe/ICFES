@@ -19,13 +19,17 @@ function AppDebug() {
     multiYearAnalysis.analyses && 
     (Array.isArray(multiYearAnalysis.analyses) 
       ? multiYearAnalysis.analyses.length > 0 
-      : multiYearAnalysis.analyses.size > 0);
+      : (multiYearAnalysis.analyses instanceof Map 
+          ? multiYearAnalysis.analyses.size > 0
+          : Object.keys(multiYearAnalysis.analyses).length > 0));
   
   // Obtener años disponibles directamente
   const availableYears = multiYearAnalysis?.analyses 
     ? (Array.isArray(multiYearAnalysis.analyses)
         ? multiYearAnalysis.analyses.map(a => a.year)
-        : Array.from(multiYearAnalysis.analyses.keys()))
+        : (multiYearAnalysis.analyses instanceof Map
+            ? Array.from(multiYearAnalysis.analyses.keys())
+            : Object.keys(multiYearAnalysis.analyses).map(Number)))
     : [];
   
   const activeYear = multiYearAnalysis?.baseYear || (availableYears.length > 0 ? availableYears[0] : null);
@@ -45,6 +49,9 @@ function AppDebug() {
             <p>comparisonMode: <strong>{comparisonMode ? 'true' : 'false'}</strong></p>
             <p>availableYears: <strong>{JSON.stringify(availableYears)}</strong></p>
             <p>activeYear: <strong>{activeYear || 'null'}</strong></p>
+            <p>multiYearAnalysis exists: <strong>{multiYearAnalysis ? 'true' : 'false'}</strong></p>
+            <p>analyses type: <strong>{multiYearAnalysis?.analyses ? (Array.isArray(multiYearAnalysis.analyses) ? 'Array' : 'Map/Object') : 'null'}</strong></p>
+            <p>analyses length/size: <strong>{multiYearAnalysis?.analyses ? (Array.isArray(multiYearAnalysis.analyses) ? multiYearAnalysis.analyses.length : 'N/A') : '0'}</strong></p>
           </div>
         </div>
         
