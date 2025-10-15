@@ -29,10 +29,10 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
       doc.text(area.name, 20, y);
       y += 5;
       
-      // Tabla con mejor distribución
+      // Tabla con mejor distribución (usando ranking con empates)
       const columns = ['#', 'Nombre', 'Apellido', 'Puntaje'];
-      const rows = topStudents.map((student, index) => [
-        String(index + 1),
+      const rows = topStudents.map((student) => [
+        String(student.ranking || ''),
         student.nombre,
         student.apellido,
         student.puntaje.toFixed(1)
@@ -67,10 +67,10 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
       doc.text(gradeData.grado, 20, y);
       y += 5;
       
-      // Tabla con mejor distribución
+      // Tabla con mejor distribución (usando ranking con empates)
       const columns = ['#', 'Nombre', 'Apellido', 'Global'];
-      const rows = gradeData.top.map((student, index) => [
-        String(index + 1),
+      const rows = gradeData.top.map((student) => [
+        String(student.ranking || ''),
         student.nombre,
         student.apellido,
         student.global.toFixed(1)

@@ -128,22 +128,49 @@ export const getGradeAverages = (data) => {
   }).sort((a, b) => a.grado.localeCompare(b.grado));
 };
 
-// Top N por área
+// Top N por área (con manejo de empates)
 export const getTopByArea = (data, area, n = METRIC_LIMITS.TOP_PERFORMERS_BY_AREA, excludePIAR = false) => {
   const filtered = excludePIAR 
     ? data.filter(s => s['¿PIAR?'] !== 'Sí') 
     : data;
   
-  return [...filtered]
+  // Ordenar por puntaje descendente
+  const sorted = [...filtered]
     .filter(s => s[area] !== null && s[area] !== undefined && !isNaN(s[area]))
-    .sort((a, b) => b[area] - a[area])
-    .slice(0, n)
-    .map(s => ({ 
-      nombre: s.Nombre, 
-      apellido: s.Apellido,
-      nombreCompleto: `${s.Nombre} ${s.Apellido}`,
-      puntaje: s[area] 
-    }));
+    .sort((a, b) => b[area] - a[area]);
+  
+  // Asignar rankings con empates
+  const result = [];
+  let currentRank = 1;
+  let previousScore = null;
+  let studentsAtCurrentRank = 0;
+  
+  for (let i = 0; i < sorted.length; i++) {
+    const student = sorted[i];
+    const score = student[area];
+    
+    // Si el puntaje cambió, actualizar el ranking
+    if (previousScore !== null && score !== previousScore) {
+      currentRank += studentsAtCurrentRank;
+      studentsAtCurrentRank = 0;
+    }
+    
+    // Si ya tenemos suficientes rankings diferentes, parar
+    if (currentRank > n) break;
+    
+    result.push({
+      nombre: student.Nombre,
+      apellido: student.Apellido,
+      nombreCompleto: `${student.Nombre} ${student.Apellido}`,
+      puntaje: score,
+      ranking: currentRank
+    });
+    
+    previousScore = score;
+    studentsAtCurrentRank++;
+  }
+  
+  return result;
 };
 
 // Top 5 por área (alias para compatibilidad)
@@ -151,25 +178,52 @@ export const getTop5BySubject = (data, subject) => {
   return getTopByArea(data, subject, 5, false);
 };
 
-// Top N por grado
+// Top N por grado (con manejo de empates)
 export const getTopByGrade = (data, grade, n = METRIC_LIMITS.TOP_PERFORMERS_BY_GRADE, excludePIAR = false) => {
   const filtered = excludePIAR 
     ? data.filter(s => s['¿PIAR?'] !== 'Sí') 
     : data;
   
-  return [...filtered]
+  // Ordenar por puntaje global descendente
+  const sorted = [...filtered]
     .filter(s => s.Grupo === grade && s.Global !== null && s.Global !== undefined && !isNaN(s.Global))
-    .sort((a, b) => b.Global - a.Global)
-    .slice(0, n)
-    .map(s => ({ 
-      nombre: s.Nombre,
-      apellido: s.Apellido,
-      nombreCompleto: `${s.Nombre} ${s.Apellido}`,
-      global: s.Global 
-    }));
+    .sort((a, b) => b.Global - a.Global);
+  
+  // Asignar rankings con empates
+  const result = [];
+  let currentRank = 1;
+  let previousScore = null;
+  let studentsAtCurrentRank = 0;
+  
+  for (let i = 0; i < sorted.length; i++) {
+    const student = sorted[i];
+    const score = student.Global;
+    
+    // Si el puntaje cambió, actualizar el ranking
+    if (previousScore !== null && score !== previousScore) {
+      currentRank += studentsAtCurrentRank;
+      studentsAtCurrentRank = 0;
+    }
+    
+    // Si ya tenemos suficientes rankings diferentes, parar
+    if (currentRank > n) break;
+    
+    result.push({
+      nombre: student.Nombre,
+      apellido: student.Apellido,
+      nombreCompleto: `${student.Nombre} ${student.Apellido}`,
+      global: score,
+      ranking: currentRank
+    });
+    
+    previousScore = score;
+    studentsAtCurrentRank++;
+  }
+  
+  return result;
 };
 
-// Top 3 por todos los grados
+// Top 3 por todos los grados (con manejo de empates)
 export const getTop3ByGrade = (data) => {
   const byGrade = data.reduce((acc, student) => {
     const grade = student.Grupo;
@@ -178,19 +232,48 @@ export const getTop3ByGrade = (data) => {
     return acc;
   }, {});
   
-  return Object.entries(byGrade).map(([grade, students]) => ({
-    grado: grade,
-    top: students
+  return Object.entries(byGrade).map(([grade, students]) => {
+    // Ordenar por puntaje global descendente
+    const sorted = students
       .filter(s => s.Global !== null && s.Global !== undefined && !isNaN(s.Global))
-      .sort((a, b) => b.Global - a.Global)
-      .slice(0, 3)
-      .map(s => ({ 
-        nombre: s.Nombre,
-        apellido: s.Apellido,
-        nombreCompleto: `${s.Nombre} ${s.Apellido}`,
-        global: s.Global 
-      }))
-  }));
+      .sort((a, b) => b.Global - a.Global);
+    
+    // Asignar rankings con empates
+    const top = [];
+    let currentRank = 1;
+    let previousScore = null;
+    let studentsAtCurrentRank = 0;
+    
+    for (let i = 0; i < sorted.length; i++) {
+      const student = sorted[i];
+      const score = student.Global;
+      
+      // Si el puntaje cambió, actualizar el ranking
+      if (previousScore !== null && score !== previousScore) {
+        currentRank += studentsAtCurrentRank;
+        studentsAtCurrentRank = 0;
+      }
+      
+      // Si ya tenemos suficientes rankings diferentes, parar
+      if (currentRank > 3) break;
+      
+      top.push({
+        nombre: student.Nombre,
+        apellido: student.Apellido,
+        nombreCompleto: `${student.Nombre} ${student.Apellido}`,
+        global: score,
+        ranking: currentRank
+      });
+      
+      previousScore = score;
+      studentsAtCurrentRank++;
+    }
+    
+    return {
+      grado: grade,
+      top
+    };
+  });
 };
 
 // Alias para compatibilidad
