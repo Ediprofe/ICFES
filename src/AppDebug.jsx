@@ -10,31 +10,25 @@ import { ExportButtons } from './components/ExportButtons.jsx';
 import { useAnalysisStore } from './stores/analysisStore.js';
 
 function AppDebug() {
-  const hasData = useAnalysisStore((state) => {
-    try {
-      return state.hasData();
-    } catch {
-      return false;
-    }
-  });
+  // Acceder directamente al estado sin llamar funciones
+  const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
+  const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
   
-  const comparisonMode = useAnalysisStore((state) => state.comparisonMode || false);
+  // Calcular hasData directamente
+  const hasData = multiYearAnalysis && 
+    multiYearAnalysis.analyses && 
+    (Array.isArray(multiYearAnalysis.analyses) 
+      ? multiYearAnalysis.analyses.length > 0 
+      : multiYearAnalysis.analyses.size > 0);
   
-  const availableYears = useAnalysisStore((state) => {
-    try {
-      return state.getAvailableYears ? state.getAvailableYears() : [];
-    } catch {
-      return [];
-    }
-  });
+  // Obtener años disponibles directamente
+  const availableYears = multiYearAnalysis?.analyses 
+    ? (Array.isArray(multiYearAnalysis.analyses)
+        ? multiYearAnalysis.analyses.map(a => a.year)
+        : Array.from(multiYearAnalysis.analyses.keys()))
+    : [];
   
-  const activeAnalysis = useAnalysisStore((state) => {
-    try {
-      return state.getActiveAnalysis ? state.getActiveAnalysis() : null;
-    } catch {
-      return null;
-    }
-  });
+  const activeYear = multiYearAnalysis?.baseYear || (availableYears.length > 0 ? availableYears[0] : null);
   
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -50,7 +44,7 @@ function AppDebug() {
             <p>hasData: <strong>{hasData ? 'true' : 'false'}</strong></p>
             <p>comparisonMode: <strong>{comparisonMode ? 'true' : 'false'}</strong></p>
             <p>availableYears: <strong>{JSON.stringify(availableYears)}</strong></p>
-            <p>activeAnalysis: <strong>{activeAnalysis ? `Year ${activeAnalysis.year}` : 'null'}</strong></p>
+            <p>activeYear: <strong>{activeYear || 'null'}</strong></p>
           </div>
         </div>
         
