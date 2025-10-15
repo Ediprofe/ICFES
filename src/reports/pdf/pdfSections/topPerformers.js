@@ -11,11 +11,11 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
   let y = 20;
   
   // Encabezado de sección
-  y = drawSectionHeader(doc, 'Mejores Desempeños', sectionNumber, y);
+  y = drawSectionHeader(doc, 'Mejores desempeños', sectionNumber, y);
   y += 5;
   
   // Top 5 por Área
-  y = drawSubsectionTitle(doc, `Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_AREA} por Área Académica`, y);
+  y = drawSubsectionTitle(doc, `Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_AREA} por área académica`, y);
   
   ACADEMIC_AREAS.forEach(area => {
     y = checkAndAddPage(doc, y, 40);
@@ -53,7 +53,7 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
   
   // Nueva página para Top por Grado
   y = checkAndAddPage(doc, y, 100);
-  y = drawSubsectionTitle(doc, `Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_GRADE} por Grado`, y);
+  y = drawSubsectionTitle(doc, `Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_GRADE} por grado`, y);
   
   const topByGrade = analysis.getTopByGrade(METRIC_LIMITS.TOP_PERFORMERS_BY_GRADE);
   

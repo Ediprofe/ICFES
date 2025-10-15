@@ -6,7 +6,7 @@ import { generateSectionHeader, generateChartContainer, generateToggleButton } f
 
 export const generateInteractiveChartsSection = (sectionNumber) => {
   return `
-    ${generateSectionHeader('Gráficos Estadísticos', sectionNumber, '📈')}
+    ${generateSectionHeader('Gráficos estadísticos', sectionNumber, '📈')}
     
     <div class="mb-6 flex gap-4 no-print">
       ${generateToggleButton('togglePIAR', 'Ocultar Comparación PIAR', '🔄')}

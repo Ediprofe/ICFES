@@ -18,7 +18,7 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
   const sd = Math.sqrt(variance);
   
   return `
-    ${generateSectionHeader('Valores Atípicos (Outliers)', sectionNumber, '⚠️')}
+    ${generateSectionHeader('Valores atípicos (outliers)', sectionNumber, '⚠️')}
     
     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
       <div class="flex">
@@ -28,7 +28,7 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-base font-bold text-blue-900 mb-2">¿Qué son los Outliers?</h3>
+          <h3 class="text-base font-bold text-blue-900 mb-2">¿Qué son los outliers?</h3>
           <div class="text-sm text-blue-800">
             <p class="mb-2">Los <strong>outliers</strong> son estudiantes con puntajes que se alejan significativamente del promedio del grupo (±3 desviaciones estándar).</p>
             <ul class="list-disc list-inside space-y-1">
@@ -43,7 +43,7 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
     ${outliers.length > 0 ? `
       <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
         <div class="bg-gradient-to-r from-red-500 to-orange-500 px-6 py-4">
-          <h3 class="text-xl font-bold text-white">Estudiantes Identificados como Outliers</h3>
+          <h3 class="text-xl font-bold text-white">Estudiantes identificados como outliers</h3>
           <p class="text-red-100 text-sm mt-1">Total: ${outliers.length} estudiante${outliers.length > 1 ? 's' : ''}</p>
         </div>
         
@@ -103,7 +103,7 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
             </svg>
           </div>
           <div class="ml-3">
-            <h3 class="text-base font-bold text-indigo-900 mb-2">💡 Recomendaciones Pedagógicas</h3>
+            <h3 class="text-base font-bold text-indigo-900 mb-2">💡 Recomendaciones pedagógicas</h3>
             <div class="text-sm text-indigo-800 space-y-2">
               <p><strong>Para Outliers Superiores:</strong> Considerar programas de enriquecimiento académico, tutorías entre pares, o participación en olimpiadas y competencias.</p>
               <p><strong>Para Outliers Inferiores:</strong> Implementar planes de apoyo personalizados, refuerzo académico, y seguimiento continuo para identificar necesidades específicas.</p>

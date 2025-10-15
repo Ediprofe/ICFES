@@ -28,7 +28,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
   
   return `
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6">
-      <h2 class="text-2xl font-bold">${sectionNumber}. COMPARACION DE METRICAS GLOBALES</h2>
+      <h2 class="text-2xl font-bold">${sectionNumber}. Comparación de métricas globales</h2>
     </div>
     
     <!-- Gráficos de Evolución (uno debajo del otro) -->
@@ -292,7 +292,7 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
   
   return `
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 mt-8">
-      <h2 class="text-2xl font-bold">${sectionNumber}. COMPARACION POR AREAS ACADEMICAS</h2>
+      <h2 class="text-2xl font-bold">${sectionNumber}. Comparación por áreas académicas</h2>
     </div>
     
     ${ACADEMIC_AREAS.map((area, areaIndex) => `
@@ -465,7 +465,7 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
   
   return `
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 mt-8">
-      <h2 class="text-2xl font-bold">${sectionNumber}. LISTADO COMPLETO DE ESTUDIANTES</h2>
+      <h2 class="text-2xl font-bold">${sectionNumber}. Listado completo de estudiantes</h2>
     </div>
     
     <!-- Toggle PIAR Moderno y Filtros -->

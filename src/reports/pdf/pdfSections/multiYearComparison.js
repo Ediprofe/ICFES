@@ -30,7 +30,7 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('1. COMPARACION DE METRICAS GLOBALES', 20, currentY);
+  doc.text('1. Comparación de métricas globales', 20, currentY);
   currentY += 10;
   
   // Ordenar análisis por año
@@ -209,7 +209,7 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text('2. COMPARACION POR AREAS ACADEMICAS', 20, currentY);
+  doc.text('2. Comparación por áreas académicas', 20, currentY);
   currentY += 12;
   
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);

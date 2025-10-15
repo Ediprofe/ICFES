@@ -19,11 +19,11 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
   const topByGrade = analysis.getTopByGrade(METRIC_LIMITS.TOP_PERFORMERS_BY_GRADE);
   
   return `
-    ${generateSectionHeader('Top Performers', sectionNumber, '🏆')}
+    ${generateSectionHeader('Top performers', sectionNumber, '🏆')}
     
-    <!-- Top por Área Académica -->
+    <!-- Top por área académica -->
     <div class="mb-8">
-      <h3 class="text-xl font-bold text-gray-800 mb-4">🎯 Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_AREA} por Área Académica</h3>
+      <h3 class="text-xl font-bold text-gray-800 mb-4">🎯 Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_AREA} por área académica</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         ${topByArea.map(areaData => `
           <div class="bg-white rounded-lg shadow-lg overflow-hidden border-t-4" style="border-color: ${areaData.color}">
@@ -69,9 +69,9 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
       </div>
     </div>
     
-    <!-- Top por Grado -->
+    <!-- Top por grado -->
     <div class="mb-8">
-      <h3 class="text-xl font-bold text-gray-800 mb-4">📚 Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_GRADE} por Grado</h3>
+      <h3 class="text-xl font-bold text-gray-800 mb-4">📚 Top ${METRIC_LIMITS.TOP_PERFORMERS_BY_GRADE} por grado</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         ${topByGrade.map(gradeData => `
           <div class="bg-white rounded-lg shadow-lg overflow-hidden border-t-4 border-indigo-500">

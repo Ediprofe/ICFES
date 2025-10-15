@@ -15,7 +15,7 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
   const grades = [...new Set(sortedData.map(s => s.Grupo))].sort();
   
   return `
-    ${generateSectionHeader('Listado de Estudiantes', sectionNumber, '📋')}
+    ${generateSectionHeader('Listado de estudiantes', sectionNumber, '📋')}
     
     <!-- Toggle PIAR Moderno -->
     <div class="mb-6 no-print flex items-center justify-between">

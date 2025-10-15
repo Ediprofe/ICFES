@@ -10,7 +10,7 @@ export const generateOutliers = (doc, analysis, sectionNumber) => {
   let y = 20;
   
   // Encabezado de sección
-  y = drawSectionHeader(doc, 'Valores Atípicos', sectionNumber, y);
+  y = drawSectionHeader(doc, 'Valores atípicos', sectionNumber, y);
   y += 5;
   
   // Descripción
