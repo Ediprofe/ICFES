@@ -126,7 +126,12 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
                 const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
                 const metricsConPIAR = allMetricsConPIAR.find(m => m.areaId === area.id) || {};
                 
-                const formatValue = (val) => typeof val === 'number' ? val.toFixed(2) : 'N/A';
+                // Convertir a número si es string (por compatibilidad con datos antiguos)
+                const formatValue = (val) => {
+                  if (val === null || val === undefined || val === 'N/A') return 'N/A';
+                  const num = typeof val === 'string' ? parseFloat(val) : val;
+                  return !isNaN(num) ? num.toFixed(2) : 'N/A';
+                };
                 
                 return `
                   <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 transition-colors">

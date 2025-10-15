@@ -159,15 +159,6 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
   
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
-  console.log('🔍 generateAreaComparisonSection - Análisis recibidos:', sortedAnalyses.length);
-  sortedAnalyses.forEach(analysis => {
-    console.log(`  Año ${analysis.year}:`, {
-      hasGetAreaMetrics: typeof analysis.getAreaMetrics === 'function',
-      processedDataLength: analysis.processedData?.length,
-      metadata: analysis.metadata
-    });
-  });
-  
   // Para cada área académica
   ACADEMIC_AREAS.forEach((area) => {
     // Verificar espacio
@@ -188,23 +179,23 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
       const allMetricsSinPIAR = analysis.getAreaMetrics(true); // excludePIAR = true (sin PIAR)
       const allMetricsConPIAR = analysis.getAreaMetrics(false); // excludePIAR = false (con todos)
       
-      console.log(`📊 Año ${analysis.year}, Área ${area.id}:`);
-      console.log('  allMetricsSinPIAR:', allMetricsSinPIAR);
-      console.log('  allMetricsConPIAR:', allMetricsConPIAR);
-      
       // Buscar métricas de esta área específica
       const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
       const metricsConPIAR = allMetricsConPIAR.find(m => m.areaId === area.id) || {};
       
-      console.log('  metricsSinPIAR encontrado:', metricsSinPIAR);
-      console.log('  metricsConPIAR encontrado:', metricsConPIAR);
+      // Convertir a número si es string (por compatibilidad con datos antiguos en localStorage)
+      const formatMetric = (val) => {
+        if (val === null || val === undefined || val === 'N/A') return 'N/A';
+        const num = typeof val === 'string' ? parseFloat(val) : val;
+        return !isNaN(num) ? num.toFixed(2) : 'N/A';
+      };
       
       return [
         analysis.year.toString(),
-        typeof metricsSinPIAR.promedio === 'number' ? metricsSinPIAR.promedio.toFixed(2) : 'N/A',
-        typeof metricsSinPIAR.desviacion === 'number' ? metricsSinPIAR.desviacion.toFixed(2) : 'N/A',
-        typeof metricsSinPIAR.promedio === 'number' ? metricsSinPIAR.promedio.toFixed(2) : 'N/A', // Por ahora usamos el mismo
-        typeof metricsConPIAR.promedio === 'number' ? metricsConPIAR.promedio.toFixed(2) : 'N/A'
+        formatMetric(metricsSinPIAR.promedio),
+        formatMetric(metricsSinPIAR.desviacion),
+        formatMetric(metricsSinPIAR.promedio), // Por ahora usamos el mismo
+        formatMetric(metricsConPIAR.promedio)
       ];
     });
     
