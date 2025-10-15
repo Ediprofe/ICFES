@@ -50,12 +50,21 @@ export const generateHTML = (analysis, options = {}) => {
   
   let sections = [];
   
+  // Preparar allAnalyses si es multi-año
+  const allAnalyses = isMultiYear && comparisonAnalyses.length > 0 
+    ? [analysis, ...comparisonAnalyses] 
+    : [];
+  
   // Portada
-  sections.push(generateCoverSection(analysis, isMultiYear, comparisonAnalyses.map(a => a.year)));
+  sections.push(generateCoverSection(
+    analysis, 
+    isMultiYear, 
+    comparisonAnalyses.map(a => a.year),
+    allAnalyses
+  ));
   
   // Si es multi-año, usar secciones de comparación
   if (isMultiYear && comparisonAnalyses.length > 0) {
-    const allAnalyses = [analysis, ...comparisonAnalyses];
     
     sections.push(generateGlobalComparisonSection(allAnalyses, sectionNumber++));
     sections.push(generateAreaComparisonSection(allAnalyses, sectionNumber++));
