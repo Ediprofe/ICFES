@@ -271,6 +271,48 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
     });
     
     currentY += 5;
+    
+    // Agregar gráfico de evolución para esta área
+    if (currentY > 180) {
+      doc.addPage();
+      currentY = 20;
+    }
+    
+    // Preparar datos para el gráfico de esta área
+    const areaEvolutionData = sortedAnalyses.map(analysis => {
+      const chartData = prepareAreaChartData(analysis, true);
+      const areaData = chartData.promedios.find(item => item.areaId === area.id);
+      
+      return {
+        area: analysis.year.toString(),
+        sinPIAR: areaData ? areaData.sinPIAR : 0,
+        conPIAR: areaData ? areaData.conPIAR : 0
+      };
+    });
+    
+    // Dibujar gráfico de evolución
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100);
+    doc.text(`Grafico de Evolucion - ${area.name}`, 20, currentY);
+    currentY += 3;
+    
+    currentY = drawBarChart(
+      doc,
+      areaEvolutionData,
+      20,
+      currentY,
+      170,
+      60,
+      '',
+      {
+        showComparison: true,
+        useDynamicScale: true,
+        showLabels: true
+      }
+    );
+    
+    currentY += 8;
   });
   
   return currentY;
