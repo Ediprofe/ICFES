@@ -31,13 +31,14 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
               <h4 class="text-lg font-bold text-gray-800 mb-3">${areaData.area}</h4>
               ${areaData.students.length > 0 ? `
                 <div class="space-y-2">
-                  ${areaData.students.map((student, index) => {
+                  ${areaData.students.map((student) => {
                     const medals = ['🥇', '🥈', '🥉'];
-                    const medal = student.ranking <= 3 ? medals[student.ranking - 1] : `#${student.ranking}`;
+                    const rankNum = student.ranking || 0;
+                    const medal = rankNum <= 3 && rankNum > 0 ? medals[rankNum - 1] : `#${rankNum}`;
                     return `
                       <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:shadow-md transition-shadow">
                         <div class="flex items-center gap-2">
-                          <span class="text-2xl">${medal}</span>
+                          <span class="text-2xl font-bold text-gray-700">${medal}</span>
                           <div>
                             <p class="font-semibold text-gray-800 text-sm">${student.nombre} ${student.apellido}</p>
                           </div>
@@ -66,13 +67,14 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
               <h4 class="text-lg font-bold text-gray-800 mb-3">Grado ${gradeData.grado}</h4>
               ${gradeData.top.length > 0 ? `
                 <div class="space-y-2">
-                  ${gradeData.top.map((student, index) => {
+                  ${gradeData.top.map((student) => {
                     const medals = ['🥇', '🥈', '🥉'];
-                    const medal = student.ranking <= 3 ? medals[student.ranking - 1] : `#${student.ranking}`;
+                    const rankNum = student.ranking || 0;
+                    const medal = rankNum <= 3 && rankNum > 0 ? medals[rankNum - 1] : `#${rankNum}`;
                     return `
                       <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:shadow-md transition-shadow">
                         <div class="flex items-center gap-2">
-                          <span class="text-2xl">${medal}</span>
+                          <span class="text-2xl font-bold text-gray-700">${medal}</span>
                           <div>
                             <p class="font-semibold text-gray-800 text-sm">${student.nombre} ${student.apellido}</p>
                           </div>
