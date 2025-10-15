@@ -4,7 +4,7 @@
  */
 
 import { ACADEMIC_AREAS } from '../../config/columnConfig.js';
-import { calculateAreaMetrics, getMetricsByGrade, getGradeAverages } from '../../utils/calculations/index.js';
+import { calculateAreaMetrics, getMetricsByGrade, getGradeAverages, findOutliers } from '../../utils/calculations/index.js';
 
 /**
  * Prepara datos para gráficos por área
@@ -14,13 +14,24 @@ export const prepareAreaChartData = (analysis, includePIAR = true) => {
   const dataConPIAR = analysis.processedData;
   const dataSinPIAR = analysis.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
   
+  // Encontrar outliers basados en muestra sin PIAR (±3σ)
+  const outliers = findOutliers(analysis.processedData, true);
+  const outlierIds = new Set(outliers.map(o => `${o.Nombre}_${o.Apellido}_${o.Grupo}`));
+  
+  // Datos sin PIAR y sin outliers
+  const dataSinPIARSinOutliers = dataSinPIAR.filter(s => 
+    !outlierIds.has(`${s.Nombre}_${s.Apellido}_${s.Grupo}`)
+  );
+  
   const metricsConPIAR = calculateAreaMetrics(dataConPIAR, false);
   const metricsSinPIAR = calculateAreaMetrics(dataSinPIAR, true);
+  const metricsSinOutliers = calculateAreaMetrics(dataSinPIARSinOutliers, true);
   
   // Preparar datos de promedios
   const promedios = ACADEMIC_AREAS.map((area, index) => {
     const metricCon = metricsConPIAR[index];
     const metricSin = metricsSinPIAR[index];
+    const metricSinOut = metricsSinOutliers[index];
     
     return {
       area: area.shortName,
@@ -28,6 +39,7 @@ export const prepareAreaChartData = (analysis, includePIAR = true) => {
       areaId: area.id,
       conPIAR: parseFloat(metricCon.promedio) || 0,
       sinPIAR: parseFloat(metricSin.promedio) || 0,
+      sinOutliers: parseFloat(metricSinOut.promedio) || 0,
       color: area.color,
       lightColor: area.lightColor,
       darkColor: area.darkColor

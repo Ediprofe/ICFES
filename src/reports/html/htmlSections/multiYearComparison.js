@@ -141,7 +141,7 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
                     <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
                     <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${areaData.sinPIAR.toFixed(2)}</td>
                     <td class="px-4 py-3 text-center">${areaDesv.sinPIAR.toFixed(2)}</td>
-                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${areaData.sinPIAR.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${areaData.sinOutliers.toFixed(2)}</td>
                     <td class="px-4 py-3 text-center text-gray-600">${areaData.conPIAR.toFixed(2)}</td>
                   </tr>
                 `;

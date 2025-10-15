@@ -198,7 +198,7 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
         analysis.year.toString(),
         areaData.sinPIAR.toFixed(2),
         areaDesv.sinPIAR.toFixed(2),
-        areaData.sinPIAR.toFixed(2), // Por ahora usamos el mismo
+        areaData.sinOutliers.toFixed(2), // Promedio sin PIAR y sin outliers (±3σ)
         areaData.conPIAR.toFixed(2)
       ];
     });

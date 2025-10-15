@@ -43,7 +43,8 @@ export const generatePDF = (analysis, options = {}) => {
   // 1. Portada
   generateCoverPage(doc, analysis, {
     isMultiYear,
-    comparisonYears: comparisonAnalyses.map(a => a.year)
+    comparisonYears: comparisonAnalyses.map(a => a.year),
+    allAnalyses: isMultiYear ? [analysis, ...comparisonAnalyses] : []
   });
   
   // Si es multi-año, generar secciones de comparación
