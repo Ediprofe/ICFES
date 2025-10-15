@@ -468,65 +468,64 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
       <h2 class="text-2xl font-bold">${sectionNumber}. LISTADO COMPLETO DE ESTUDIANTES</h2>
     </div>
     
-    <!-- Filtros -->
-    <div class="mb-6 no-print grid grid-cols-1 md:grid-cols-5 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar estudiante</label>
-        <input 
-          type="text" 
-          id="searchAllStudents" 
-          placeholder="Nombre o apellido..." 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onkeyup="filterAllStudentsTable()"
+    <!-- Filtros y Botón Toggle PIAR -->
+    <div class="mb-6 no-print">
+      <div class="mb-4">
+        <button 
+          id="togglePiarBtn" 
+          onclick="togglePiarVisibility()"
+          class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-colors"
         >
+          👁️ Mostrar/Ocultar Estudiantes con PIAR
+        </button>
       </div>
       
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por año</label>
-        <select 
-          id="yearFilter" 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onchange="filterAllStudentsTable()"
-        >
-          <option value="">Todos los años</option>
-          ${years.map(year => `<option value="${year}">${year}</option>`).join('')}
-        </select>
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por grado</label>
-        <select 
-          id="gradeFilterAll" 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onchange="filterAllStudentsTable()"
-        >
-          <option value="">Todos los grados</option>
-          ${grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
-        </select>
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">PIAR</label>
-        <select 
-          id="piarFilterAll" 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onchange="filterAllStudentsTable()"
-        >
-          <option value="">Todos</option>
-          <option value="no">Sin PIAR</option>
-          <option value="si">Con PIAR</option>
-        </select>
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Puntaje mínimo</label>
-        <input 
-          type="number" 
-          id="minScoreFilterAll" 
-          placeholder="Ej: 300" 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onkeyup="filterAllStudentsTable()"
-        >
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Buscar estudiante</label>
+          <input 
+            type="text" 
+            id="searchAllStudents" 
+            placeholder="Nombre o apellido..." 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onkeyup="filterAllStudentsTable()"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por año</label>
+          <select 
+            id="yearFilter" 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onchange="filterAllStudentsTable()"
+          >
+            <option value="">Todos los años</option>
+            ${years.map(year => `<option value="${year}">${year}</option>`).join('')}
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por grado</label>
+          <select 
+            id="gradeFilterAll" 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onchange="filterAllStudentsTable()"
+          >
+            <option value="">Todos los grados</option>
+            ${grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Puntaje mínimo</label>
+          <input 
+            type="number" 
+            id="minScoreFilterAll" 
+            placeholder="Ej: 300" 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onkeyup="filterAllStudentsTable()"
+          >
+        </div>
       </div>
     </div>
     
@@ -539,12 +538,13 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(1)">Nombre</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(2)">Apellido</th>
             <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(3)">Grado</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(4)">Global ⬍</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(5)">Lectura</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(6)">Matemát.</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(7)">Sociales</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(8)">Naturales</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(9)">Inglés</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(4)">PIAR</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(5)">Global ⬍</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(6)">Lectura</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(7)">Matemát.</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(8)">Sociales</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(9)">Naturales</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(10)">Inglés</th>
           </tr>
         </thead>
         <tbody>
@@ -552,9 +552,12 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
             // Color por año: 2025 = azul, 2024 = gris, otros = verde
             const yearColor = student.year === 2025 ? 'bg-blue-50' : student.year === 2024 ? 'bg-gray-50' : 'bg-green-50';
             const yearBadge = student.year === 2025 ? 'bg-blue-600' : student.year === 2024 ? 'bg-gray-600' : 'bg-green-600';
+            // Resaltado para PIAR
+            const piarHighlight = student.piar ? 'bg-yellow-100 border-l-4 border-yellow-500' : '';
+            const rowClass = student.piar ? 'piar-row' : 'no-piar-row';
             
             return `
-            <tr class="border-b border-gray-200 hover:opacity-75 transition-opacity ${yearColor}" 
+            <tr class="border-b border-gray-200 hover:opacity-75 transition-opacity ${yearColor} ${piarHighlight} ${rowClass}" 
                 data-year="${student.year}" 
                 data-grade="${student.grado}" 
                 data-global="${student.global}"
@@ -566,6 +569,9 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
               <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.apellido}</td>
               <td class="px-4 py-3 text-center">
                 <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">${student.grado}</span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                ${student.piar ? '<span class="px-2 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">SÍ</span>' : '<span class="px-2 py-1 bg-gray-300 text-gray-700 rounded-full text-xs">NO</span>'}
               </td>
               <td class="px-4 py-3 text-right font-bold text-lg ${student.global >= 300 ? 'text-green-600' : 'text-gray-700'}">
                 ${student.global != null ? student.global.toFixed(1) : 'N/A'}
@@ -587,16 +593,46 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
     </p>
     
     <script>
+      let piarVisible = true; // Estado inicial: PIAR visible
+      
+      function togglePiarVisibility() {
+        piarVisible = !piarVisible;
+        const piarRows = document.querySelectorAll('.piar-row');
+        
+        piarRows.forEach(row => {
+          if (piarVisible) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Actualizar contador
+        updateVisibleCount();
+      }
+      
+      function updateVisibleCount() {
+        const table = document.getElementById('allStudentsTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        let visibleCount = 0;
+        
+        for (let row of rows) {
+          if (row.style.display !== 'none') {
+            visibleCount++;
+          }
+        }
+        
+        document.getElementById('visibleCountAll').textContent = visibleCount;
+      }
+      
       function filterAllStudentsTable() {
         const searchValue = document.getElementById('searchAllStudents').value.toLowerCase();
         const yearValue = document.getElementById('yearFilter').value;
         const gradeValue = document.getElementById('gradeFilterAll').value;
-        const piarValue = document.getElementById('piarFilterAll').value;
         const minScore = parseFloat(document.getElementById('minScoreFilterAll').value) || 0;
         
         const table = document.getElementById('allStudentsTable');
         const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-        let visibleCount = 0;
         
         for (let row of rows) {
           const nombre = row.cells[1].textContent.toLowerCase();
@@ -609,18 +645,25 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
           const matchesSearch = nombre.includes(searchValue) || apellido.includes(searchValue);
           const matchesYear = !yearValue || year === yearValue;
           const matchesGrade = !gradeValue || grade === gradeValue;
-          const matchesPiar = !piarValue || piar === piarValue;
           const matchesScore = global >= minScore;
           
-          if (matchesSearch && matchesYear && matchesGrade && matchesPiar && matchesScore) {
+          // Aplicar filtros normales
+          if (matchesSearch && matchesYear && matchesGrade && matchesScore) {
             row.style.display = '';
-            visibleCount++;
           } else {
             row.style.display = 'none';
           }
         }
         
-        document.getElementById('visibleCountAll').textContent = visibleCount;
+        // Aplicar toggle de PIAR después de los filtros
+        if (!piarVisible) {
+          const piarRows = document.querySelectorAll('.piar-row');
+          piarRows.forEach(row => {
+            row.style.display = 'none';
+          });
+        }
+        
+        updateVisibleCount();
       }
       
       let sortDirectionAll = {};
