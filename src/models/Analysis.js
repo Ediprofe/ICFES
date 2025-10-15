@@ -12,7 +12,7 @@ import {
   getTop3ByGrade, 
   getMetricsByGrade, 
   getGradeAverages 
-} from '../utils/calculations.js';
+} from '../utils/calculations/index.js';
 
 export class Analysis {
   constructor(year, rawData) {
