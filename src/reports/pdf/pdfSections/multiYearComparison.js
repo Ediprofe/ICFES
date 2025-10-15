@@ -328,15 +328,15 @@ export const generateAllStudentsTable = (doc, analyses, startY) => {
   const columns = ['Año', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lectura', 'Matemat.', 'Sociales', 'Natural.', 'Ingles'];
   const rows = allStudents.map(student => [
     student.year.toString(),
-    student.nombre,
-    student.apellido,
-    student.grado,
-    student.global.toFixed(1),
-    student.lectura.toFixed(1),
-    student.matematicas.toFixed(1),
-    student.sociales.toFixed(1),
-    student.naturales.toFixed(1),
-    student.ingles.toFixed(1)
+    student.nombre || '',
+    student.apellido || '',
+    student.grado || '',
+    student.global != null ? student.global.toFixed(1) : 'N/A',
+    student.lectura != null ? student.lectura.toFixed(1) : 'N/A',
+    student.matematicas != null ? student.matematicas.toFixed(1) : 'N/A',
+    student.sociales != null ? student.sociales.toFixed(1) : 'N/A',
+    student.naturales != null ? student.naturales.toFixed(1) : 'N/A',
+    student.ingles != null ? student.ingles.toFixed(1) : 'N/A'
   ]);
   
   currentY = drawTable(doc, columns, rows, currentY, {

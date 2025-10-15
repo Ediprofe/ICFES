@@ -444,13 +444,13 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
                 <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">${student.grado}</span>
               </td>
               <td class="px-4 py-3 text-right font-bold text-lg ${student.global >= 300 ? 'text-green-600' : 'text-gray-700'}">
-                ${student.global.toFixed(1)}
+                ${student.global != null ? student.global.toFixed(1) : 'N/A'}
               </td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.lectura.toFixed(1)}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.matematicas.toFixed(1)}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.sociales.toFixed(1)}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.naturales.toFixed(1)}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.ingles.toFixed(1)}</td>
+              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.lectura != null ? student.lectura.toFixed(1) : 'N/A'}</td>
+              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.matematicas != null ? student.matematicas.toFixed(1) : 'N/A'}</td>
+              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.sociales != null ? student.sociales.toFixed(1) : 'N/A'}</td>
+              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.naturales != null ? student.naturales.toFixed(1) : 'N/A'}</td>
+              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.ingles != null ? student.ingles.toFixed(1) : 'N/A'}</td>
             </tr>
           `;
           }).join('')}
