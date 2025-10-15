@@ -265,15 +265,38 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
 export const generateAreaComparisonSection = (analyses, sectionNumber) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
+  // Preparar datos de evolución por área
+  const areasEvolutionData = ACADEMIC_AREAS.map(area => {
+    return {
+      areaId: area.id,
+      areaName: area.name,
+      color: area.color,
+      data: sortedAnalyses.map(analysis => {
+        const chartData = prepareAreaChartData(analysis, true);
+        const areaData = chartData.promedios.find(item => item.areaId === area.id);
+        const areaDesv = chartData.desviacion.find(item => item.areaId === area.id);
+        return {
+          year: analysis.year,
+          sinPIAR: areaData ? areaData.sinPIAR : null,
+          conPIAR: areaData ? areaData.conPIAR : null,
+          desvSinPIAR: areaDesv ? areaDesv.sinPIAR : null,
+          desvConPIAR: areaDesv ? areaDesv.conPIAR : null
+        };
+      })
+    };
+  });
+  
   return `
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 mt-8">
       <h2 class="text-2xl font-bold">${sectionNumber}. COMPARACION POR AREAS ACADEMICAS</h2>
     </div>
     
-    ${ACADEMIC_AREAS.map(area => `
+    ${ACADEMIC_AREAS.map((area, areaIndex) => `
       <div class="mb-8">
         <h3 class="text-lg font-bold mb-3 uppercase" style="color: ${area.color}">${area.name}</h3>
-        <div class="overflow-x-auto shadow-md rounded-lg">
+        
+        <!-- Tabla del área -->
+        <div class="overflow-x-auto shadow-md rounded-lg mb-6">
           <table class="min-w-full bg-white">
             <thead class="bg-blue-600 text-white">
               <tr>
@@ -315,42 +338,18 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
             </tbody>
           </table>
         </div>
+        
+        <!-- Gráfico de evolución del área -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <h4 class="text-md font-semibold text-gray-700 mb-2">Gráfico de Evolución - ${area.name}</h4>
+          <canvas id="chartAreaEvolution${areaIndex}" height="250"></canvas>
+        </div>
       </div>
     `).join('')}
     
-    <!-- Gráficos de Evolución por Área -->
-    <div class="mt-8 mb-8">
-      <h3 class="text-xl font-bold text-center text-blue-600 mb-6">Gráficos de Evolución por Área</h3>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        ${ACADEMIC_AREAS.map((area, areaIndex) => `
-          <div class="bg-white rounded-lg shadow-md p-4">
-            <canvas id="chartAreaEvolution${areaIndex}" height="250"></canvas>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-    
     <script>
-      // Preparar datos de evolución por área
-      const areasEvolutionData = ${JSON.stringify(ACADEMIC_AREAS.map(area => {
-        return {
-          areaId: area.id,
-          areaName: area.name,
-          color: area.color,
-          data: sortedAnalyses.map(analysis => {
-            const chartData = prepareAreaChartData(analysis, true);
-            const areaData = chartData.promedios.find(item => item.areaId === area.id);
-            const areaDesv = chartData.desviacion.find(item => item.areaId === area.id);
-            return {
-              year: analysis.year,
-              sinPIAR: areaData ? areaData.sinPIAR : null,
-              conPIAR: areaData ? areaData.conPIAR : null,
-              desvSinPIAR: areaDesv ? areaDesv.sinPIAR : null,
-              desvConPIAR: areaDesv ? areaDesv.conPIAR : null
-            };
-          })
-        };
-      }))};
+      // Datos de evolución por área
+      const areasEvolutionData = ${JSON.stringify(areasEvolutionData)};
       
       // Crear gráficos de evolución por área
       areasEvolutionData.forEach((areaEvolution, index) => {
@@ -381,9 +380,7 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
             maintainAspectRatio: false,
             plugins: {
               title: {
-                display: true,
-                text: areaEvolution.areaName + ' - Evolución del Promedio',
-                font: { size: 14, weight: 'bold' }
+                display: false
               },
               legend: {
                 display: true,
