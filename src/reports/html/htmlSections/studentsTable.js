@@ -17,17 +17,22 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
   return `
     ${generateSectionHeader('Listado de Estudiantes', sectionNumber, '📋')}
     
-    <!-- Botón Toggle PIAR -->
-    <div class="mb-6 no-print">
-      <div class="mb-4">
+    <!-- Toggle PIAR Moderno -->
+    <div class="mb-6 no-print flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span class="text-sm font-medium text-gray-700">Mostrar PIAR:</span>
         <button 
           id="togglePiarBtnSingle" 
           onclick="togglePiarVisibilitySingle()"
-          class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-colors"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105"
         >
-          👁️ Mostrar/Ocultar Estudiantes con PIAR
+          <span id="piarStatusSingle">Sí</span>
         </button>
       </div>
+      <div id="piarCountSingle" class="text-sm text-gray-600"></div>
+    </div>
+    
+    <!-- Filtros -->
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
@@ -132,9 +137,30 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
           }
         });
         
+        // Actualizar texto del botón
+        const statusSpan = document.getElementById('piarStatusSingle');
+        if (statusSpan) {
+          statusSpan.textContent = piarVisibleSingle ? 'Sí' : 'No';
+        }
+        
         // Actualizar contador
         updateVisibleCountSingle();
+        updatePiarCount();
       }
+      
+      function updatePiarCount() {
+        const piarRows = document.querySelectorAll('.piar-row-single');
+        const visiblePiarRows = Array.from(piarRows).filter(row => row.style.display !== 'none');
+        const countDiv = document.getElementById('piarCountSingle');
+        if (countDiv) {
+          countDiv.textContent = \`Estudiantes con PIAR: \${visiblePiarRows.length} de \${piarRows.length}\`;
+        }
+      }
+      
+      // Inicializar contador al cargar
+      window.addEventListener('DOMContentLoaded', () => {
+        updatePiarCount();
+      });
       
       function updateVisibleCountSingle() {
         const table = document.getElementById('studentsTable');

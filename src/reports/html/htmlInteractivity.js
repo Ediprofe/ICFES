@@ -57,6 +57,7 @@ export const generateInteractivityScript = () => {
           labels: data.map(d => d.area || d.grado),
           datasets: datasets
         },
+        plugins: [ChartDataLabels],
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -190,6 +191,16 @@ export const generateInteractivityScript = () => {
           gradeChartData.promedios,
           'Promedios Globales por Grado',
           { maxValue: 500, showComparison: true }
+        );
+      }
+      
+      // Gráfico de desviación estándar por grado
+      if (gradeChartData && gradeChartData.desviacion) {
+        charts.gradeDesviacion = createBarChart(
+          'chartGradeDesviacion',
+          gradeChartData.desviacion,
+          'Desviación Estándar por Grado',
+          { maxValue: 50, showComparison: true }
         );
       }
       

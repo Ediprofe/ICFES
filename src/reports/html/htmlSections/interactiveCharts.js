@@ -13,13 +13,16 @@ export const generateInteractiveChartsSection = (sectionNumber) => {
       ${generateToggleButton('printBtn', 'Imprimir Informe', '🖨️')}
     </div>
     
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Gráficos por Área (uno debajo del otro) -->
+    <div class="space-y-6 mb-8">
       ${generateChartContainer('chartAreaPromedios', 'Promedios por Área Académica')}
       ${generateChartContainer('chartAreaDesviacion', 'Desviación Estándar por Área')}
     </div>
     
-    <div class="mt-6">
+    <!-- Gráficos por Grado (uno debajo del otro) -->
+    <div class="space-y-6">
       ${generateChartContainer('chartGradePromedios', 'Promedios Globales por Grado')}
+      ${generateChartContainer('chartGradeDesviacion', 'Desviación Estándar por Grado')}
     </div>
   `;
 };
