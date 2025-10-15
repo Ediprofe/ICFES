@@ -29,7 +29,7 @@ export const generateInteractivityScript = () => {
       const ctx = document.getElementById(canvasId);
       if (!ctx) return null;
       
-      const { maxValue = 100, showComparison = true } = options;
+      const { showComparison = true, useDynamicScale = true } = options;
       
       const datasets = [];
       
@@ -50,6 +50,18 @@ export const generateInteractivityScript = () => {
         borderColor: data.map(d => d.color || 'rgba(37, 99, 235, 1)'),
         borderWidth: 1
       });
+      
+      // Calcular el valor máximo dinámicamente con margen del 20%
+      let maxValue = 100; // Valor por defecto
+      if (useDynamicScale) {
+        const allValues = [];
+        if (showComparison && showPIAR) {
+          allValues.push(...data.map(d => d.conPIAR || 0));
+        }
+        allValues.push(...data.map(d => d.sinPIAR || 0));
+        const dataMax = Math.max(...allValues);
+        maxValue = Math.ceil(dataMax * 1.2); // 20% de margen superior
+      }
       
       return new Chart(ctx, {
         type: 'bar',
@@ -188,7 +200,7 @@ export const generateInteractivityScript = () => {
           'chartAreaPromedios',
           areaChartData.promedios,
           'Promedios por Área Académica',
-          { maxValue: 100, showComparison: true }
+          { showComparison: true, useDynamicScale: true }
         );
       }
       
@@ -198,7 +210,7 @@ export const generateInteractivityScript = () => {
           'chartAreaDesviacion',
           areaChartData.desviacion,
           'Desviación Estándar por Área',
-          { maxValue: 30, showComparison: true }
+          { showComparison: true, useDynamicScale: true }
         );
       }
       
@@ -208,7 +220,7 @@ export const generateInteractivityScript = () => {
           'chartGradePromedios',
           gradeChartData.promedios,
           'Promedios Globales por Grado',
-          { maxValue: 500, showComparison: true }
+          { showComparison: true, useDynamicScale: true }
         );
       }
       
@@ -218,7 +230,7 @@ export const generateInteractivityScript = () => {
           'chartGradeDesviacion',
           gradeChartData.desviacion,
           'Desviación Estándar por Grado',
-          { maxValue: 50, showComparison: true }
+          { showComparison: true, useDynamicScale: true }
         );
       }
       

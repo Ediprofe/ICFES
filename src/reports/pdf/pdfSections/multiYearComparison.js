@@ -43,7 +43,7 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
   doc.text('SIN PIAR (Metricas Principales)', 20, currentY);
   currentY += 6;
   
-  const sinPIARColumns = ['Año', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo', 'Sin Outliers'];
+  const sinPIARColumns = ['Cohorte', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo', 'Sin Outliers'];
   const sinPIARRows = sortedAnalyses.map(analysis => {
     const metrics = analysis.getGlobalMetrics(true, false); // excludePIAR = true, excludeOutliers = false
     const metricsNoOutliers = analysis.getGlobalMetrics(true, true); // excludePIAR = true, excludeOutliers = true
@@ -80,7 +80,7 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
   doc.text('CON PIAR (Todos los Estudiantes)', 20, currentY);
   currentY += 6;
   
-  const conPIARColumns = ['Año', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo'];
+  const conPIARColumns = ['Cohorte', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo'];
   const conPIARRows = sortedAnalyses.map(analysis => {
     const metricsPIAR = analysis.getGlobalMetrics(false, false); // excludePIAR = false (incluye todos), excludeOutliers = false
     
@@ -232,7 +232,7 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
     currentY += 6;
     
     // Tabla de comparación para esta área
-    const columns = ['Año', 'Promedio Sin PIAR', 'Desv. Est.', 'Sin Outliers', 'Promedio Con PIAR'];
+    const columns = ['Cohorte', 'Promedio Sin PIAR', 'Desv. Est.', 'Sin Outliers', 'Promedio Con PIAR'];
     const rows = sortedAnalyses.map(analysis => {
       // Usar la misma lógica que funciona en análisis de un solo año
       const chartData = prepareAreaChartData(analysis, true);
@@ -367,7 +367,7 @@ export const generateAllStudentsTable = (doc, analyses, startY) => {
   });
   
   // Crear tabla con headers optimizados
-  const columns = ['Año', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lectura', 'Matemat.', 'Sociales', 'Natural.', 'Ingles'];
+  const columns = ['Cohorte', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lectura', 'Matemat.', 'Sociales', 'Natural.', 'Ingles'];
   const rows = allStudents.map(student => [
     student.year.toString(),
     student.nombre || '',

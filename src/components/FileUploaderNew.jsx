@@ -77,20 +77,30 @@ export const FileUploaderNew = () => {
   
   const handleConfirmYear = async () => {
     if (!yearLabel || yearLabel.trim() === '') {
-      alert('Por favor, ingresa un año válido');
+      alert('Por favor, ingresa una cohorte válida');
       return;
     }
     
-    const year = parseInt(yearLabel);
-    if (isNaN(year) || year < 1900 || year > 2100) {
-      alert('Por favor, ingresa un año válido (entre 1900 y 2100)');
+    // Limpiar espacios
+    const cohort = yearLabel.trim();
+    
+    // Validar formato: permitir números, letras, guiones y algunos caracteres especiales
+    const validFormat = /^[a-zA-Z0-9\-_.]+$/;
+    if (!validFormat.test(cohort)) {
+      alert('Por favor, usa solo letras, números, guiones (-), guiones bajos (_) o puntos (.)');
+      return;
+    }
+    
+    // Validar longitud razonable
+    if (cohort.length > 20) {
+      alert('La cohorte debe tener máximo 20 caracteres');
       return;
     }
     
     setShowYearDialog(false);
     clearError();
     
-    const result = await loadBaseYear(pendingFile, year);
+    const result = await loadBaseYear(pendingFile, cohort);
     
     if (result.success) {
       setPendingFile(null);
@@ -106,16 +116,23 @@ export const FileUploaderNew = () => {
   
   return (
     <>
-      <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-2xl p-8 border-2 border-blue-200">
-        <div className="text-center mb-8">
-          <div className="inline-block bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full p-4 mb-4 shadow-lg">
-            <FileSpreadsheet size={48} className="text-white" />
+      <div className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 rounded-3xl shadow-2xl p-10 border-2 border-blue-300 relative overflow-hidden">
+        {/* Decoración de fondo */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-400/10 to-pink-400/10 rounded-full blur-3xl -z-10"></div>
+        
+        <div className="text-center mb-10">
+          <div className="inline-block bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-full p-5 mb-6 shadow-2xl animate-pulse">
+            <FileSpreadsheet size={56} className="text-white" />
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-800 mb-3">
+          <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4">
             📊 Cargar datos ICFES
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-xl text-gray-700 font-medium">
             Arrastra tu archivo Excel o haz clic para seleccionarlo
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Soporta archivos .xlsx y .xls hasta 10MB
           </p>
         </div>
         
@@ -184,14 +201,25 @@ export const FileUploaderNew = () => {
           </div>
         </form>
         
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>📋 Formato requerido:</strong> El archivo debe contener las columnas:
-            ¿PIAR?, Grupo, Nombre, Apellido, Lectura crítica, Matemáticas, Sociales, Naturales, Inglés, Global
-          </p>
-          <p className="text-sm text-blue-700 mt-2">
-            💡 <strong>Nota:</strong> Se te pedirá que etiquetes el año del archivo al cargarlo (ej: 2024, 2025).
-          </p>
+        <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border-2 border-blue-200 shadow-inner">
+          <div className="flex items-start gap-3">
+            <div className="text-3xl">📋</div>
+            <div>
+              <p className="text-sm font-bold text-blue-900 mb-2">Formato requerido:</p>
+              <p className="text-sm text-blue-800 leading-relaxed">
+                El archivo debe contener las columnas: <strong>¿PIAR?, Grupo, Nombre, Apellido, Lectura crítica, Matemáticas, Sociales, Naturales, Inglés, Global</strong>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 mt-4 pt-4 border-t border-blue-200">
+            <div className="text-3xl">💡</div>
+            <div>
+              <p className="text-sm font-bold text-indigo-900 mb-2">Nota importante:</p>
+              <p className="text-sm text-indigo-800 leading-relaxed">
+                Se te pedirá que etiquetes la <strong>cohorte</strong> del archivo al cargarlo (ej: 2024, 2025).
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -200,19 +228,18 @@ export const FileUploaderNew = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">
-              📅 Etiqueta de Año
+              📅 Etiqueta de cohorte
             </h3>
             <p className="text-gray-600 mb-4">
-              Por favor, ingresa el año correspondiente a estos datos:
+              Por favor, ingresa la cohorte correspondiente a estos datos:
             </p>
             <input
-              type="number"
+              type="text"
               value={yearLabel}
               onChange={(e) => setYearLabel(e.target.value)}
-              placeholder="Ej: 2024"
+              placeholder="Ej: 2024, 2025-1A, 2025-1, Cohorte-1..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold text-center"
-              min="1900"
-              max="2100"
+              maxLength="20"
               autoFocus
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -253,7 +280,7 @@ export const FileUploaderNew = () => {
               ¿Análisis Comparativo?
             </h3>
             <p className="text-gray-600 mb-6">
-              ¿Deseas cargar datos de años anteriores para realizar un análisis comparativo multi-año?
+              ¿Deseas cargar datos de cohortes anteriores para realizar un análisis comparativo multi-cohorte?
             </p>
             <div className="flex gap-4">
               <button
@@ -261,9 +288,9 @@ export const FileUploaderNew = () => {
                   enableComparisonMode();
                   setShowComparisonDialog(false);
                 }}
-                className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium cursor-pointer"
               >
-                Sí, cargar más años
+                Sí, cargar más cohortes
               </button>
               <button
                 onClick={() => {

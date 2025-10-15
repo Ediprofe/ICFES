@@ -1,6 +1,6 @@
 /**
- * ✅ Componente: Cargador de Años para Comparación
- * Permite cargar archivos adicionales para análisis multi-año
+ * ✅ Componente: Cargador de Cohortes para Comparación
+ * Permite cargar archivos adicionales para análisis multi-cohorte
  */
 
 import { useState } from 'react';
@@ -22,7 +22,7 @@ export const ComparisonYearUploader = () => {
   const clearError = useAnalysisStore((state) => state.clearError);
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
   
-  // Obtener años disponibles directamente del Map
+  // Obtener cohortes disponibles directamente del Map
   const availableYears = multiYearAnalysis?.analyses 
     ? (multiYearAnalysis.analyses instanceof Map
         ? Array.from(multiYearAnalysis.analyses.keys())
@@ -71,7 +71,7 @@ export const ComparisonYearUploader = () => {
     
     setPendingFile(file);
     
-    // Intentar extraer año del nombre del archivo
+    // Intentar extraer cohorte del nombre del archivo
     const yearMatch = file.name.match(/(\d{4})/);
     if (yearMatch) {
       setYearLabel(yearMatch[1]);
@@ -84,26 +84,36 @@ export const ComparisonYearUploader = () => {
   
   const handleConfirmYear = async () => {
     if (!yearLabel || yearLabel.trim() === '') {
-      alert('Por favor, ingresa un año válido');
+      alert('Por favor, ingresa una cohorte válida');
       return;
     }
     
-    const year = parseInt(yearLabel);
-    if (isNaN(year) || year < 1900 || year > 2100) {
-      alert('Por favor, ingresa un año válido (entre 1900 y 2100)');
+    // Limpiar espacios
+    const cohort = yearLabel.trim();
+    
+    // Validar formato: permitir números, letras, guiones y algunos caracteres especiales
+    const validFormat = /^[a-zA-Z0-9\-_.]+$/;
+    if (!validFormat.test(cohort)) {
+      alert('Por favor, usa solo letras, números, guiones (-), guiones bajos (_) o puntos (.)');
+      return;
+    }
+    
+    // Validar longitud razonable
+    if (cohort.length > 20) {
+      alert('La cohorte debe tener máximo 20 caracteres');
       return;
     }
     
     // Verificar que no esté ya cargado
-    if (availableYears.includes(year)) {
-      alert(`El año ${year} ya está cargado. Por favor, selecciona otro año.`);
+    if (availableYears.includes(cohort)) {
+      alert(`La cohorte ${cohort} ya está cargada. Por favor, selecciona otra cohorte.`);
       return;
     }
     
     setShowYearDialog(false);
     clearError();
     
-    const result = await loadComparisonYear(pendingFile, year);
+    const result = await loadComparisonYear(pendingFile, cohort);
     
     if (result.success) {
       setPendingFile(null);
@@ -112,7 +122,7 @@ export const ComparisonYearUploader = () => {
   };
   
   if (loading) {
-    return <LoadingSpinner message="Cargando año adicional..." />;
+    return <LoadingSpinner message="Cargando cohorte adicional..." />;
   }
   
   return (
@@ -124,9 +134,9 @@ export const ComparisonYearUploader = () => {
           </div>
           <div>
             <h3 className="text-xl font-bold text-gray-800">
-              📅 Cargar año adicional para comparación
+              📅 Cargar cohorte adicional para comparación
             </h3>
-            <p className="text-sm text-gray-600">Agrega más años para análisis comparativo multi-año</p>
+            <p className="text-sm text-gray-600">Agrega más cohortes para análisis comparativo multi-cohorte</p>
           </div>
         </div>
         
@@ -175,7 +185,7 @@ export const ComparisonYearUploader = () => {
                 </div>
                 
                 <p className="mb-2 text-xl font-bold text-gray-800">
-                  {dragActive ? '🎯 Suelta el archivo aquí' : '📄 Cargar otro año'}
+                  {dragActive ? '🎯 Suelta el archivo aquí' : '📄 Cargar otra cohorte'}
                 </p>
                 <p className="text-sm text-gray-600 font-medium">
                   Archivo Excel (.xlsx o .xls)
@@ -203,7 +213,7 @@ export const ComparisonYearUploader = () => {
                   {availableYears.length}
                 </div>
                 <p className="text-sm font-bold text-gray-800">
-                  Años cargados:
+                  Cohortes cargadas:
                 </p>
               </div>
               {waitingForMoreYears && (
@@ -225,20 +235,20 @@ export const ComparisonYearUploader = () => {
             </div>
             {waitingForMoreYears && (
               <p className="text-xs text-blue-600 mt-3 font-medium">
-                💡 Puedes cargar más años o hacer clic en "Finalizar carga" para ver los botones de exportación
+                💡 Puedes cargar más cohortes o hacer clic en "Finalizar carga" para ver los botones de exportación
               </p>
             )}
           </div>
         )}
       </div>
       
-      {/* Diálogo de etiqueta de año */}
+      {/* Diálogo de etiqueta de cohorte */}
       {showYearDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800">
-                📅 Etiqueta de Año
+                📅 Etiqueta de cohorte
               </h3>
               <button
                 onClick={() => {
@@ -253,17 +263,16 @@ export const ComparisonYearUploader = () => {
             </div>
             
             <p className="text-gray-600 mb-4">
-              Ingresa el año correspondiente a estos datos:
+              Ingresa la cohorte correspondiente a estos datos:
             </p>
             
             <input
-              type="number"
+              type="text"
               value={yearLabel}
               onChange={(e) => setYearLabel(e.target.value)}
-              placeholder="Ej: 2023"
+              placeholder="Ej: 2023, 2024-1A, 2025-1, Cohorte-2..."
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold text-center"
-              min="1900"
-              max="2100"
+              maxLength="20"
               autoFocus
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -277,7 +286,7 @@ export const ComparisonYearUploader = () => {
             </p>
             
             <p className="text-xs text-gray-500 mt-2">
-              Años ya cargados: {availableYears.join(', ')}
+              Cohortes ya cargadas: {availableYears.join(', ')}
             </p>
             
             <div className="flex gap-4 mt-6">

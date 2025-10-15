@@ -19,6 +19,7 @@ const useAnalysisStore = create(
         waitingForMoreYears: false, // Nuevo: indica si está esperando más archivos
         loading: false,
         error: null,
+        version: 0, // Contador para forzar re-renders
         
         // Selectores
         getActiveAnalysis: () => {
@@ -84,6 +85,7 @@ const useAnalysisStore = create(
             set((state) => {
               state.multiYearAnalysis.addAnalysis(year, data);
               state.loading = false;
+              state.version += 1; // Incrementar para forzar re-render
             });
             
             return { success: true, year, warnings };
@@ -113,6 +115,7 @@ const useAnalysisStore = create(
               state.multiYearAnalysis.addAnalysis(year, data);
               state.multiYearAnalysis.addComparisonYear(year);
               state.loading = false;
+              state.version += 1; // Incrementar para forzar re-render
             });
             
             return { success: true, year, warnings };
@@ -182,7 +185,8 @@ const useAnalysisStore = create(
             comparisonMode: false,
             waitingForMoreYears: false,
             loading: false,
-            error: null
+            error: null,
+            version: 0
           });
         }
       })),

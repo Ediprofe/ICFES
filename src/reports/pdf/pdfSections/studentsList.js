@@ -23,7 +23,7 @@ export const generateStudentsList = (doc, analysis, sectionNumber, options = {})
   const sortedData = [...data].sort((a, b) => b.Global - a.Global);
   
   // Preparar datos para la tabla con todas las áreas
-  const columns = ['Año', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lectura', 'Matemat.', 'Sociales', 'Natural.', 'Ingles'];
+  const columns = ['Cohorte', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lectura', 'Matemat.', 'Sociales', 'Natural.', 'Ingles'];
   const rows = sortedData.map((student) => [
     analysis.year.toString(),
     student.Nombre,

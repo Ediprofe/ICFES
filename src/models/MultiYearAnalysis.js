@@ -6,9 +6,30 @@ import { Analysis } from './Analysis.js';
 
 export class MultiYearAnalysis {
   constructor() {
-    this.analyses = new Map(); // Map<year, Analysis>
+    this.analyses = new Map(); // Map<year|string, Analysis>
     this.baseYear = null;
     this.comparisonYears = [];
+  }
+  
+  /**
+   * Función de ordenamiento inteligente para cohortes
+   * Maneja números y strings de forma natural
+   */
+  static smartSort(a, b) {
+    // Si ambos son números, ordenar numéricamente
+    const aNum = typeof a === 'number' ? a : parseFloat(a);
+    const bNum = typeof b === 'number' ? b : parseFloat(b);
+    
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      return bNum - aNum; // Descendente
+    }
+    
+    // Si solo uno es número, números primero
+    if (!isNaN(aNum)) return -1;
+    if (!isNaN(bNum)) return 1;
+    
+    // Ambos son strings, ordenar alfabéticamente (descendente)
+    return String(b).localeCompare(String(a));
   }
   
   /**
@@ -23,8 +44,13 @@ export class MultiYearAnalysis {
     this.analyses.set(year, analysis);
     
     // Si es el primero o el más reciente, establecerlo como base
-    if (!this.baseYear || year > this.baseYear) {
+    if (!this.baseYear) {
       this.baseYear = year;
+    } else {
+      // Usar ordenamiento inteligente para determinar el más reciente
+      const years = [this.baseYear, year];
+      years.sort(MultiYearAnalysis.smartSort);
+      this.baseYear = years[0]; // El primero es el más reciente (descendente)
     }
     
     return analysis;
@@ -70,10 +96,10 @@ export class MultiYearAnalysis {
   }
   
   /**
-   * Obtiene años disponibles ordenados descendente
+   * Obtiene años disponibles ordenados descendente (usando ordenamiento inteligente)
    */
   getAvailableYears() {
-    return Array.from(this.analyses.keys()).sort((a, b) => b - a);
+    return Array.from(this.analyses.keys()).sort(MultiYearAnalysis.smartSort);
   }
   
   /**

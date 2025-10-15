@@ -49,12 +49,15 @@ export const parseExcel = (file, yearLabel = null) => {
           throw error;
         }
         
-        // Extraer año: prioridad a yearLabel, luego integrityValidation, luego año actual
+        // Extraer cohorte: prioridad a yearLabel, luego integrityValidation, luego año actual
         let year;
         if (yearLabel !== null) {
-          year = parseInt(yearLabel);
-          if (isNaN(year)) {
-            throw new ParseError('La etiqueta de año debe ser un número válido');
+          // Permitir strings o números
+          year = yearLabel;
+          // Si es un string numérico, intentar convertir a número para compatibilidad
+          const numericYear = parseInt(yearLabel);
+          if (!isNaN(numericYear) && numericYear.toString() === yearLabel.toString()) {
+            year = numericYear;
           }
         } else {
           year = integrityValidation.year || new Date().getFullYear();

@@ -71,7 +71,7 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
         <table id="combinedGlobalTable" class="min-w-full">
           <thead class="bg-gradient-to-r from-gray-700 to-gray-800">
             <tr>
-              <th class="px-8 py-4 text-left text-sm font-bold text-white uppercase">Año</th>
+              <th class="px-8 py-4 text-left text-sm font-bold text-white uppercase">Cohorte</th>
               <th class="px-8 py-4 text-center text-sm font-bold text-white uppercase">Promedio global</th>
               <th class="px-8 py-4 text-center text-sm font-bold text-white uppercase">Desviación estándar</th>
             </tr>
@@ -795,7 +795,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
         <table class="min-w-full bg-white">
           <thead class="bg-blue-600 text-white">
             <tr>
-              <th class="px-4 py-3 text-center text-sm font-semibold">Año</th>
+              <th class="px-4 py-3 text-center text-sm font-semibold">Cohorte</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Estudiantes</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Promedio</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Desv. Est.</th>
@@ -835,7 +835,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
         <table class="min-w-full bg-white">
           <thead class="bg-blue-600 text-white">
             <tr>
-              <th class="px-4 py-3 text-center text-sm font-semibold">Año</th>
+              <th class="px-4 py-3 text-center text-sm font-semibold">Cohorte</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Estudiantes</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Promedio</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Desv. Est.</th>
@@ -908,7 +908,7 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
           <table class="min-w-full bg-white">
             <thead class="bg-blue-600 text-white">
               <tr>
-                <th class="px-4 py-3 text-center text-sm font-semibold">Año</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold">Cohorte</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold">Promedio Sin PIAR</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold">Desv. Est.</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold">Sin Outliers</th>
@@ -1181,7 +1181,7 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
       <table id="allStudentsTable" class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
         <thead class="bg-blue-600 text-white">
           <tr>
-            <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(0)">Año ⬍</th>
+              <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(0)">Cohorte ⬍</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(1)">Nombre</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(2)">Apellido</th>
             <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(3)">Grado</th>
