@@ -34,10 +34,14 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
     <!-- Gráficos de Evolución -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow-md p-4">
-        <canvas id="chartEvolucionPromedio" height="300"></canvas>
+        <div style="height: 350px; position: relative;">
+          <canvas id="chartEvolucionPromedio"></canvas>
+        </div>
       </div>
       <div class="bg-white rounded-lg shadow-md p-4">
-        <canvas id="chartEvolucionDesviacion" height="300"></canvas>
+        <div style="height: 350px; position: relative;">
+          <canvas id="chartEvolucionDesviacion"></canvas>
+        </div>
       </div>
     </div>
     
@@ -342,7 +346,9 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
         <!-- Gráfico de evolución del área -->
         <div class="bg-white rounded-lg shadow-md p-4">
           <h4 class="text-md font-semibold text-gray-700 mb-2">Gráfico de Evolución - ${area.name}</h4>
-          <canvas id="chartAreaEvolution${areaIndex}" height="250"></canvas>
+          <div style="height: 300px; position: relative;">
+            <canvas id="chartAreaEvolution${areaIndex}"></canvas>
+          </div>
         </div>
       </div>
     `).join('')}
