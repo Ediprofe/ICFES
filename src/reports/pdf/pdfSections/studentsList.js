@@ -23,7 +23,7 @@ export const generateStudentsList = (doc, analysis, sectionNumber, options = {})
   const sortedData = [...data].sort((a, b) => b.Global - a.Global);
   
   // Preparar datos para la tabla con todas las áreas
-  const columns = ['Año', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lect.', 'Mat.', 'Soc.', 'Nat.', 'Ing.'];
+  const columns = ['Año', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lectura', 'Matemat.', 'Sociales', 'Natural.', 'Ingles'];
   const rows = sortedData.map((student) => [
     analysis.year.toString(),
     student.Nombre,
@@ -37,20 +37,21 @@ export const generateStudentsList = (doc, analysis, sectionNumber, options = {})
     student.Inglés ? student.Inglés.toFixed(1) : 'N/A'
   ]);
   
-  // Dibujar tabla con mejor distribución
+  // Dibujar tabla con anchos optimizados para evitar desbordamiento
   y = drawTable(doc, columns, rows, y, {
     columnStyles: {
-      0: { halign: 'center', fontStyle: 'bold', cellWidth: 15 },
-      1: { halign: 'left', cellWidth: 25 },
-      2: { halign: 'left', cellWidth: 25 },
-      3: { halign: 'center', cellWidth: 15 },
-      4: { halign: 'center', fontStyle: 'bold', cellWidth: 18 },
-      5: { halign: 'center', cellWidth: 15 },
-      6: { halign: 'center', cellWidth: 15 },
-      7: { halign: 'center', cellWidth: 15 },
-      8: { halign: 'center', cellWidth: 15 },
-      9: { halign: 'center', cellWidth: 15 }
-    }
+      0: { halign: 'center', fontStyle: 'bold', cellWidth: 18 },
+      1: { halign: 'left', cellWidth: 28 },
+      2: { halign: 'left', cellWidth: 30 },
+      3: { halign: 'center', cellWidth: 18 },
+      4: { halign: 'center', fontStyle: 'bold', cellWidth: 20 },
+      5: { halign: 'center', cellWidth: 20 },
+      6: { halign: 'center', cellWidth: 22 },
+      7: { halign: 'center', cellWidth: 20 },
+      8: { halign: 'center', cellWidth: 20 },
+      9: { halign: 'center', cellWidth: 18 }
+    },
+    margin: { left: 10, right: 10 } // Márgenes más pequeños para aprovechar espacio
   });
   
   return y;

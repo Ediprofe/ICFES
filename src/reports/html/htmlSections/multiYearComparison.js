@@ -3,7 +3,6 @@
  * Compara métricas entre diferentes años
  */
 
-import { generateSectionHeader } from '../htmlCore.js';
 import { ACADEMIC_AREAS } from '../../../config/columnConfig.js';
 import { prepareAreaChartData } from '../../charts/chartDataPreparation.js';
 

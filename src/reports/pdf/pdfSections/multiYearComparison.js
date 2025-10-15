@@ -286,8 +286,8 @@ export const generateAllStudentsTable = (doc, analyses, startY) => {
     return b.global - a.global;
   });
   
-  // Crear tabla
-  const columns = ['Año', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lect.', 'Mat.', 'Soc.', 'Nat.', 'Ing.'];
+  // Crear tabla con headers optimizados
+  const columns = ['Año', 'Nombre', 'Apellido', 'Grado', 'Global', 'Lectura', 'Matemat.', 'Sociales', 'Natural.', 'Ingles'];
   const rows = allStudents.map(student => [
     student.year.toString(),
     student.nombre,
@@ -303,17 +303,18 @@ export const generateAllStudentsTable = (doc, analyses, startY) => {
   
   currentY = drawTable(doc, columns, rows, currentY, {
     columnStyles: {
-      0: { halign: 'center', fontStyle: 'bold', cellWidth: 15 },
-      1: { halign: 'left', cellWidth: 25 },
-      2: { halign: 'left', cellWidth: 25 },
-      3: { halign: 'center', cellWidth: 15 },
-      4: { halign: 'center', fontStyle: 'bold', cellWidth: 18 },
-      5: { halign: 'center', cellWidth: 15 },
-      6: { halign: 'center', cellWidth: 15 },
-      7: { halign: 'center', cellWidth: 15 },
-      8: { halign: 'center', cellWidth: 15 },
-      9: { halign: 'center', cellWidth: 15 }
-    }
+      0: { halign: 'center', fontStyle: 'bold', cellWidth: 18 },
+      1: { halign: 'left', cellWidth: 28 },
+      2: { halign: 'left', cellWidth: 30 },
+      3: { halign: 'center', cellWidth: 18 },
+      4: { halign: 'center', fontStyle: 'bold', cellWidth: 20 },
+      5: { halign: 'center', cellWidth: 20 },
+      6: { halign: 'center', cellWidth: 22 },
+      7: { halign: 'center', cellWidth: 20 },
+      8: { halign: 'center', cellWidth: 20 },
+      9: { halign: 'center', cellWidth: 18 }
+    },
+    margin: { left: 10, right: 10 } // Márgenes más pequeños para aprovechar espacio
   });
   
   // Agregar resumen al final
