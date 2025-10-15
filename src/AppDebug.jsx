@@ -52,15 +52,20 @@ function AppDebug() {
         {!hasData ? (
           <FileUploaderNew />
         ) : (
-          <>
-            <DataPreview />
-            
-            {comparisonMode && (
-              <ComparisonYearUploader />
-            )}
-            
-            <ExportButtons />
-          </>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold text-green-600 mb-4">
+              ✅ Datos Cargados Exitosamente
+            </h2>
+            <p className="text-gray-700">
+              Años disponibles: <strong>{availableYears.join(', ')}</strong>
+            </p>
+            <p className="text-gray-700 mt-2">
+              Año activo: <strong>{activeYear}</strong>
+            </p>
+            <p className="text-sm text-gray-600 mt-4">
+              Los componentes DataPreview y ExportButtons están temporalmente deshabilitados para debugging.
+            </p>
+          </div>
         )}
       </div>
     </div>
