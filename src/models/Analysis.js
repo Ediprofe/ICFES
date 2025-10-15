@@ -97,23 +97,35 @@ export class Analysis {
   
   /**
    * Obtiene métricas globales (con cache)
+   * @param {boolean} excludePIAR - Si true, excluye estudiantes con PIAR (sin PIAR). Si false, incluye todos (con PIAR)
+   * @param {boolean} excludeOutliers - Si true, excluye outliers del cálculo
    */
-  getGlobalMetrics(withPIAR = true) {
-    const cacheKey = `global_${withPIAR}`;
+  getGlobalMetrics(excludePIAR = false, excludeOutliers = false) {
+    const cacheKey = `global_${excludePIAR}_${excludeOutliers}`;
     
     if (this._calculationCache.has(cacheKey)) {
       return this._calculationCache.get(cacheKey);
     }
     
-    const data = withPIAR 
-      ? this.processedData 
-      : this.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
+    // Filtrar datos según parámetros
+    let data = excludePIAR 
+      ? this.processedData.filter(s => s['¿PIAR?'] !== 'Sí')
+      : this.processedData;
+    
+    // Si se excluyen outliers, filtrarlos
+    if (excludeOutliers) {
+      const outliers = findOutliers(data);
+      const outlierIds = new Set(outliers.map(o => `${o.Nombre}_${o.Apellido}_${o.Grupo}`));
+      data = data.filter(s => !outlierIds.has(`${s.Nombre}_${s.Apellido}_${s.Grupo}`));
+    }
     
     const globals = data.map(s => s.Global).filter(v => v !== null && v !== undefined && !isNaN(v));
     
     const metrics = {
       promedio: globals.length > 0 ? mean(globals) : 0,
       desviacion: globals.length > 0 ? stdDev(globals) : 0,
+      minimo: globals.length > 0 ? Math.min(...globals) : 0,
+      maximo: globals.length > 0 ? Math.max(...globals) : 0,
       totalEstudiantes: data.length,
       outliers: findOutliers(this.processedData)
     };
@@ -125,19 +137,20 @@ export class Analysis {
   
   /**
    * Obtiene métricas por área (con cache)
+   * @param {boolean} excludePIAR - Si true, excluye estudiantes con PIAR (sin PIAR). Si false, incluye todos (con PIAR)
    */
-  getAreaMetrics(withPIAR = true) {
-    const cacheKey = `area_${withPIAR}`;
+  getAreaMetrics(excludePIAR = false) {
+    const cacheKey = `area_${excludePIAR}`;
     
     if (this._calculationCache.has(cacheKey)) {
       return this._calculationCache.get(cacheKey);
     }
     
-    const data = withPIAR 
-      ? this.processedData 
-      : this.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
+    const data = excludePIAR 
+      ? this.processedData.filter(s => s['¿PIAR?'] !== 'Sí')
+      : this.processedData;
     
-    const metrics = calculateAreaMetrics(data, !withPIAR);
+    const metrics = calculateAreaMetrics(data, excludePIAR);
     this._calculationCache.set(cacheKey, metrics);
     
     return metrics;

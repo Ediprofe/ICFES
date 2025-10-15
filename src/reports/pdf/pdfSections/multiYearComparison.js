@@ -31,7 +31,7 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
   
   const sinPIARColumns = ['Año', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo', 'Sin Outliers'];
   const sinPIARRows = sortedAnalyses.map(analysis => {
-    const metrics = analysis.getGlobalMetrics(true); // excludePIAR = true
+    const metrics = analysis.getGlobalMetrics(true, false); // excludePIAR = true, excludeOutliers = false
     const metricsNoOutliers = analysis.getGlobalMetrics(true, true); // excludePIAR = true, excludeOutliers = true
     
     return [
@@ -68,7 +68,7 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
   
   const conPIARColumns = ['Año', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo'];
   const conPIARRows = sortedAnalyses.map(analysis => {
-    const metricsPIAR = analysis.getGlobalMetrics(false); // Para estudiantes con PIAR
+    const metricsPIAR = analysis.getGlobalMetrics(false, false); // excludePIAR = false (incluye todos), excludeOutliers = false
     
     return [
       analysis.year.toString(),
@@ -176,9 +176,8 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
     // Tabla de comparación para esta área
     const columns = ['Año', 'Promedio Sin PIAR', 'Desv. Est.', 'Sin Outliers', 'Promedio Con PIAR'];
     const rows = sortedAnalyses.map(analysis => {
-      const allMetricsSinPIAR = analysis.getAreaMetrics(true); // excludePIAR = true
-      const allMetricsNoOutliers = analysis.getGlobalMetrics(true, true); // Para outliers usamos global
-      const allMetricsConPIAR = analysis.getAreaMetrics(false); // excludePIAR = false
+      const allMetricsSinPIAR = analysis.getAreaMetrics(true); // excludePIAR = true (sin PIAR)
+      const allMetricsConPIAR = analysis.getAreaMetrics(false); // excludePIAR = false (con todos)
       
       // Buscar métricas de esta área específica
       const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
@@ -188,7 +187,7 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
         analysis.year.toString(),
         metricsSinPIAR.promedio || 'N/A',
         metricsSinPIAR.desviacion || 'N/A',
-        metricsSinPIAR.promedio || 'N/A', // Usamos el mismo sin outliers por ahora
+        metricsSinPIAR.promedio || 'N/A', // Por ahora usamos el mismo (sin outliers requiere cálculo adicional)
         metricsConPIAR.promedio || 'N/A'
       ];
     });

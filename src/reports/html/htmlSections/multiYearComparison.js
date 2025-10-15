@@ -33,8 +33,8 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
           </thead>
           <tbody>
             ${sortedAnalyses.map((analysis, index) => {
-              const metrics = analysis.getGlobalMetrics(true);
-              const metricsNoOutliers = analysis.getGlobalMetrics(true, true);
+              const metrics = analysis.getGlobalMetrics(true, false); // excludePIAR = true, excludeOutliers = false
+              const metricsNoOutliers = analysis.getGlobalMetrics(true, true); // excludePIAR = true, excludeOutliers = true
               
               const formatValue = (val) => typeof val === 'number' ? val.toFixed(2) : (val || 'N/A');
               
@@ -72,7 +72,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
           </thead>
           <tbody>
             ${sortedAnalyses.map((analysis, index) => {
-              const metricsPIAR = analysis.getGlobalMetrics(false);
+              const metricsPIAR = analysis.getGlobalMetrics(false, false); // excludePIAR = false (incluye todos), excludeOutliers = false
               
               const formatValue = (val) => typeof val === 'number' ? val.toFixed(2) : (val || 'N/A');
               
