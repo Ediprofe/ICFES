@@ -12,6 +12,7 @@ import { generateTopPerformersSection } from './htmlSections/topPerformers.js';
 import { generateOutliersSection } from './htmlSections/outliers.js';
 import { 
   generateCombinedMetricsSection,
+  generateGaussianCurvesSection,
   generateGlobalComparisonSection,
   generateAreaComparisonSection,
   generateAllStudentsTableSection
@@ -71,6 +72,7 @@ export const generateHTML = (analysis, options = {}) => {
     
     sections.push(generateAllStudentsTableSection(allAnalyses, sectionNumber++));
     sections.push(generateCombinedMetricsSection(allAnalyses, sectionNumber++));
+    sections.push(generateGaussianCurvesSection(allAnalyses, sectionNumber++));
     sections.push(generateGlobalComparisonSection(allAnalyses, sectionNumber++));
     sections.push(generateAreaComparisonSection(allAnalyses, sectionNumber++));
     

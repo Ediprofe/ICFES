@@ -15,7 +15,24 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
   const grades = [...new Set(sortedData.map(s => s.Grupo))].sort();
   
   return `
-    ${generateSectionHeader('Listado de estudiantes', sectionNumber, '📋')}
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold">${sectionNumber}. 📋 Listado de estudiantes</h2>
+        <p class="text-blue-100 text-sm mt-1">Tabla completa con filtros y ordenamiento</p>
+      </div>
+      <button 
+        onclick="toggleStudentsTableSingle()" 
+        id="toggleStudentsButtonSingle"
+        class="flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+      >
+        <svg id="toggleIconSingle" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+        <span id="toggleTextSingle">Ocultar tabla</span>
+      </button>
+    </div>
+    
+    <div id="studentsTableContainerSingle" class="transition-all duration-500 ease-in-out overflow-hidden" style="max-height: 10000px;">
     
     <!-- Toggle PIAR Moderno -->
     <div class="mb-6 no-print flex items-center justify-between">
@@ -146,7 +163,34 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
       Mostrando <strong id="visibleCount">${sortedData.length}</strong> de <strong>${sortedData.length}</strong> estudiantes
     </p>
     
+    </div> <!-- Fin del contenedor colapsable -->
+    
     <script>
+      // Estado del toggle de la tabla
+      let studentsTableVisibleSingle = true;
+      
+      function toggleStudentsTableSingle() {
+        const container = document.getElementById('studentsTableContainerSingle');
+        const icon = document.getElementById('toggleIconSingle');
+        const text = document.getElementById('toggleTextSingle');
+        
+        studentsTableVisibleSingle = !studentsTableVisibleSingle;
+        
+        if (studentsTableVisibleSingle) {
+          // Mostrar tabla
+          container.style.maxHeight = '10000px';
+          container.style.opacity = '1';
+          icon.style.transform = 'rotate(0deg)';
+          text.textContent = 'Ocultar tabla';
+        } else {
+          // Ocultar tabla
+          container.style.maxHeight = '0';
+          container.style.opacity = '0';
+          icon.style.transform = 'rotate(-90deg)';
+          text.textContent = 'Mostrar tabla';
+        }
+      }
+      
       let piarVisibleSingle = true; // Estado inicial: PIAR visible
       
       function togglePiarVisibilitySingle() {

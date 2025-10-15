@@ -152,6 +152,465 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
 };
 
 /**
+ * Genera la sección de curvas de Gauss superpuestas
+ */
+export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
+  const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
+  const years = sortedAnalyses.map(a => a.year);
+  
+  // Preparar datos de métricas para cada año
+  const gaussianData = sortedAnalyses.map(analysis => {
+    const globalSinPIAR = analysis.getGlobalMetrics(true, false);
+    
+    return {
+      year: analysis.year,
+      promedio: globalSinPIAR.promedio,
+      desviacion: globalSinPIAR.desviacion
+    };
+  });
+  
+  // Colores para cada año
+  const yearColors = [
+    { border: 'rgba(59, 130, 246, 1)', background: 'rgba(59, 130, 246, 0.1)' },   // Azul
+    { border: 'rgba(16, 185, 129, 1)', background: 'rgba(16, 185, 129, 0.1)' },   // Verde
+    { border: 'rgba(239, 68, 68, 1)', background: 'rgba(239, 68, 68, 0.1)' },     // Rojo
+    { border: 'rgba(245, 158, 11, 1)', background: 'rgba(245, 158, 11, 0.1)' },   // Naranja
+    { border: 'rgba(139, 92, 246, 1)', background: 'rgba(139, 92, 246, 0.1)' },   // Púrpura
+    { border: 'rgba(236, 72, 153, 1)', background: 'rgba(236, 72, 153, 0.1)' },   // Rosa
+  ];
+  
+  return `
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-lg p-4 mb-6">
+      <h2 class="text-2xl font-bold">${sectionNumber}. Curvas de distribución normal (Campana de Gauss)</h2>
+      <p class="text-indigo-100 text-sm mt-1">Visualiza la distribución de promedios globales sin PIAR por año</p>
+    </div>
+    
+    <!-- Selector de años para curvas -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Seleccionar años para visualizar</h3>
+      <div class="flex flex-wrap gap-3 mb-4">
+        ${years.map((year, index) => {
+          const color = yearColors[index % yearColors.length];
+          return `
+            <label class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-indigo-100 rounded-lg cursor-pointer transition-colors border-2 border-transparent hover:border-indigo-500">
+              <input 
+                type="checkbox" 
+                class="gaussian-year-selector w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500" 
+                value="${year}"
+                data-color-border="${color.border}"
+                data-color-bg="${color.background}"
+                checked
+                onchange="updateGaussianChart()"
+              >
+              <span class="font-semibold text-gray-800">${year}</span>
+              <span class="w-6 h-6 rounded-full" style="background-color: ${color.border}"></span>
+            </label>
+          `;
+        }).join('')}
+      </div>
+      <button 
+        onclick="selectAllGaussianYears(true)" 
+        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm mr-2"
+      >
+        ✓ Seleccionar todos
+      </button>
+      <button 
+        onclick="selectAllGaussianYears(false)" 
+        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+      >
+        ✗ Deseleccionar todos
+      </button>
+    </div>
+    
+    <!-- Gráfico de curvas de Gauss -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div style="height: 500px; position: relative;">
+        <canvas id="gaussianCurvesChart"></canvas>
+      </div>
+      
+      <!-- Leyenda de zonas de percentiles -->
+      <div class="mt-4 grid grid-cols-4 gap-3">
+        <div class="flex items-center gap-2 p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+          <div class="w-4 h-4 bg-red-500 rounded"></div>
+          <div>
+            <p class="text-xs font-bold text-red-800">Zona Roja</p>
+            <p class="text-xs text-red-600">0-25% (Necesita apoyo)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+          <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+          <div>
+            <p class="text-xs font-bold text-yellow-800">Zona Amarilla</p>
+            <p class="text-xs text-yellow-600">25-50% (En desarrollo)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+          <div class="w-4 h-4 bg-green-500 rounded"></div>
+          <div>
+            <p class="text-xs font-bold text-green-800">Zona Verde</p>
+            <p class="text-xs text-green-600">50-75% (Satisfactorio)</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+          <div class="w-4 h-4 bg-blue-500 rounded"></div>
+          <div>
+            <p class="text-xs font-bold text-blue-800">Zona Azul</p>
+            <p class="text-xs text-blue-600">75-100% (Sobresaliente)</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Insights automáticos -->
+      <div id="gaussianInsights" class="mt-6">
+        <!-- Se llenará dinámicamente con JavaScript -->
+      </div>
+    </div>
+    
+    <script>
+      // Datos para curvas de Gauss
+      const gaussianData = ${JSON.stringify(gaussianData)};
+      const yearColors = ${JSON.stringify(yearColors)};
+      
+      // Función para calcular la distribución normal (campana de Gauss)
+      function normalDistribution(x, mean, stdDev) {
+        const coefficient = 1 / (stdDev * Math.sqrt(2 * Math.PI));
+        const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
+        return coefficient * Math.exp(exponent);
+      }
+      
+      // Generar puntos para la curva de Gauss
+      function generateGaussianCurve(mean, stdDev, numPoints = 200) {
+        const points = [];
+        const range = 4 * stdDev; // 4 desviaciones estándar a cada lado
+        const start = mean - range;
+        const end = mean + range;
+        const step = (end - start) / numPoints;
+        
+        for (let x = start; x <= end; x += step) {
+          points.push({
+            x: x,
+            y: normalDistribution(x, mean, stdDev)
+          });
+        }
+        
+        return points;
+      }
+      
+      // Calcular percentiles basados en distribución normal
+      function calculatePercentile(value, mean, stdDev) {
+        const z = (value - mean) / stdDev;
+        // Aproximación de la función de distribución acumulativa (CDF)
+        const t = 1 / (1 + 0.2316419 * Math.abs(z));
+        const d = 0.3989423 * Math.exp(-z * z / 2);
+        const probability = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+        return z > 0 ? (1 - probability) * 100 : probability * 100;
+      }
+      
+      // Calcular zona de rendimiento
+      function getPerformanceZone(percentile) {
+        if (percentile < 25) return { name: 'Roja', color: '#ef4444', label: 'Necesita apoyo' };
+        if (percentile < 50) return { name: 'Amarilla', color: '#f59e0b', label: 'En desarrollo' };
+        if (percentile < 75) return { name: 'Verde', color: '#10b981', label: 'Satisfactorio' };
+        return { name: 'Azul', color: '#3b82f6', label: 'Sobresaliente' };
+      }
+      
+      // Generar insights automáticos
+      function generateInsights(selectedData) {
+        if (selectedData.length < 2) {
+          return '<div class="p-4 bg-gray-50 rounded-lg"><p class="text-sm text-gray-600">Selecciona al menos 2 años para ver insights comparativos.</p></div>';
+        }
+        
+        // Ordenar por año
+        const sortedData = [...selectedData].sort((a, b) => a.year - b.year);
+        const oldest = sortedData[0];
+        const newest = sortedData[sortedData.length - 1];
+        
+        // Calcular cambios
+        const promedioChange = newest.promedio - oldest.promedio;
+        const desviacionChange = newest.desviacion - oldest.desviacion;
+        const desviacionChangePercent = ((desviacionChange / oldest.desviacion) * 100).toFixed(1);
+        
+        // Determinar tendencias
+        const promedioTrend = promedioChange > 0 ? 'mejoró' : 'disminuyó';
+        const promedioIcon = promedioChange > 0 ? '📈' : '📉';
+        const consistenciaTrend = desviacionChange < 0 ? 'más homogéneo' : 'más disperso';
+        const consistenciaIcon = desviacionChange < 0 ? '✅' : '⚠️';
+        
+        // Calcular percentiles de los promedios
+        const oldestPercentile = calculatePercentile(oldest.promedio, oldest.promedio, oldest.desviacion);
+        const newestPercentile = calculatePercentile(newest.promedio, newest.promedio, newest.desviacion);
+        
+        let html = \`
+          <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6 border-2 border-purple-200">
+            <h4 class="text-lg font-bold text-purple-900 mb-4 flex items-center gap-2">
+              <span class="text-2xl">💡</span>
+              <span>INSIGHTS CLAVE: \${oldest.year} → \${newest.year}</span>
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Cambio en promedio -->
+              <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 \${promedioChange > 0 ? 'border-green-500' : 'border-red-500'}">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">\${promedioIcon}</span>
+                  <p class="text-sm font-bold text-gray-700">Cambio en Promedio</p>
+                </div>
+                <p class="text-3xl font-extrabold \${promedioChange > 0 ? 'text-green-600' : 'text-red-600'}">
+                  \${promedioChange > 0 ? '+' : ''}\${promedioChange.toFixed(2)}
+                </p>
+                <p class="text-xs text-gray-600 mt-1">
+                  El promedio \${promedioTrend} \${Math.abs(promedioChange).toFixed(2)} puntos
+                </p>
+              </div>
+              
+              <!-- Cambio en consistencia -->
+              <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 \${desviacionChange < 0 ? 'border-green-500' : 'border-orange-500'}">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">\${consistenciaIcon}</span>
+                  <p class="text-sm font-bold text-gray-700">Consistencia</p>
+                </div>
+                <p class="text-3xl font-extrabold \${desviacionChange < 0 ? 'text-green-600' : 'text-orange-600'}">
+                  \${desviacionChange > 0 ? '+' : ''}\${desviacionChangePercent}%
+                </p>
+                <p class="text-xs text-gray-600 mt-1">
+                  El grupo es \${consistenciaTrend}
+                </p>
+              </div>
+              
+              <!-- Desplazamiento de curva -->
+              <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 border-purple-500">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">🎯</span>
+                  <p class="text-sm font-bold text-gray-700">Desplazamiento</p>
+                </div>
+                <p class="text-3xl font-extrabold text-purple-600">
+                  \${promedioChange > 0 ? '→' : '←'} \${Math.abs(promedioChange).toFixed(1)} pts
+                </p>
+                <p class="text-xs text-gray-600 mt-1">
+                  La curva se movió a la \${promedioChange > 0 ? 'derecha' : 'izquierda'}
+                </p>
+              </div>
+            </div>
+            
+            <!-- Análisis detallado -->
+            <div class="mt-4 p-4 bg-white rounded-lg">
+              <p class="text-sm text-gray-800 leading-relaxed">
+                <strong class="text-purple-900">📊 Análisis:</strong>
+                Entre \${oldest.year} y \${newest.year}, el promedio global 
+                <strong class="\${promedioChange > 0 ? 'text-green-600' : 'text-red-600'}">\${promedioTrend} \${Math.abs(promedioChange).toFixed(2)} puntos</strong>
+                (de \${oldest.promedio.toFixed(2)} a \${newest.promedio.toFixed(2)}). 
+                La desviación estándar 
+                <strong class="\${desviacionChange < 0 ? 'text-green-600' : 'text-orange-600'}">\${desviacionChange < 0 ? 'disminuyó' : 'aumentó'} \${Math.abs(desviacionChangePercent)}%</strong>
+                (de \${oldest.desviacion.toFixed(2)} a \${newest.desviacion.toFixed(2)}), 
+                lo que indica que el grupo es ahora <strong>\${consistenciaTrend}</strong>.
+                \${promedioChange > 0 && desviacionChange < 0 ? 
+                  ' <span class="text-green-600 font-bold">¡Excelente! Mejoraron el promedio Y la consistencia.</span>' : 
+                  promedioChange > 0 ? 
+                    ' <span class="text-blue-600 font-bold">Hay mejora en el promedio, pero la dispersión aumentó.</span>' :
+                    ' <span class="text-orange-600 font-bold">Se requiere atención para mejorar el rendimiento general.</span>'
+                }
+              </p>
+            </div>
+          </div>
+        \`;
+        
+        return html;
+      }
+      
+      let gaussianChart = null;
+      
+      function selectAllGaussianYears(select) {
+        document.querySelectorAll('.gaussian-year-selector').forEach(checkbox => {
+          checkbox.checked = select;
+        });
+        updateGaussianChart();
+      }
+      
+      function updateGaussianChart() {
+        const selectedCheckboxes = Array.from(document.querySelectorAll('.gaussian-year-selector:checked'));
+        
+        // Obtener datos seleccionados
+        const selectedData = selectedCheckboxes.map(checkbox => {
+          const year = parseInt(checkbox.value);
+          return gaussianData.find(d => d.year === year);
+        }).filter(d => d !== null);
+        
+        // Generar insights
+        document.getElementById('gaussianInsights').innerHTML = generateInsights(selectedData);
+        
+        // Preparar datasets para el gráfico
+        const datasets = selectedCheckboxes.map((checkbox, index) => {
+          const year = parseInt(checkbox.value);
+          const yearData = gaussianData.find(d => d.year === year);
+          const colorBorder = checkbox.dataset.colorBorder;
+          const colorBg = checkbox.dataset.colorBg;
+          
+          if (!yearData) return null;
+          
+          const curvePoints = generateGaussianCurve(yearData.promedio, yearData.desviacion);
+          
+          return {
+            label: \`\${year} (μ=\${yearData.promedio.toFixed(2)}, σ=\${yearData.desviacion.toFixed(2)})\`,
+            data: curvePoints,
+            borderColor: colorBorder,
+            backgroundColor: colorBg,
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 5
+          };
+        }).filter(d => d !== null);
+        
+        if (gaussianChart) {
+          gaussianChart.destroy();
+        }
+        
+        const ctx = document.getElementById('gaussianCurvesChart').getContext('2d');
+        
+        // Plugin para dibujar zonas de fondo (percentiles)
+        const backgroundZonesPlugin = {
+          id: 'backgroundZones',
+          beforeDraw: (chart) => {
+            if (selectedData.length === 0) return;
+            
+            const ctx = chart.ctx;
+            const chartArea = chart.chartArea;
+            const xScale = chart.scales.x;
+            const yScale = chart.scales.y;
+            
+            // Usar el primer año seleccionado como referencia para las zonas
+            const referenceData = selectedData[0];
+            const mean = referenceData.promedio;
+            const stdDev = referenceData.desviacion;
+            
+            // Calcular límites de percentiles (usando z-scores)
+            const p25 = mean - 0.674 * stdDev;  // Percentil 25
+            const p50 = mean;                    // Percentil 50 (mediana)
+            const p75 = mean + 0.674 * stdDev;  // Percentil 75
+            
+            // Dibujar zonas
+            const zones = [
+              { start: xScale.min, end: p25, color: 'rgba(239, 68, 68, 0.08)' },    // Roja
+              { start: p25, end: p50, color: 'rgba(245, 158, 11, 0.08)' },          // Amarilla
+              { start: p50, end: p75, color: 'rgba(16, 185, 129, 0.08)' },          // Verde
+              { start: p75, end: xScale.max, color: 'rgba(59, 130, 246, 0.08)' }    // Azul
+            ];
+            
+            zones.forEach(zone => {
+              const xStart = xScale.getPixelForValue(zone.start);
+              const xEnd = xScale.getPixelForValue(zone.end);
+              
+              ctx.fillStyle = zone.color;
+              ctx.fillRect(
+                xStart,
+                chartArea.top,
+                xEnd - xStart,
+                chartArea.bottom - chartArea.top
+              );
+            });
+            
+            // Dibujar líneas de percentiles
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            [p25, p50, p75].forEach(percentile => {
+              const x = xScale.getPixelForValue(percentile);
+              ctx.beginPath();
+              ctx.moveTo(x, chartArea.top);
+              ctx.lineTo(x, chartArea.bottom);
+              ctx.stroke();
+            });
+            
+            ctx.setLineDash([]);
+          }
+        };
+        
+        gaussianChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Distribución Normal de Promedios Globales (sin PIAR)',
+                font: {
+                  size: 18,
+                  weight: 'bold'
+                }
+              },
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  font: {
+                    size: 14,
+                    weight: 'bold'
+                  },
+                  usePointStyle: true,
+                  padding: 15
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return \`\${context.dataset.label}: Densidad = \${context.parsed.y.toFixed(4)}\`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                type: 'linear',
+                title: {
+                  display: true,
+                  text: 'Promedio Global',
+                  font: {
+                    size: 14,
+                    weight: 'bold'
+                  }
+                },
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'Densidad de Probabilidad',
+                  font: {
+                    size: 14,
+                    weight: 'bold'
+                  }
+                },
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.05)'
+                }
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              axis: 'x',
+              intersect: false
+            }
+          },
+          plugins: [backgroundZonesPlugin]
+        });
+      }
+      
+      // Inicializar gráfico al cargar
+      window.addEventListener('DOMContentLoaded', () => {
+        updateGaussianChart();
+      });
+    </script>
+  `;
+};
+
+/**
  * Genera la sección de comparación de métricas globales
  */
 export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
@@ -609,9 +1068,24 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
   const grades = [...new Set(allStudents.map(s => s.grado))].sort();
   
   return `
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 mt-8">
-      <h2 class="text-2xl font-bold">${sectionNumber}. Listado completo de estudiantes</h2>
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 mt-8 flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold">${sectionNumber}. Listado completo de estudiantes</h2>
+        <p class="text-blue-100 text-sm mt-1">Todos los años con filtros avanzados</p>
+      </div>
+      <button 
+        onclick="toggleStudentsTableMulti()" 
+        id="toggleStudentsButtonMulti"
+        class="flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+      >
+        <svg id="toggleIconMulti" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+        <span id="toggleTextMulti">Ocultar tabla</span>
+      </button>
     </div>
+    
+    <div id="studentsTableContainerMulti" class="transition-all duration-500 ease-in-out overflow-hidden" style="max-height: 10000px;">
     
     <!-- Toggle PIAR Moderno y Filtros -->
     <div class="mb-6 no-print">
@@ -765,7 +1239,34 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
       Mostrando <strong id="visibleCountAll">${allStudents.length}</strong> de <strong>${allStudents.length}</strong> estudiantes
     </p>
     
+    </div> <!-- Fin del contenedor colapsable -->
+    
     <script>
+      // Estado del toggle de la tabla multi-año
+      let studentsTableVisibleMulti = true;
+      
+      function toggleStudentsTableMulti() {
+        const container = document.getElementById('studentsTableContainerMulti');
+        const icon = document.getElementById('toggleIconMulti');
+        const text = document.getElementById('toggleTextMulti');
+        
+        studentsTableVisibleMulti = !studentsTableVisibleMulti;
+        
+        if (studentsTableVisibleMulti) {
+          // Mostrar tabla
+          container.style.maxHeight = '10000px';
+          container.style.opacity = '1';
+          icon.style.transform = 'rotate(0deg)';
+          text.textContent = 'Ocultar tabla';
+        } else {
+          // Ocultar tabla
+          container.style.maxHeight = '0';
+          container.style.opacity = '0';
+          icon.style.transform = 'rotate(-90deg)';
+          text.textContent = 'Mostrar tabla';
+        }
+      }
+      
       let piarVisible = true; // Estado inicial: PIAR visible
       
       function togglePiarVisibility() {
