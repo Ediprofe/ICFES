@@ -14,14 +14,16 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
   return `
-    ${generateSectionHeader('Comparación de Métricas Globales', sectionNumber, '📊')}
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6">
+      <h2 class="text-2xl font-bold">${sectionNumber}. COMPARACION DE METRICAS GLOBALES</h2>
+    </div>
     
     <!-- Métricas Sin PIAR (Principales) -->
     <div class="mb-8">
-      <h3 class="text-xl font-bold text-gray-800 mb-4">Sin PIAR (Métricas Principales)</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-          <thead class="bg-green-600 text-white">
+      <h3 class="text-lg font-bold text-green-600 mb-3 uppercase">Sin PIAR (Metricas Principales)</h3>
+      <div class="overflow-x-auto shadow-md rounded-lg">
+        <table class="min-w-full bg-white">
+          <thead class="bg-blue-600 text-white">
             <tr>
               <th class="px-4 py-3 text-center text-sm font-semibold">Año</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Estudiantes</th>
@@ -58,10 +60,10 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
     
     <!-- Métricas Con PIAR -->
     <div class="mb-8">
-      <h3 class="text-xl font-bold text-gray-800 mb-4">Con PIAR</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-          <thead class="bg-gray-600 text-white">
+      <h3 class="text-lg font-bold text-gray-600 mb-3 uppercase">Con PIAR (Todos los Estudiantes)</h3>
+      <div class="overflow-x-auto shadow-md rounded-lg">
+        <table class="min-w-full bg-white">
+          <thead class="bg-blue-600 text-white">
             <tr>
               <th class="px-4 py-3 text-center text-sm font-semibold">Año</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Estudiantes</th>
@@ -102,14 +104,16 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
   return `
-    ${generateSectionHeader('Comparación por Áreas Académicas', sectionNumber, '📚')}
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 mt-8">
+      <h2 class="text-2xl font-bold">${sectionNumber}. COMPARACION POR AREAS ACADEMICAS</h2>
+    </div>
     
     ${ACADEMIC_AREAS.map(area => `
       <div class="mb-8">
-        <h3 class="text-xl font-bold mb-4" style="color: ${area.color}">${area.name}</h3>
-        <div class="overflow-x-auto">
-          <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-            <thead style="background-color: ${area.color}" class="text-white">
+        <h3 class="text-lg font-bold mb-3 uppercase" style="color: ${area.color}">${area.name}</h3>
+        <div class="overflow-x-auto shadow-md rounded-lg">
+          <table class="min-w-full bg-white">
+            <thead class="bg-blue-600 text-white">
               <tr>
                 <th class="px-4 py-3 text-center text-sm font-semibold">Año</th>
                 <th class="px-4 py-3 text-center text-sm font-semibold">Promedio Sin PIAR</th>
@@ -191,7 +195,9 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
   const grades = [...new Set(allStudents.map(s => s.grado))].sort();
   
   return `
-    ${generateSectionHeader('Listado Completo de Estudiantes', sectionNumber, '📋')}
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 mt-8">
+      <h2 class="text-2xl font-bold">${sectionNumber}. LISTADO COMPLETO DE ESTUDIANTES</h2>
+    </div>
     
     <!-- Filtros -->
     <div class="mb-6 no-print grid grid-cols-1 md:grid-cols-4 gap-4">

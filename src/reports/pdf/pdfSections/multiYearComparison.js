@@ -248,12 +248,15 @@ export const generateAllStudentsTable = (doc, analyses, startY) => {
   doc.addPage();
   currentY = 20;
   
-  // Título
-  doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(37, 99, 235);
-  doc.text('📋 Listado Completo de Estudiantes (Todos los Años)', 20, currentY);
-  currentY += 10;
+  // Título con diseño mejorado
+  doc.setFillColor(37, 99, 235); // blue-600
+  doc.rect(15, currentY - 8, 180, 12, 'F');
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('3. LISTADO COMPLETO DE ESTUDIANTES', 20, currentY);
+  currentY += 12;
   
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
