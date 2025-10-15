@@ -100,6 +100,74 @@ export const generatePDF = (analysis, options = {}) => {
     }
   }
   
+  // Agregar página final con disclaimer
+  addNewPage(doc);
+  const pageHeight = doc.internal.pageSize.height;
+  const pageWidth = doc.internal.pageSize.width;
+  const centerX = pageWidth / 2;
+  
+  // Título
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(59, 130, 246); // Azul
+  doc.text('Aviso Legal y Responsabilidad', centerX, 40, { align: 'center' });
+  
+  // Contenido del disclaimer
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(60, 60, 60);
+  
+  const disclaimerText = [
+    'Este informe ha sido generado mediante la plataforma web desarrollada por ediprofe.com,',
+    'diseñada específicamente para facilitar el análisis de resultados de pruebas ICFES en',
+    'instituciones educativas.',
+    '',
+    'RESPONSABILIDAD DEL USO DE DATOS:',
+    '',
+    'ediprofe.com proporciona únicamente la herramienta tecnológica para el procesamiento y',
+    'visualización de datos. La institución educativa y/o los docentes que utilizan esta plataforma',
+    'son los únicos responsables de:',
+    '',
+    '  • La veracidad, exactitud y actualización de los datos ingresados al sistema',
+    '  • El uso adecuado de la información generada en los informes',
+    '  • El cumplimiento de las normativas de protección de datos personales vigentes',
+    '  • Las decisiones pedagógicas, administrativas o de cualquier índole tomadas con base',
+    '    en los análisis presentados',
+    '  • La confidencialidad y privacidad de la información de los estudiantes',
+    '',
+    'ediprofe.com no asume responsabilidad alguna por el uso indebido de los datos, las',
+    'interpretaciones realizadas, ni las acciones derivadas del análisis de los resultados.',
+    '',
+    'Para más información sobre términos de uso y políticas de privacidad, visite:',
+    'www.ediprofe.com'
+  ];
+  
+  let yPos = 60;
+  disclaimerText.forEach(line => {
+    if (line === '') {
+      yPos += 4;
+    } else if (line.includes('RESPONSABILIDAD')) {
+      doc.setFont('helvetica', 'bold');
+      doc.text(line, 14, yPos);
+      doc.setFont('helvetica', 'normal');
+      yPos += 6;
+    } else {
+      doc.text(line, 14, yPos);
+      yPos += 5;
+    }
+  });
+  
+  // Línea decorativa
+  doc.setDrawColor(59, 130, 246);
+  doc.setLineWidth(0.5);
+  doc.line(14, pageHeight - 30, pageWidth - 14, pageHeight - 30);
+  
+  // Pie de página final
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text('© ' + new Date().getFullYear() + ' ediprofe.com - Herramientas educativas para instituciones', centerX, pageHeight - 20, { align: 'center' });
+  doc.text('Documento generado el ' + new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' }), centerX, pageHeight - 15, { align: 'center' });
+  
   // Generar nombre de archivo
   const defaultFileName = `informe-icfes-${analysis.year}${isMultiYear ? '-comparativo' : ''}-${new Date().toISOString().split('T')[0]}.pdf`;
   const finalFileName = fileName || defaultFileName;

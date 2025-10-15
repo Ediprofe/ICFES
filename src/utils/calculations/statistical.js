@@ -11,21 +11,14 @@ export const zScore = (value, avg, sd) => {
   return sd === 0 ? 0 : (value - avg) / sd;
 };
 
-// Outliers (±3σ) - Basado en muestra SIN PIAR
-export const findOutliers = (data, excludePIAR = true) => {
-  // Filtrar solo estudiantes SIN PIAR con puntaje global válido
-  const validStudents = excludePIAR
-    ? data.filter(s => 
-        s['¿PIAR?'] !== 'Sí' && 
-        s.Global !== null && 
-        s.Global !== undefined && 
-        !isNaN(s.Global)
-      )
-    : data.filter(s => 
-        s.Global !== null && 
-        s.Global !== undefined && 
-        !isNaN(s.Global)
-      );
+// Outliers (±3σ) - Basado en muestra CON PIAR (todos los estudiantes)
+export const findOutliers = (data, excludePIAR = false) => {
+  // Siempre usar TODOS los estudiantes (CON PIAR) para calcular outliers
+  const validStudents = data.filter(s => 
+    s.Global !== null && 
+    s.Global !== undefined && 
+    !isNaN(s.Global)
+  );
   
   const globals = validStudents.map(s => s.Global);
   const avg = mean(globals);
@@ -36,6 +29,30 @@ export const findOutliers = (data, excludePIAR = true) => {
   // Buscar outliers
   return validStudents.filter(student => {
     const z = Math.abs(zScore(student.Global, avg, sd));
+    return z >= threshold;
+  });
+};
+
+// Encontrar outliers por área académica específica
+export const findOutliersByArea = (data, areaField) => {
+  // Usar TODOS los estudiantes (CON PIAR) para calcular outliers
+  const validStudents = data.filter(s => 
+    s[areaField] !== null && 
+    s[areaField] !== undefined && 
+    !isNaN(s[areaField])
+  );
+  
+  if (validStudents.length === 0) return [];
+  
+  const values = validStudents.map(s => s[areaField]);
+  const avg = mean(values);
+  const sd = stdDev(values);
+  
+  const threshold = METRIC_LIMITS.OUTLIER_THRESHOLD_SIGMA;
+  
+  // Buscar outliers
+  return validStudents.filter(student => {
+    const z = Math.abs(zScore(student[areaField], avg, sd));
     return z >= threshold;
   });
 };

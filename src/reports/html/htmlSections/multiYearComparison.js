@@ -165,7 +165,8 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
     return {
       year: analysis.year,
       promedio: globalSinPIAR.promedio,
-      desviacion: globalSinPIAR.desviacion
+      desviacion: globalSinPIAR.desviacion,
+      data: analysis.processedData // Incluir datos de estudiantes para cálculo de outliers
     };
   });
   
@@ -857,6 +858,32 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
             </div>
           </div>
           
+          <!-- Tabla de Outliers por Cohorte y Área -->
+          <div class="mt-8 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-200 overflow-hidden">
+            <button 
+              onclick="toggleOutliersSection()" 
+              class="w-full px-6 py-4 flex items-center justify-between hover:bg-yellow-100 transition-colors cursor-pointer"
+            >
+              <div class="flex items-center gap-2">
+                <span class="text-2xl">⚠️</span>
+                <h4 class="text-lg font-bold text-orange-900">OUTLIERS POR COHORTE Y ÁREA</h4>
+              </div>
+              <svg id="outliersChevron" class="w-6 h-6 text-orange-900 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="outliersContent" class="px-6 pb-6" style="display: none;">
+              <p class="text-sm text-gray-700 mb-4">
+                Estudiantes que se encuentran a más de 3 desviaciones estándar (±3σ) del promedio. 
+                Los outliers se calculan con respecto a <strong>todos los estudiantes</strong> (incluyendo PIAR) de las cohortes seleccionadas.
+                <strong>Nota:</strong> Un estudiante puede ser outlier en el promedio global pero no en áreas específicas, y viceversa.
+              </p>
+              <div id="outliersTableContainer" class="overflow-x-auto">
+                <!-- Se llenará dinámicamente -->
+              </div>
+            </div>
+          </div>
+          
           <!-- Comparación por Áreas Académicas -->
           <div class="mt-8 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg p-6 border-2 border-indigo-200">
             <h4 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
@@ -906,6 +933,9 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
         
         // Crear gráficos de comparación
         createComparisonCharts(groupAPromedio, groupBPromedio, groupADesviacion, groupBDesviacion, groupAYears, groupBYears);
+        
+        // Crear tabla de outliers
+        updateOutliersTable(groupAYears, groupBYears);
         
         // Crear gráficos de comparación por áreas
         updateAreaComparisonCharts(groupAYears, groupBYears);
@@ -1097,6 +1127,250 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
             }
           });
         }
+      }
+      
+      // Función para toggle de sección de outliers
+      function toggleOutliersSection() {
+        const content = document.getElementById('outliersContent');
+        const chevron = document.getElementById('outliersChevron');
+        
+        if (content.style.display === 'none') {
+          content.style.display = 'block';
+          chevron.style.transform = 'rotate(180deg)';
+        } else {
+          content.style.display = 'none';
+          chevron.style.transform = 'rotate(0deg)';
+        }
+      }
+      
+      // Función para actualizar tabla de outliers
+      function updateOutliersTable(groupAYears, groupBYears) {
+        const container = document.getElementById('outliersTableContainer');
+        
+        if (!container || (groupAYears.length === 0 && groupBYears.length === 0)) {
+          container.innerHTML = '<p class="text-gray-600 text-center py-4">Selecciona cohortes para ver los outliers</p>';
+          return;
+        }
+        
+        const allYears = [...new Set([...groupAYears, ...groupBYears])].sort();
+        
+        // Función auxiliar para calcular outliers por área
+        function findOutliersByArea(data, areaField) {
+          const validStudents = data.filter(s => 
+            s[areaField] !== null && 
+            s[areaField] !== undefined && 
+            !isNaN(s[areaField])
+          );
+          
+          if (validStudents.length === 0) return [];
+          
+          const values = validStudents.map(s => s[areaField]);
+          const avg = values.reduce((a, b) => a + b, 0) / values.length;
+          const variance = values.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / values.length;
+          const sd = Math.sqrt(variance);
+          
+          const threshold = 3; // ±3σ
+          
+          return validStudents.filter(student => {
+            const z = Math.abs((student[areaField] - avg) / sd);
+            return z >= threshold;
+          });
+        }
+        
+        // Función auxiliar para calcular outliers globales
+        function findGlobalOutliers(data) {
+          const validStudents = data.filter(s => 
+            s.Global !== null && 
+            s.Global !== undefined && 
+            !isNaN(s.Global)
+          );
+          
+          if (validStudents.length === 0) return [];
+          
+          const globals = validStudents.map(s => s.Global);
+          const avg = globals.reduce((a, b) => a + b, 0) / globals.length;
+          const variance = globals.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / globals.length;
+          const sd = Math.sqrt(variance);
+          
+          const threshold = 3; // ±3σ
+          
+          return validStudents.filter(student => {
+            const z = Math.abs((student.Global - avg) / sd);
+            return z >= threshold;
+          });
+        }
+        
+        // Recopilar datos de todas las cohortes seleccionadas
+        const allData = [];
+        allYears.forEach(year => {
+          const analysis = gaussianData.find(d => d.year === year);
+          if (analysis && analysis.data) {
+            analysis.data.forEach(student => {
+              allData.push({ ...student, year });
+            });
+          }
+        });
+        
+        if (allData.length === 0) {
+          container.innerHTML = '<p class="text-gray-600 text-center py-4">No hay datos disponibles</p>';
+          return;
+        }
+        
+        // Calcular outliers por área
+        const areas = [
+          { name: 'Global', field: 'Global', color: '#6366f1' },
+          { name: 'Lectura crítica', field: 'Lectura crítica', color: '#ef4444' },
+          { name: 'Matemáticas', field: 'Matemáticas', color: '#3b82f6' },
+          { name: 'Sociales', field: 'Sociales', color: '#f97316' },
+          { name: 'Naturales', field: 'Naturales', color: '#10b981' },
+          { name: 'Inglés', field: 'Inglés', color: '#8b5cf6' }
+        ];
+        
+        let html = '<table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">';
+        html += '<thead class="bg-orange-600 text-white">';
+        html += '<tr>';
+        html += '<th class="px-4 py-3 text-left text-sm font-semibold">Cohorte</th>';
+        areas.forEach(area => {
+          html += \`<th class="px-4 py-3 text-center text-sm font-semibold" style="color: white;">\${area.name}</th>\`;
+        });
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+        
+        allYears.forEach((year, index) => {
+          const yearData = allData.filter(s => s.year === year);
+          
+          html += \`<tr class="\${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">\`;
+          html += \`<td class="px-4 py-3 text-left font-bold text-lg">\${year}</td>\`;
+          
+          areas.forEach(area => {
+            const outliers = area.field === 'Global' 
+              ? findGlobalOutliers(yearData)
+              : findOutliersByArea(yearData, area.field);
+            
+            const count = outliers.length;
+            const percentage = yearData.length > 0 ? ((count / yearData.length) * 100).toFixed(1) : '0.0';
+            
+            html += \`<td class="px-4 py-3 text-center">\`;
+            if (count > 0) {
+              html += \`<div class="flex flex-col items-center">\`;
+              html += \`<span class="text-lg font-bold" style="color: \${area.color}">\${count}</span>\`;
+              html += \`<span class="text-xs text-gray-600">(\${percentage}%)</span>\`;
+              html += \`</div>\`;
+            } else {
+              html += \`<span class="text-gray-400">-</span>\`;
+            }
+            html += \`</td>\`;
+          });
+          
+          html += '</tr>';
+        });
+        
+        html += '</tbody>';
+        html += '</table>';
+        
+        // Agregar leyenda
+        html += '<div class="mt-4 p-3 bg-white rounded-lg border border-yellow-200">';
+        html += '<p class="text-xs text-gray-700"><strong>Interpretación:</strong> Los números indican la cantidad de estudiantes outliers en cada área. ';
+        html += 'El porcentaje muestra qué proporción del total de estudiantes de esa cohorte son outliers. ';
+        html += 'Los outliers pueden ser tanto por rendimiento excepcional (por encima) como bajo rendimiento (por debajo).</p>';
+        html += '</div>';
+        
+        // Agregar listado detallado de outliers por cohorte y área
+        html += '<div class="mt-6">';
+        html += '<h5 class="text-md font-bold text-orange-900 mb-3 flex items-center gap-2">';
+        html += '<span>📋</span>';
+        html += '<span>LISTADO DETALLADO DE OUTLIERS</span>';
+        html += '</h5>';
+        
+        allYears.forEach((year, yearIndex) => {
+          const yearData = allData.filter(s => s.year === year);
+          
+          html += \`<div class="mb-6 bg-white rounded-lg border-2 border-orange-200 overflow-hidden">\`;
+          html += \`<div class="bg-orange-100 px-4 py-2 border-b border-orange-200">\`;
+          html += \`<h6 class="font-bold text-lg text-orange-900">Cohorte \${year}</h6>\`;
+          html += \`</div>\`;
+          html += \`<div class="p-4">\`;
+          
+          let hasOutliers = false;
+          
+          areas.forEach(area => {
+            const outliers = area.field === 'Global' 
+              ? findGlobalOutliers(yearData)
+              : findOutliersByArea(yearData, area.field);
+            
+            if (outliers.length > 0) {
+              hasOutliers = true;
+              
+              // Calcular estadísticas para mostrar el contexto
+              const validValues = yearData
+                .map(s => s[area.field])
+                .filter(v => v !== null && v !== undefined && !isNaN(v));
+              const avg = validValues.reduce((a, b) => a + b, 0) / validValues.length;
+              const variance = validValues.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / validValues.length;
+              const sd = Math.sqrt(variance);
+              
+              html += \`<div class="mb-4">\`;
+              html += \`<div class="flex items-center gap-2 mb-2">\`;
+              html += \`<div class="w-3 h-3 rounded-full" style="background-color: \${area.color}"></div>\`;
+              html += \`<h6 class="font-bold text-md" style="color: \${area.color}">\${area.name}</h6>\`;
+              html += \`<span class="text-xs text-gray-600 ml-2">(μ=\${avg.toFixed(2)}, σ=\${sd.toFixed(2)})</span>\`;
+              html += \`</div>\`;
+              
+              html += \`<div class="space-y-2">\`;
+              
+              outliers.forEach(student => {
+                const value = student[area.field];
+                const z = ((value - avg) / sd).toFixed(2);
+                const isAbove = value > avg;
+                const bgColor = isAbove ? 'bg-green-50 border-l-green-500' : 'bg-red-50 border-l-red-500';
+                const badgeColor = isAbove ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                const icon = isAbove ? '↑' : '↓';
+                const label = isAbove ? 'Excepcional' : 'Bajo';
+                
+                html += \`<div class="flex items-center gap-3 p-3 rounded-lg border-l-4 \${bgColor} bg-white shadow-sm hover:shadow-md transition-shadow">\`;
+                
+                // Badge de tipo
+                html += \`<div class="flex-shrink-0">\`;
+                html += \`<span class="inline-flex items-center justify-center w-16 h-16 rounded-full \${badgeColor} font-bold text-xl">\`;
+                html += \`\${icon}\`;
+                html += \`</span>\`;
+                html += \`</div>\`;
+                
+                // Información del estudiante
+                html += \`<div class="flex-1 min-w-0">\`;
+                html += \`<div class="flex items-baseline gap-2 mb-1">\`;
+                html += \`<p class="text-base font-bold text-gray-900">\${student.Nombre} \${student.Apellido}</p>\`;
+                html += \`<span class="text-xs px-2 py-0.5 rounded-full \${badgeColor} font-semibold">\${label}</span>\`;
+                html += \`</div>\`;
+                html += \`<p class="text-sm text-gray-600">Grupo: <span class="font-semibold">\${student.Grupo || 'N/A'}</span></p>\`;
+                html += \`</div>\`;
+                
+                // Métricas
+                html += \`<div class="flex-shrink-0 text-right">\`;
+                html += \`<p class="text-lg font-bold text-gray-900">\${value.toFixed(1)}</p>\`;
+                html += \`<p class="text-xs text-gray-500">z-score: \${z}</p>\`;
+                html += \`</div>\`;
+                
+                html += \`</div>\`;
+              });
+              
+              html += \`</div>\`;
+              html += \`</div>\`;
+            }
+          });
+          
+          if (!hasOutliers) {
+            html += \`<p class="text-gray-600 text-center py-4 italic">No se encontraron outliers en esta cohorte</p>\`;
+          }
+          
+          html += \`</div>\`;
+          html += \`</div>\`;
+        });
+        
+        html += '</div>';
+        
+        container.innerHTML = html;
       }
       
       // Variables para comparación por áreas

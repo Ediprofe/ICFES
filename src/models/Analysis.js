@@ -234,7 +234,7 @@ export class Analysis {
       return this._calculationCache.get(cacheKey);
     }
     
-    const outliers = findOutliers(this.processedData, true);
+    const outliers = findOutliers(this.processedData);
     this._calculationCache.set(cacheKey, outliers);
     
     return outliers;

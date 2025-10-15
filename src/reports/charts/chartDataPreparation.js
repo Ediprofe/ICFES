@@ -14,8 +14,8 @@ export const prepareAreaChartData = (analysis, includePIAR = true) => {
   const dataConPIAR = analysis.processedData;
   const dataSinPIAR = analysis.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
   
-  // Encontrar outliers basados en muestra sin PIAR (±3σ)
-  const outliers = findOutliers(analysis.processedData, true);
+  // Encontrar outliers basados en muestra CON PIAR (todos los estudiantes) (±3σ)
+  const outliers = findOutliers(analysis.processedData);
   const outlierIds = new Set(outliers.map(o => `${o.Nombre}_${o.Apellido}_${o.Grupo}`));
   
   // Datos sin PIAR y sin outliers
