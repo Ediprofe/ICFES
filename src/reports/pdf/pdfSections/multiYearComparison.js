@@ -260,10 +260,10 @@ export const generateAllStudentsTable = (doc, analyses, startY) => {
   
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
-  // Recopilar todos los estudiantes
+  // Recopilar todos los estudiantes (INCLUYE PIAR)
   const allStudents = [];
   sortedAnalyses.forEach(analysis => {
-    const students = analysis.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
+    const students = analysis.processedData; // No filtrar PIAR
     students.forEach(student => {
       allStudents.push({
         year: analysis.year,

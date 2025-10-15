@@ -163,10 +163,10 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
 export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
-  // Recopilar todos los estudiantes
+  // Recopilar todos los estudiantes (INCLUYE PIAR)
   const allStudents = [];
   sortedAnalyses.forEach(analysis => {
-    const students = analysis.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
+    const students = analysis.processedData; // No filtrar PIAR
     students.forEach(student => {
       allStudents.push({
         year: analysis.year,
@@ -178,7 +178,8 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
         matematicas: student.Matemáticas,
         sociales: student.Sociales,
         naturales: student.Naturales,
-        ingles: student.Inglés
+        ingles: student.Inglés,
+        piar: student['¿PIAR?'] === 'Sí'
       });
     });
   });
@@ -199,7 +200,7 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
     </div>
     
     <!-- Filtros -->
-    <div class="mb-6 no-print grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="mb-6 no-print grid grid-cols-1 md:grid-cols-5 gap-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Buscar estudiante</label>
         <input 
@@ -236,6 +237,19 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
       </div>
       
       <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">PIAR</label>
+        <select 
+          id="piarFilterAll" 
+          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          onchange="filterAllStudentsTable()"
+        >
+          <option value="">Todos</option>
+          <option value="no">Sin PIAR</option>
+          <option value="si">Con PIAR</option>
+        </select>
+      </div>
+      
+      <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Puntaje mínimo</label>
         <input 
           type="number" 
@@ -265,13 +279,19 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
           </tr>
         </thead>
         <tbody>
-          ${allStudents.map((student) => `
-            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" 
+          ${allStudents.map((student) => {
+            // Color por año: 2025 = azul, 2024 = gris, otros = verde
+            const yearColor = student.year === 2025 ? 'bg-blue-50' : student.year === 2024 ? 'bg-gray-50' : 'bg-green-50';
+            const yearBadge = student.year === 2025 ? 'bg-blue-600' : student.year === 2024 ? 'bg-gray-600' : 'bg-green-600';
+            
+            return `
+            <tr class="border-b border-gray-200 hover:opacity-75 transition-opacity ${yearColor}" 
                 data-year="${student.year}" 
                 data-grade="${student.grado}" 
-                data-global="${student.global}">
+                data-global="${student.global}"
+                data-piar="${student.piar ? 'si' : 'no'}">
               <td class="px-4 py-3 text-center">
-                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-bold">${student.year}</span>
+                <span class="px-3 py-1 ${yearBadge} text-white rounded-full text-sm font-bold">${student.year}</span>
               </td>
               <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.nombre}</td>
               <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.apellido}</td>
@@ -287,7 +307,8 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
               <td class="px-4 py-3 text-right text-sm text-gray-700">${student.naturales.toFixed(1)}</td>
               <td class="px-4 py-3 text-right text-sm text-gray-700">${student.ingles.toFixed(1)}</td>
             </tr>
-          `).join('')}
+          `;
+          }).join('')}
         </tbody>
       </table>
     </div>
@@ -301,6 +322,7 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
         const searchValue = document.getElementById('searchAllStudents').value.toLowerCase();
         const yearValue = document.getElementById('yearFilter').value;
         const gradeValue = document.getElementById('gradeFilterAll').value;
+        const piarValue = document.getElementById('piarFilterAll').value;
         const minScore = parseFloat(document.getElementById('minScoreFilterAll').value) || 0;
         
         const table = document.getElementById('allStudentsTable');
@@ -312,14 +334,16 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
           const apellido = row.cells[2].textContent.toLowerCase();
           const year = row.getAttribute('data-year');
           const grade = row.getAttribute('data-grade');
+          const piar = row.getAttribute('data-piar');
           const global = parseFloat(row.getAttribute('data-global'));
           
           const matchesSearch = nombre.includes(searchValue) || apellido.includes(searchValue);
           const matchesYear = !yearValue || year === yearValue;
           const matchesGrade = !gradeValue || grade === gradeValue;
+          const matchesPiar = !piarValue || piar === piarValue;
           const matchesScore = global >= minScore;
           
-          if (matchesSearch && matchesYear && matchesGrade && matchesScore) {
+          if (matchesSearch && matchesYear && matchesGrade && matchesPiar && matchesScore) {
             row.style.display = '';
             visibleCount++;
           } else {
