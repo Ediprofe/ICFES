@@ -50,8 +50,9 @@ function AppDebug() {
             <p>availableYears: <strong>{JSON.stringify(availableYears)}</strong></p>
             <p>activeYear: <strong>{activeYear || 'null'}</strong></p>
             <p>multiYearAnalysis exists: <strong>{multiYearAnalysis ? 'true' : 'false'}</strong></p>
-            <p>analyses type: <strong>{multiYearAnalysis?.analyses ? (Array.isArray(multiYearAnalysis.analyses) ? 'Array' : 'Map/Object') : 'null'}</strong></p>
-            <p>analyses length/size: <strong>{multiYearAnalysis?.analyses ? (Array.isArray(multiYearAnalysis.analyses) ? multiYearAnalysis.analyses.length : 'N/A') : '0'}</strong></p>
+            <p>analyses type: <strong>{multiYearAnalysis?.analyses ? (Array.isArray(multiYearAnalysis.analyses) ? 'Array' : (multiYearAnalysis.analyses instanceof Map ? 'Map' : 'Object')) : 'null'}</strong></p>
+            <p>analyses content: <strong className="break-all">{multiYearAnalysis?.analyses ? JSON.stringify(multiYearAnalysis.analyses).substring(0, 100) : 'null'}</strong></p>
+            <p>Object.keys length: <strong>{multiYearAnalysis?.analyses && !(multiYearAnalysis.analyses instanceof Map) && !Array.isArray(multiYearAnalysis.analyses) ? Object.keys(multiYearAnalysis.analyses).length : 'N/A'}</strong></p>
           </div>
         </div>
         
@@ -59,20 +60,15 @@ function AppDebug() {
         {!hasData ? (
           <FileUploaderNew />
         ) : (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold text-green-600 mb-4">
-              ✅ Datos Cargados Exitosamente
-            </h2>
-            <p className="text-gray-700">
-              Años disponibles: <strong>{availableYears.join(', ')}</strong>
-            </p>
-            <p className="text-gray-700 mt-2">
-              Año activo: <strong>{activeYear}</strong>
-            </p>
-            <p className="text-sm text-gray-600 mt-4">
-              Los componentes DataPreview y ExportButtons están temporalmente deshabilitados para debugging.
-            </p>
-          </div>
+          <>
+            <DataPreview />
+            
+            {comparisonMode && (
+              <ComparisonYearUploader />
+            )}
+            
+            <ExportButtons />
+          </>
         )}
       </div>
     </div>
