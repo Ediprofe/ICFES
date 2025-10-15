@@ -109,21 +109,21 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
 };
 
 /**
- * Genera gráfico de comparación de promedios por año
+ * Genera gráficos de comparación de promedios y desviación estándar por año
  */
 export const generateYearComparisonChart = (doc, analyses, startY) => {
   let currentY = startY;
   
   // Verificar si necesitamos nueva página
-  if (currentY > 220) {
+  if (currentY > 200) {
     doc.addPage();
     currentY = 20;
   }
   
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
-  // Preparar datos para el gráfico
-  const chartData = sortedAnalyses.map(analysis => {
+  // Preparar datos para el gráfico de promedios
+  const chartDataPromedio = sortedAnalyses.map(analysis => {
     const metricsSinPIAR = analysis.getGlobalMetrics(true);
     const metricsConPIAR = analysis.getGlobalMetrics(false);
     
@@ -134,17 +134,55 @@ export const generateYearComparisonChart = (doc, analyses, startY) => {
     };
   });
   
+  // Gráfico de Promedio
   currentY = drawBarChart(
     doc,
-    chartData,
+    chartDataPromedio,
     20,
     currentY,
     170,
-    80,
-    'Evolución del Promedio Global por Año',
+    70,
+    'Evolucion del Promedio Global por Año',
     {
       showComparison: true,
       useDynamicScale: true,
+      showLabels: true
+    }
+  );
+  
+  currentY += 10;
+  
+  // Verificar espacio para segundo gráfico
+  if (currentY > 200) {
+    doc.addPage();
+    currentY = 20;
+  }
+  
+  // Preparar datos para el gráfico de desviación estándar
+  const chartDataDesviacion = sortedAnalyses.map(analysis => {
+    const metricsSinPIAR = analysis.getGlobalMetrics(true);
+    const metricsConPIAR = analysis.getGlobalMetrics(false);
+    
+    return {
+      area: analysis.year.toString(),
+      sinPIAR: metricsSinPIAR.desviacion,
+      conPIAR: metricsConPIAR.desviacion
+    };
+  });
+  
+  // Gráfico de Desviación Estándar
+  currentY = drawBarChart(
+    doc,
+    chartDataDesviacion,
+    20,
+    currentY,
+    170,
+    70,
+    'Evolucion de la Desviacion Estandar por Año',
+    {
+      showComparison: true,
+      useDynamicScale: false,
+      maxValue: 50,
       showLabels: true
     }
   );

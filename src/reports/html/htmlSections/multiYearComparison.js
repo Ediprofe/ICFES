@@ -12,10 +12,155 @@ import { prepareAreaChartData } from '../../charts/chartDataPreparation.js';
 export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
+  // Preparar datos para gráficos de evolución
+  const evolutionData = sortedAnalyses.map(analysis => {
+    const metricsSinPIAR = analysis.getGlobalMetrics(true, false);
+    const metricsConPIAR = analysis.getGlobalMetrics(false, false);
+    
+    return {
+      year: analysis.year,
+      promedioSinPIAR: metricsSinPIAR.promedio,
+      promedioConPIAR: metricsConPIAR.promedio,
+      desviacionSinPIAR: metricsSinPIAR.desviacion,
+      desviacionConPIAR: metricsConPIAR.desviacion
+    };
+  });
+  
   return `
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6">
       <h2 class="text-2xl font-bold">${sectionNumber}. COMPARACION DE METRICAS GLOBALES</h2>
     </div>
+    
+    <!-- Gráficos de Evolución -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-md p-4">
+        <canvas id="chartEvolucionPromedio" height="300"></canvas>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-4">
+        <canvas id="chartEvolucionDesviacion" height="300"></canvas>
+      </div>
+    </div>
+    
+    <script>
+      // Datos para gráficos de evolución
+      const evolutionData = ${JSON.stringify(evolutionData)};
+      
+      // Gráfico de Evolución del Promedio Global
+      new Chart(document.getElementById('chartEvolucionPromedio'), {
+        type: 'bar',
+        data: {
+          labels: evolutionData.map(d => d.year),
+          datasets: [
+            {
+              label: 'Sin PIAR',
+              data: evolutionData.map(d => d.promedioSinPIAR),
+              backgroundColor: 'rgba(22, 163, 74, 0.8)',
+              borderColor: 'rgba(22, 163, 74, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Con PIAR',
+              data: evolutionData.map(d => d.promedioConPIAR),
+              backgroundColor: 'rgba(107, 114, 128, 0.8)',
+              borderColor: 'rgba(107, 114, 128, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Evolución del Promedio Global por Año',
+              font: { size: 16, weight: 'bold' }
+            },
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'top',
+              formatter: (value) => value ? value.toFixed(1) : '',
+              font: { weight: 'bold', size: 11 },
+              color: '#1f2937'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              min: 280,
+              max: 320,
+              ticks: {
+                callback: function(value) {
+                  return value.toFixed(0);
+                }
+              }
+            }
+          }
+        }
+      });
+      
+      // Gráfico de Evolución de la Desviación Estándar
+      new Chart(document.getElementById('chartEvolucionDesviacion'), {
+        type: 'bar',
+        data: {
+          labels: evolutionData.map(d => d.year),
+          datasets: [
+            {
+              label: 'Sin PIAR',
+              data: evolutionData.map(d => d.desviacionSinPIAR),
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Con PIAR',
+              data: evolutionData.map(d => d.desviacionConPIAR),
+              backgroundColor: 'rgba(107, 114, 128, 0.8)',
+              borderColor: 'rgba(107, 114, 128, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Evolución de la Desviación Estándar por Año',
+              font: { size: 16, weight: 'bold' }
+            },
+            legend: {
+              display: true,
+              position: 'top'
+            },
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'top',
+              formatter: (value) => value ? value.toFixed(1) : '',
+              font: { weight: 'bold', size: 11 },
+              color: '#1f2937'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value.toFixed(0);
+                }
+              }
+            }
+          }
+        }
+      });
+    </script>
     
     <!-- Métricas Sin PIAR (Principales) -->
     <div class="mb-8">
