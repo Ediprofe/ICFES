@@ -225,6 +225,22 @@ export class Analysis {
   }
   
   /**
+   * Obtiene outliers (valores atípicos ±3σ)
+   */
+  getOutliers() {
+    const cacheKey = 'outliers';
+    
+    if (this._calculationCache.has(cacheKey)) {
+      return this._calculationCache.get(cacheKey);
+    }
+    
+    const outliers = findOutliers(this.processedData, true);
+    this._calculationCache.set(cacheKey, outliers);
+    
+    return outliers;
+  }
+  
+  /**
    * Limpia cache de cálculos
    */
   clearCache() {
