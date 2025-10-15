@@ -69,17 +69,17 @@ export const generatePDF = (analysis, options = {}) => {
   } else {
     // Modo de un solo año - secciones tradicionales
     
-    // 2. Listado de Estudiantes
-    addNewPage(doc);
-    generateStudentsList(doc, analysis, sectionNumber++, { excludePIAR });
-    
-    // 3. Métricas por Área
+    // 2. Métricas por Área
     addNewPage(doc);
     generateAreaMetrics(doc, analysis, sectionNumber++);
     
-    // 4. Gráficos
+    // 3. Gráficos
     addNewPage(doc);
     generateCharts(doc, analysis, sectionNumber++);
+    
+    // 4. Listado de Estudiantes
+    addNewPage(doc);
+    generateStudentsList(doc, analysis, sectionNumber++, { excludePIAR });
     
     // 5. Top Performers
     addNewPage(doc);

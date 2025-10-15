@@ -72,8 +72,8 @@ export const generateHTML = (analysis, options = {}) => {
     
   } else {
     // Modo de un solo año
-    sections.push(generateInteractiveChartsSection(sectionNumber++));
     sections.push(generateStudentsTableSection(analysis, sectionNumber++, excludePIAR));
+    sections.push(generateInteractiveChartsSection(sectionNumber++));
   }
   
   const content = sections.join('\n');
