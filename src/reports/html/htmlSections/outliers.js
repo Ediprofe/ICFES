@@ -20,17 +20,21 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
   return `
     ${generateSectionHeader('Valores Atípicos (Outliers)', sectionNumber, '⚠️')}
     
-    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
       <div class="flex">
         <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          <svg class="h-6 w-6 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-sm font-medium text-yellow-800">¿Qué son los Outliers?</h3>
-          <div class="mt-2 text-sm text-yellow-700">
-            <p>Los outliers son valores que se desvían significativamente del resto de los datos (±3σ). Pueden indicar casos excepcionales que requieren atención especial.</p>
+          <h3 class="text-base font-bold text-blue-900 mb-2">¿Qué son los Outliers?</h3>
+          <div class="text-sm text-blue-800">
+            <p class="mb-2">Los <strong>outliers</strong> son estudiantes con puntajes que se alejan significativamente del promedio del grupo (±3 desviaciones estándar).</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li><strong>Outliers Superiores:</strong> Estudiantes con rendimiento excepcional, muy por encima del promedio. Pueden beneficiarse de programas de enriquecimiento académico.</li>
+              <li><strong>Outliers Inferiores:</strong> Estudiantes con rendimiento significativamente bajo. Requieren apoyo adicional y seguimiento personalizado.</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -45,14 +49,14 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
         
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+            <thead class="bg-gradient-to-r from-gray-700 to-gray-800">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Apellido</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Grado</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Global</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Z-Score</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Nombre</th>
+                <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">Apellido</th>
+                <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">Grado</th>
+                <th class="px-6 py-3 text-right text-xs font-bold text-white uppercase tracking-wider">Global</th>
+                <th class="px-6 py-3 text-right text-xs font-bold text-white uppercase tracking-wider">Z-Score</th>
+                <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase tracking-wider">Tipo</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -91,17 +95,18 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
         </div>
       </div>
       
-      <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+      <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4">
         <div class="flex">
           <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            <svg class="h-6 w-6 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
             </svg>
           </div>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-blue-800">Recomendación</h3>
-            <div class="mt-2 text-sm text-blue-700">
-              <p>Estos estudiantes requieren atención especial. Los outliers bajos pueden necesitar apoyo adicional, mientras que los altos pueden beneficiarse de programas de enriquecimiento.</p>
+            <h3 class="text-base font-bold text-indigo-900 mb-2">💡 Recomendaciones Pedagógicas</h3>
+            <div class="text-sm text-indigo-800 space-y-2">
+              <p><strong>Para Outliers Superiores:</strong> Considerar programas de enriquecimiento académico, tutorías entre pares, o participación en olimpiadas y competencias.</p>
+              <p><strong>Para Outliers Inferiores:</strong> Implementar planes de apoyo personalizados, refuerzo académico, y seguimiento continuo para identificar necesidades específicas.</p>
             </div>
           </div>
         </div>
