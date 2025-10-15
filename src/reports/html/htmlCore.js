@@ -227,11 +227,11 @@ export const generateTable = (columns, rows, options = {}) => {
 /**
  * Genera un contenedor para gráfico
  */
-export const generateChartContainer = (chartId, title) => {
+export const generateChartContainer = (chartId, title = '') => {
   return `
-    <div class="bg-white rounded-lg shadow p-6 mb-6">
-      <h3 class="text-lg font-semibold mb-4 text-gray-800">${title}</h3>
-      <div class="chart-container">
+    <div class="bg-white rounded-xl shadow-xl p-6 mb-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
+      ${title ? `<h4 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">${title}</h4>` : ''}
+      <div style="height: 380px; position: relative;">
         <canvas id="${chartId}"></canvas>
       </div>
     </div>

@@ -61,15 +61,30 @@ export const generateInteractivityScript = () => {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 1500,
+            easing: 'easeInOutQuart',
+            onComplete: function() {
+              // Animación completada
+            }
+          },
           plugins: {
             title: {
               display: true,
               text: title,
-              font: { size: 16, weight: 'bold' }
+              font: { size: 18, weight: 'bold' },
+              color: '#1f2937',
+              padding: { top: 10, bottom: 20 }
             },
             legend: {
               display: showComparison && showPIAR,
-              position: 'top'
+              position: 'top',
+              labels: {
+                font: { size: 13, weight: '600' },
+                padding: 15,
+                usePointStyle: true,
+                pointStyle: 'circle'
+              }
             },
             datalabels: {
               display: true,
@@ -78,9 +93,12 @@ export const generateInteractivityScript = () => {
               formatter: (value) => value ? value.toFixed(1) : '',
               font: {
                 weight: 'bold',
-                size: 11
+                size: 12
               },
-              color: '#1f2937'
+              color: '#1f2937',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: 4,
+              padding: { top: 2, bottom: 2, left: 6, right: 6 }
             },
             tooltip: {
               enabled: true,

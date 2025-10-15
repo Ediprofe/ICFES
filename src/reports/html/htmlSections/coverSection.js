@@ -8,14 +8,26 @@ export const generateCoverSection = (analysis, isMultiYear = false, comparisonYe
   const metrics = analysis.getGlobalMetrics(true);
   
   return `
-    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-lg shadow-2xl p-12 mb-8">
-      <div class="text-center">
-        <h1 class="text-5xl font-bold mb-4">Análisis ICFES</h1>
-        <p class="text-2xl mb-2">
+    <div class="relative bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 text-white rounded-2xl shadow-2xl p-12 mb-8 overflow-hidden">
+      <!-- Efecto de fondo animado -->
+      <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+      </div>
+      
+      <div class="relative text-center">
+        <div class="inline-block mb-4">
+          <div class="text-6xl mb-2">📊</div>
+        </div>
+        <h1 class="text-6xl font-extrabold mb-4 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
+          Análisis ICFES
+        </h1>
+        <div class="h-1 w-32 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto mb-6 rounded-full"></div>
+        <p class="text-3xl font-semibold mb-2">
           ${isMultiYear ? 'Análisis Comparativo Multi-Año' : `Año ${analysis.year}`}
         </p>
         ${isMultiYear ? `
-          <p class="text-lg opacity-90">
+          <p class="text-xl opacity-90 font-light">
             Años: ${[analysis.year, ...comparisonYears].sort((a, b) => b - a).join(' • ')}
           </p>
         ` : ''}

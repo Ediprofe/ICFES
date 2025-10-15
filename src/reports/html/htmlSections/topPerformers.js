@@ -43,8 +43,8 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
                           ${isTopThree ? `
                             <span class="text-3xl">${medal}</span>
                           ` : `
-                            <div class="flex items-center justify-center w-10 h-10 rounded-full font-bold text-white text-sm" style="background: linear-gradient(135deg, ${areaData.color} 0%, ${areaData.color}CC 100%)">
-                              #${rankNum}
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full font-bold text-white text-sm shadow-lg" style="background: linear-gradient(135deg, ${areaData.color} 0%, ${areaData.color}CC 100%)">
+                              ${rankNum}
                             </div>
                           `}
                           <div>
@@ -91,8 +91,8 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
                           ${isTopThree ? `
                             <span class="text-3xl">${medal}</span>
                           ` : `
-                            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white text-sm shadow-md">
-                              #${rankNum}
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white text-sm shadow-lg">
+                              ${rankNum}
                             </div>
                           `}
                           <div>
