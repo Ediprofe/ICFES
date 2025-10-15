@@ -1,40 +1,52 @@
 /**
- * ✅ App Debug - Versión simplificada para debugging
+ * ✅ App Debug - Versión completa para testing
  */
 
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
+import { FileUploaderNew } from './components/FileUploaderNew.jsx';
+import { DataPreview } from './components/DataPreview.jsx';
+import { ComparisonYearUploader } from './components/ComparisonYearUploader.jsx';
+import { ExportButtons } from './components/ExportButtons.jsx';
+import { useAnalysisStore } from './stores/analysisStore.js';
 
 function AppDebug() {
-  // Limpiar localStorage al iniciar
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.removeItem('icfes-analysis-storage');
-      console.log('✅ localStorage limpiado');
-    } catch (e) {
-      console.error('Error limpiando localStorage:', e);
-    }
-  }
+  const hasData = useAnalysisStore((state) => state.hasData());
+  const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
+  const availableYears = useAnalysisStore((state) => state.getAvailableYears());
+  const activeAnalysis = useAnalysisStore((state) => state.getActiveAnalysis());
   
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-blue-600 mb-4">
-          ✅ ICFES Analyzer Funcionando
+          ICFES Analyzer - Testing Mode
         </h1>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-lg text-gray-700 mb-4">
-            Si ves este mensaje, React está funcionando correctamente.
-          </p>
-          <p className="text-sm text-gray-600">
-            localStorage ha sido limpiado. Recarga la página para continuar.
-          </p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Recargar Página
-          </button>
+        
+        {/* Debug Info */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <p className="text-sm font-semibold mb-2">Debug Info:</p>
+          <div className="text-xs text-gray-600 space-y-1">
+            <p>hasData: <strong>{hasData ? 'true' : 'false'}</strong></p>
+            <p>comparisonMode: <strong>{comparisonMode ? 'true' : 'false'}</strong></p>
+            <p>availableYears: <strong>{JSON.stringify(availableYears)}</strong></p>
+            <p>activeAnalysis: <strong>{activeAnalysis ? `Year ${activeAnalysis.year}` : 'null'}</strong></p>
+          </div>
         </div>
+        
+        {/* Componentes principales */}
+        {!hasData ? (
+          <FileUploaderNew />
+        ) : (
+          <>
+            <DataPreview />
+            
+            {comparisonMode && (
+              <ComparisonYearUploader />
+            )}
+            
+            <ExportButtons />
+          </>
+        )}
       </div>
     </div>
   );
