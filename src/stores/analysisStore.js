@@ -183,8 +183,16 @@ const useAnalysisStore = create(
           comparisonMode: state.comparisonMode
         }),
         onRehydrateStorage: () => (state) => {
+          console.log('🔄 Rehidratando store...', state);
           if (state && state.multiYearAnalysis) {
-            state.multiYearAnalysis = MultiYearAnalysis.fromJSON(state.multiYearAnalysis);
+            try {
+              console.log('📦 Datos a rehidratar:', state.multiYearAnalysis);
+              state.multiYearAnalysis = MultiYearAnalysis.fromJSON(state.multiYearAnalysis);
+              console.log('✅ Rehidratación exitosa:', state.multiYearAnalysis);
+            } catch (error) {
+              console.error('❌ Error en rehidratación:', error);
+              state.multiYearAnalysis = new MultiYearAnalysis();
+            }
           }
         }
       }
