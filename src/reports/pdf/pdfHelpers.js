@@ -37,12 +37,12 @@ export const drawTable = (doc, columns, rows, startY, options = {}) => {
       fillColor: [37, 99, 235], // blue-600
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 10,
+      fontSize: 8, // Reducido de 10 a 8 para evitar desbordamiento
       halign: 'center',
       valign: 'middle',
-      cellPadding: 5,
+      cellPadding: 4,
       lineWidth: 0,
-      minCellHeight: 12
+      minCellHeight: 10
     },
     bodyStyles: {
       fontSize: 9,

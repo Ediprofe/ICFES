@@ -42,15 +42,15 @@ export const drawSectionHeader = (doc, title, sectionNumber, y) => {
   const { width } = getPageDimensions(doc);
   const margins = LAYOUT_CONFIG.margins.pdf;
   
-  // Rectángulo de fondo
+  // Rectángulo de fondo más compacto
   doc.setFillColor(37, 99, 235); // blue-600
-  doc.rect(margins.left, y, width - margins.left - margins.right, 10, 'F');
+  doc.rect(margins.left, y, width - margins.left - margins.right, 9, 'F');
   
-  // Texto del título
-  doc.setFontSize(12);
-  doc.setFont(undefined, 'bold');
+  // Texto del título más pequeño
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text(`${sectionNumber}. ${title}`, margins.left + 5, y + 7);
+  doc.text(`${sectionNumber}. ${title.toUpperCase()}`, margins.left + 5, y + 6.5);
   
   // Resetear color
   doc.setTextColor(0, 0, 0);
