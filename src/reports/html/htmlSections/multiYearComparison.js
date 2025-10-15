@@ -7,6 +7,208 @@ import { ACADEMIC_AREAS } from '../../../config/columnConfig.js';
 import { prepareAreaChartData } from '../../charts/chartDataPreparation.js';
 
 /**
+ * Genera la sección de tabla de métricas combinadas con selector de años
+ */
+export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
+  const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
+  const years = sortedAnalyses.map(a => a.year);
+  
+  // Preparar datos de métricas para cada año
+  const metricsData = sortedAnalyses.map(analysis => {
+    const globalSinPIAR = analysis.getGlobalMetrics(true, false);
+    const globalConPIAR = analysis.getGlobalMetrics(false, false);
+    
+    // Métricas por área
+    const areaMetrics = ACADEMIC_AREAS.map(area => {
+      const areaSinPIAR = analysis.getAreaMetrics(area.columnName, true);
+      const areaConPIAR = analysis.getAreaMetrics(area.columnName, false);
+      
+      return {
+        area: area.name,
+        color: area.color,
+        sinPIAR: {
+          promedio: areaSinPIAR.promedio,
+          desviacion: areaSinPIAR.desviacion
+        },
+        conPIAR: {
+          promedio: areaConPIAR.promedio,
+          desviacion: areaConPIAR.desviacion
+        }
+      };
+    });
+    
+    return {
+      year: analysis.year,
+      global: {
+        sinPIAR: {
+          promedio: globalSinPIAR.promedio,
+          desviacion: globalSinPIAR.desviacion
+        },
+        conPIAR: {
+          promedio: globalConPIAR.promedio,
+          desviacion: globalConPIAR.desviacion
+        }
+      },
+      areas: areaMetrics
+    };
+  });
+  
+  return `
+    <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg p-4 mb-6">
+      <h2 class="text-2xl font-bold">${sectionNumber}. Tabla de métricas combinadas</h2>
+      <p class="text-purple-100 text-sm mt-1">Selecciona los años que deseas comparar</p>
+    </div>
+    
+    <!-- Selector de años -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">📅 Seleccionar años para comparar</h3>
+      <div class="flex flex-wrap gap-3 mb-4">
+        ${years.map(year => `
+          <label class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-purple-100 rounded-lg cursor-pointer transition-colors border-2 border-transparent hover:border-purple-500">
+            <input 
+              type="checkbox" 
+              class="year-selector w-5 h-5 text-purple-600 rounded focus:ring-purple-500" 
+              value="${year}"
+              checked
+              onchange="updateCombinedMetricsTable()"
+            >
+            <span class="font-semibold text-gray-800">${year}</span>
+          </label>
+        `).join('')}
+      </div>
+      <button 
+        onclick="selectAllYears(true)" 
+        class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-sm mr-2"
+      >
+        ✓ Seleccionar todos
+      </button>
+      <button 
+        onclick="selectAllYears(false)" 
+        class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+      >
+        ✗ Deseleccionar todos
+      </button>
+    </div>
+    
+    <!-- Tabla de métricas globales -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+        <h3 class="text-xl font-bold text-white">📊 Métricas globales</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table id="combinedGlobalTable" class="min-w-full">
+          <thead class="bg-gradient-to-r from-gray-700 to-gray-800">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase">Año</th>
+              <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Sin PIAR</th>
+              <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Con PIAR</th>
+            </tr>
+            <tr class="bg-gray-600">
+              <th class="px-6 py-2 text-left text-xs font-semibold text-gray-200"></th>
+              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
+              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
+              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
+              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Se llenará dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Tablas por área académica -->
+    ${ACADEMIC_AREAS.map((area, index) => `
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+        <div class="px-6 py-4" style="background: linear-gradient(135deg, ${area.color}15 0%, ${area.color}05 100%)">
+          <h3 class="text-xl font-bold text-gray-800">${area.name}</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table id="combinedAreaTable${index}" class="min-w-full">
+            <thead class="bg-gradient-to-r from-gray-700 to-gray-800">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase">Año</th>
+                <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Sin PIAR</th>
+                <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Con PIAR</th>
+              </tr>
+              <tr class="bg-gray-600">
+                <th class="px-6 py-2 text-left text-xs font-semibold text-gray-200"></th>
+                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
+                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
+                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
+                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <!-- Se llenará dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `).join('')}
+    
+    <script>
+      // Datos de métricas
+      const metricsData = ${JSON.stringify(metricsData)};
+      const academicAreas = ${JSON.stringify(ACADEMIC_AREAS.map(a => ({ name: a.name, color: a.color })))};
+      
+      function selectAllYears(select) {
+        document.querySelectorAll('.year-selector').forEach(checkbox => {
+          checkbox.checked = select;
+        });
+        updateCombinedMetricsTable();
+      }
+      
+      function updateCombinedMetricsTable() {
+        const selectedYears = Array.from(document.querySelectorAll('.year-selector:checked'))
+          .map(cb => parseInt(cb.value));
+        
+        const filteredData = metricsData.filter(data => selectedYears.includes(data.year));
+        
+        // Actualizar tabla global
+        const globalTableBody = document.querySelector('#combinedGlobalTable tbody');
+        globalTableBody.innerHTML = filteredData.map((data, index) => {
+          const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+          return \`
+            <tr class="\${rowBg}">
+              <td class="px-6 py-4 text-sm font-bold text-gray-900">\${data.year}</td>
+              <td class="px-6 py-4 text-center text-sm font-bold text-blue-600">\${data.global.sinPIAR.promedio.toFixed(2)}</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-700">\${data.global.sinPIAR.desviacion.toFixed(2)}</td>
+              <td class="px-6 py-4 text-center text-sm font-bold text-gray-600">\${data.global.conPIAR.promedio.toFixed(2)}</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-700">\${data.global.conPIAR.desviacion.toFixed(2)}</td>
+            </tr>
+          \`;
+        }).join('');
+        
+        // Actualizar tablas por área
+        academicAreas.forEach((area, areaIndex) => {
+          const areaTableBody = document.querySelector(\`#combinedAreaTable\${areaIndex} tbody\`);
+          areaTableBody.innerHTML = filteredData.map((data, index) => {
+            const areaData = data.areas[areaIndex];
+            const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+            return \`
+              <tr class="\${rowBg}">
+                <td class="px-6 py-4 text-sm font-bold text-gray-900">\${data.year}</td>
+                <td class="px-6 py-4 text-center text-sm font-bold" style="color: \${area.color}">\${areaData.sinPIAR.promedio.toFixed(2)}</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-700">\${areaData.sinPIAR.desviacion.toFixed(2)}</td>
+                <td class="px-6 py-4 text-center text-sm font-bold text-gray-600">\${areaData.conPIAR.promedio.toFixed(2)}</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-700">\${areaData.conPIAR.desviacion.toFixed(2)}</td>
+              </tr>
+            \`;
+          }).join('');
+        });
+      }
+      
+      // Inicializar tabla al cargar
+      window.addEventListener('DOMContentLoaded', () => {
+        updateCombinedMetricsTable();
+      });
+    </script>
+  `;
+};
+
+/**
  * Genera la sección de comparación de métricas globales
  */
 export const generateGlobalComparisonSection = (analyses, sectionNumber) => {

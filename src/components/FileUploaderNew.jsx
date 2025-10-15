@@ -19,6 +19,7 @@ export const FileUploaderNew = () => {
   const error = useAnalysisStore((state) => state.error);
   const loadBaseYear = useAnalysisStore((state) => state.loadBaseYear);
   const enableComparisonMode = useAnalysisStore((state) => state.enableComparisonMode);
+  const disableComparisonMode = useAnalysisStore((state) => state.disableComparisonMode);
   const clearError = useAnalysisStore((state) => state.clearError);
   
   const handleDrag = (e) => {
@@ -265,7 +266,10 @@ export const FileUploaderNew = () => {
                 Sí, cargar más años
               </button>
               <button
-                onClick={() => setShowComparisonDialog(false)}
+                onClick={() => {
+                  disableComparisonMode();
+                  setShowComparisonDialog(false);
+                }}
                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-300 transition-colors font-medium"
               >
                 No, continuar

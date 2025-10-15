@@ -8,10 +8,18 @@ import { DataPreview } from './components/DataPreview.jsx';
 import { ComparisonYearUploader } from './components/ComparisonYearUploader.jsx';
 import { ExportButtons } from './components/ExportButtons.jsx';
 import { useAnalysisStore } from './stores/analysisStore.js';
+import { RefreshCw } from 'lucide-react';
 
 function AppDebug() {
   // Acceder directamente al estado sin llamar funciones
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
+  const reset = useAnalysisStore((state) => state.reset);
+  
+  const handleNewAnalysis = () => {
+    if (confirm('¿Estás seguro de que deseas iniciar un nuevo análisis? Se perderán los datos actuales.')) {
+      reset();
+    }
+  };
   
   // Calcular hasData directamente
   const hasData = multiYearAnalysis && 
@@ -46,17 +54,28 @@ function AppDebug() {
                 Sistema de análisis de resultados académicos
               </p>
             </div>
-            {hasData && (
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-4">
-                <p className="text-sm text-blue-100 mb-1">Año activo</p>
-                <p className="text-3xl font-bold">{activeYear}</p>
-                {availableYears.length > 1 && (
-                  <p className="text-xs text-blue-200 mt-1">
-                    +{availableYears.length - 1} año{availableYears.length > 2 ? 's' : ''} más
-                  </p>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {hasData && (
+                <>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-4">
+                    <p className="text-sm text-blue-100 mb-1">Año activo</p>
+                    <p className="text-3xl font-bold">{activeYear}</p>
+                    {availableYears.length > 1 && (
+                      <p className="text-xs text-blue-200 mt-1">
+                        +{availableYears.length - 1} año{availableYears.length > 2 ? 's' : ''} más
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleNewAnalysis}
+                    className="flex items-center gap-2 px-5 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all duration-300 font-bold shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <RefreshCw size={20} />
+                    <span>Nuevo análisis</span>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
         
