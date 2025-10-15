@@ -5,6 +5,7 @@
 
 import { drawTable, drawBarChart } from '../pdfHelpers.js';
 import { ACADEMIC_AREAS } from '../../../config/columnConfig.js';
+import { prepareAreaChartData } from '../../charts/chartDataPreparation.js';
 
 /**
  * Genera la sección de comparación de métricas globales
@@ -176,26 +177,29 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
     // Tabla de comparación para esta área
     const columns = ['Año', 'Promedio Sin PIAR', 'Desv. Est.', 'Sin Outliers', 'Promedio Con PIAR'];
     const rows = sortedAnalyses.map(analysis => {
-      const allMetricsSinPIAR = analysis.getAreaMetrics(true); // excludePIAR = true (sin PIAR)
-      const allMetricsConPIAR = analysis.getAreaMetrics(false); // excludePIAR = false (con todos)
+      // Usar la misma lógica que funciona en análisis de un solo año
+      const chartData = prepareAreaChartData(analysis, true);
       
-      // Buscar métricas de esta área específica
-      const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
-      const metricsConPIAR = allMetricsConPIAR.find(m => m.areaId === area.id) || {};
+      // Buscar datos de esta área específica
+      const areaData = chartData.promedios.find(item => item.areaId === area.id);
+      const areaDesv = chartData.desviacion.find(item => item.areaId === area.id);
       
-      // Convertir a número si es string (por compatibilidad con datos antiguos en localStorage)
-      const formatMetric = (val) => {
-        if (val === null || val === undefined || val === 'N/A') return 'N/A';
-        const num = typeof val === 'string' ? parseFloat(val) : val;
-        return !isNaN(num) ? num.toFixed(2) : 'N/A';
-      };
+      if (!areaData || !areaDesv) {
+        return [
+          analysis.year.toString(),
+          'N/A',
+          'N/A',
+          'N/A',
+          'N/A'
+        ];
+      }
       
       return [
         analysis.year.toString(),
-        formatMetric(metricsSinPIAR.promedio),
-        formatMetric(metricsSinPIAR.desviacion),
-        formatMetric(metricsSinPIAR.promedio), // Por ahora usamos el mismo
-        formatMetric(metricsConPIAR.promedio)
+        areaData.sinPIAR.toFixed(2),
+        areaDesv.sinPIAR.toFixed(2),
+        areaData.sinPIAR.toFixed(2), // Por ahora usamos el mismo
+        areaData.conPIAR.toFixed(2)
       ];
     });
     

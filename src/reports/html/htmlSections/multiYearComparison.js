@@ -5,6 +5,7 @@
 
 import { generateSectionHeader } from '../htmlCore.js';
 import { ACADEMIC_AREAS } from '../../../config/columnConfig.js';
+import { prepareAreaChartData } from '../../charts/chartDataPreparation.js';
 
 /**
  * Genera la sección de comparación de métricas globales
@@ -119,27 +120,29 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
             </thead>
             <tbody>
               ${sortedAnalyses.map((analysis, index) => {
-                const allMetricsSinPIAR = analysis.getAreaMetrics(true);
-                const allMetricsConPIAR = analysis.getAreaMetrics(false);
+                // Usar la misma lógica que funciona en análisis de un solo año
+                const chartData = prepareAreaChartData(analysis, true);
                 
-                // Buscar métricas de esta área específica
-                const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
-                const metricsConPIAR = allMetricsConPIAR.find(m => m.areaId === area.id) || {};
+                // Buscar datos de esta área específica
+                const areaData = chartData.promedios.find(item => item.areaId === area.id);
+                const areaDesv = chartData.desviacion.find(item => item.areaId === area.id);
                 
-                // Convertir a número si es string (por compatibilidad con datos antiguos)
-                const formatValue = (val) => {
-                  if (val === null || val === undefined || val === 'N/A') return 'N/A';
-                  const num = typeof val === 'string' ? parseFloat(val) : val;
-                  return !isNaN(num) ? num.toFixed(2) : 'N/A';
-                };
+                if (!areaData || !areaDesv) {
+                  return `
+                    <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}">
+                      <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
+                      <td class="px-4 py-3 text-center" colspan="4">N/A</td>
+                    </tr>
+                  `;
+                }
                 
                 return `
                   <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 transition-colors">
                     <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
-                    <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${formatValue(metricsSinPIAR.promedio)}</td>
-                    <td class="px-4 py-3 text-center">${formatValue(metricsSinPIAR.desviacion)}</td>
-                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${formatValue(metricsSinPIAR.promedio)}</td>
-                    <td class="px-4 py-3 text-center text-gray-600">${formatValue(metricsConPIAR.promedio)}</td>
+                    <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${areaData.sinPIAR.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center">${areaDesv.sinPIAR.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${areaData.sinPIAR.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center text-gray-600">${areaData.conPIAR.toFixed(2)}</td>
                   </tr>
                 `;
               }).join('')}
