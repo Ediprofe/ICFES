@@ -10,7 +10,6 @@ import { generateHTML } from '../reports/html/HTMLReportGenerator.js';
 
 export const ExportButtons = () => {
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
-  const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
   const reset = useAnalysisStore((state) => state.reset);
   
   if (!multiYearAnalysis) return null;
@@ -23,10 +22,19 @@ export const ExportButtons = () => {
   
   if (!activeAnalysis) return null;
   
-  // Obtener análisis de comparación
-  const comparisonAnalyses = multiYearAnalysis.comparisonYears
-    ?.map(year => multiYearAnalysis.analyses instanceof Map ? multiYearAnalysis.analyses.get(year) : null)
-    .filter(a => a !== null) || [];
+  // Obtener todos los años disponibles
+  const availableYears = multiYearAnalysis.analyses instanceof Map
+    ? Array.from(multiYearAnalysis.analyses.keys())
+    : [];
+  
+  // Determinar si es modo comparativo (más de 1 año cargado)
+  const isComparisonMode = availableYears.length > 1;
+  
+  // Obtener análisis de comparación (todos excepto el año base)
+  const comparisonAnalyses = availableYears
+    .filter(year => year !== baseYear)
+    .map(year => multiYearAnalysis.analyses.get(year))
+    .filter(a => a !== null);
   
   const handleNewAnalysis = () => {
     if (confirm('¿Estás seguro de que deseas iniciar un nuevo análisis? Se perderán los datos actuales.')) {
@@ -37,7 +45,7 @@ export const ExportButtons = () => {
   const handleExportPDF = () => {
     try {
       generatePDF(activeAnalysis, {
-        isMultiYear: comparisonMode,
+        isMultiYear: isComparisonMode,
         comparisonAnalyses,
         excludePIAR: true
       });
@@ -50,7 +58,7 @@ export const ExportButtons = () => {
   const handleExportHTML = () => {
     try {
       generateHTML(activeAnalysis, {
-        isMultiYear: comparisonMode,
+        isMultiYear: isComparisonMode,
         comparisonAnalyses,
         excludePIAR: true
       });
@@ -92,8 +100,8 @@ export const ExportButtons = () => {
       </div>
       
       <p className="mt-4 text-sm text-gray-600">
-        {comparisonMode 
-          ? `📊 Exportando análisis comparativo de ${comparisonAnalyses.length + 1} años`
+        {isComparisonMode 
+          ? `📊 Exportando análisis comparativo de ${availableYears.length} años (${availableYears.sort().join(', ')})`
           : `📄 Exportando análisis del año ${activeAnalysis.year}`
         }
       </p>
