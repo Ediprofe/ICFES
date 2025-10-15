@@ -79,7 +79,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
               return `
                 <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 transition-colors">
                   <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
-                  <td class="px-4 py-3 text-center">${analysis.metadata.studentsWithPIAR}</td>
+                  <td class="px-4 py-3 text-center">${analysis.metadata.totalStudents}</td>
                   <td class="px-4 py-3 text-center font-bold">${formatValue(metricsPIAR.promedio)}</td>
                   <td class="px-4 py-3 text-center">${formatValue(metricsPIAR.desviacion)}</td>
                   <td class="px-4 py-3 text-center">${formatValue(metricsPIAR.minimo)}</td>
@@ -126,13 +126,15 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
                 const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
                 const metricsConPIAR = allMetricsConPIAR.find(m => m.areaId === area.id) || {};
                 
+                const formatValue = (val) => typeof val === 'number' ? val.toFixed(2) : 'N/A';
+                
                 return `
                   <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 transition-colors">
                     <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
-                    <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${metricsSinPIAR.promedio || 'N/A'}</td>
-                    <td class="px-4 py-3 text-center">${metricsSinPIAR.desviacion || 'N/A'}</td>
-                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${metricsSinPIAR.promedio || 'N/A'}</td>
-                    <td class="px-4 py-3 text-center text-gray-600">${metricsConPIAR.promedio || 'N/A'}</td>
+                    <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${formatValue(metricsSinPIAR.promedio)}</td>
+                    <td class="px-4 py-3 text-center">${formatValue(metricsSinPIAR.desviacion)}</td>
+                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${formatValue(metricsSinPIAR.promedio)}</td>
+                    <td class="px-4 py-3 text-center text-gray-600">${formatValue(metricsConPIAR.promedio)}</td>
                   </tr>
                 `;
               }).join('')}

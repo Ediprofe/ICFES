@@ -72,7 +72,7 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
     
     return [
       analysis.year.toString(),
-      analysis.metadata.studentsWithPIAR.toString(),
+      analysis.metadata.totalStudents.toString(), // Total de estudiantes (con y sin PIAR)
       typeof metricsPIAR.promedio === 'number' ? metricsPIAR.promedio.toFixed(2) : (metricsPIAR.promedio || 'N/A'),
       typeof metricsPIAR.desviacion === 'number' ? metricsPIAR.desviacion.toFixed(2) : (metricsPIAR.desviacion || 'N/A'),
       typeof metricsPIAR.minimo === 'number' ? metricsPIAR.minimo.toFixed(2) : (metricsPIAR.minimo || 'N/A'),
@@ -185,10 +185,10 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
       
       return [
         analysis.year.toString(),
-        metricsSinPIAR.promedio || 'N/A',
-        metricsSinPIAR.desviacion || 'N/A',
-        metricsSinPIAR.promedio || 'N/A', // Por ahora usamos el mismo (sin outliers requiere cálculo adicional)
-        metricsConPIAR.promedio || 'N/A'
+        typeof metricsSinPIAR.promedio === 'number' ? metricsSinPIAR.promedio.toFixed(2) : 'N/A',
+        typeof metricsSinPIAR.desviacion === 'number' ? metricsSinPIAR.desviacion.toFixed(2) : 'N/A',
+        typeof metricsSinPIAR.promedio === 'number' ? metricsSinPIAR.promedio.toFixed(2) : 'N/A', // Por ahora usamos el mismo
+        typeof metricsConPIAR.promedio === 'number' ? metricsConPIAR.promedio.toFixed(2) : 'N/A'
       ];
     });
     

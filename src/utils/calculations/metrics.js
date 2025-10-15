@@ -44,9 +44,9 @@ export const calculateAreaMetrics = (data, excludePIAR = false) => {
       areaId: area.id,
       shortName: area.shortName,
       color: area.color,
-      promedio: values.length > 0 ? mean(values).toFixed(2) : 'N/A',
-      desviacion: values.length > 0 ? stdDev(values).toFixed(2) : 'N/A',
-      percentil: percentileValues.length > 0 ? mean(percentileValues).toFixed(2) : 'N/A',
+      promedio: values.length > 0 ? mean(values) : 0, // Retornar número, no string
+      desviacion: values.length > 0 ? stdDev(values) : 0, // Retornar número, no string
+      percentil: percentileValues.length > 0 ? mean(percentileValues) : 0, // Retornar número, no string
       cantidadDatos: values.length
     };
   });
