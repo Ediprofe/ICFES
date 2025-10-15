@@ -47,15 +47,19 @@ const useAnalysisStore = create(
         
         hasData: () => {
           const state = get();
-          // Verificar si multiYearAnalysis tiene analyses (array o Map)
           if (!state.multiYearAnalysis) return false;
           
-          // Si es un objeto rehidratado de localStorage
-          if (state.multiYearAnalysis.analyses && Array.isArray(state.multiYearAnalysis.analyses)) {
+          // Verificar si analyses es un Map y tiene elementos
+          if (state.multiYearAnalysis.analyses instanceof Map) {
+            return state.multiYearAnalysis.analyses.size > 0;
+          }
+          
+          // Si es un array
+          if (Array.isArray(state.multiYearAnalysis.analyses)) {
             return state.multiYearAnalysis.analyses.length > 0;
           }
           
-          // Si es una instancia de MultiYearAnalysis
+          // Si tiene el método getAvailableYears
           if (state.multiYearAnalysis.getAvailableYears) {
             return state.multiYearAnalysis.getAvailableYears().length > 0;
           }

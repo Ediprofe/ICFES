@@ -12,7 +12,6 @@ import { useAnalysisStore } from './stores/analysisStore.js';
 function AppDebug() {
   // Acceder directamente al estado sin llamar funciones
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
-  const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
   
   // Calcular hasData directamente
   const hasData = multiYearAnalysis && 
@@ -35,24 +34,29 @@ function AppDebug() {
   const activeYear = multiYearAnalysis?.baseYear || (availableYears.length > 0 ? availableYears[0] : null);
   
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-blue-600 mb-4">
-          ICFES Analyzer - Testing Mode
-        </h1>
-        
-        {/* Debug Info */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <p className="text-sm font-semibold mb-2">Debug Info:</p>
-          <div className="text-xs text-gray-600 space-y-1">
-            <p>hasData: <strong>{hasData ? 'true' : 'false'}</strong></p>
-            <p>comparisonMode: <strong>{comparisonMode ? 'true' : 'false'}</strong></p>
-            <p>availableYears: <strong>{JSON.stringify(availableYears)}</strong></p>
-            <p>activeYear: <strong>{activeYear || 'null'}</strong></p>
-            <p>multiYearAnalysis exists: <strong>{multiYearAnalysis ? 'true' : 'false'}</strong></p>
-            <p>analyses type: <strong>{multiYearAnalysis?.analyses ? (Array.isArray(multiYearAnalysis.analyses) ? 'Array' : (multiYearAnalysis.analyses instanceof Map ? 'Map' : 'Object')) : 'null'}</strong></p>
-            <p>analyses content: <strong className="break-all">{multiYearAnalysis?.analyses ? JSON.stringify(multiYearAnalysis.analyses).substring(0, 100) : 'null'}</strong></p>
-            <p>Object.keys length: <strong>{multiYearAnalysis?.analyses && !(multiYearAnalysis.analyses instanceof Map) && !Array.isArray(multiYearAnalysis.analyses) ? Object.keys(multiYearAnalysis.analyses).length : 'N/A'}</strong></p>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-2xl p-8 mb-8 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-extrabold mb-2">
+                📊 Analizador ICFES
+              </h1>
+              <p className="text-blue-100 text-lg">
+                Sistema de análisis de resultados académicos
+              </p>
+            </div>
+            {hasData && (
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-4">
+                <p className="text-sm text-blue-100 mb-1">Año activo</p>
+                <p className="text-3xl font-bold">{activeYear}</p>
+                {availableYears.length > 1 && (
+                  <p className="text-xs text-blue-200 mt-1">
+                    +{availableYears.length - 1} año{availableYears.length > 2 ? 's' : ''} más
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
         
