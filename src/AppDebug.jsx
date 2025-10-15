@@ -63,9 +63,8 @@ function AppDebug() {
           <>
             <DataPreview />
             
-            {comparisonMode && (
-              <ComparisonYearUploader />
-            )}
+            {/* Siempre mostrar uploader si hay datos, para poder agregar más años */}
+            <ComparisonYearUploader />
             
             <ExportButtons />
           </>

@@ -37,11 +37,11 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
     return [
       analysis.year.toString(),
       analysis.metadata.studentsWithoutPIAR.toString(),
-      metrics.promedio.toFixed(2),
-      metrics.desviacion.toFixed(2),
-      metrics.minimo.toFixed(2),
-      metrics.maximo.toFixed(2),
-      metricsNoOutliers.promedio.toFixed(2)
+      typeof metrics.promedio === 'number' ? metrics.promedio.toFixed(2) : (metrics.promedio || 'N/A'),
+      typeof metrics.desviacion === 'number' ? metrics.desviacion.toFixed(2) : (metrics.desviacion || 'N/A'),
+      typeof metrics.minimo === 'number' ? metrics.minimo.toFixed(2) : (metrics.minimo || 'N/A'),
+      typeof metrics.maximo === 'number' ? metrics.maximo.toFixed(2) : (metrics.maximo || 'N/A'),
+      typeof metricsNoOutliers.promedio === 'number' ? metricsNoOutliers.promedio.toFixed(2) : (metricsNoOutliers.promedio || 'N/A')
     ];
   });
   
@@ -73,10 +73,10 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
     return [
       analysis.year.toString(),
       analysis.metadata.studentsWithPIAR.toString(),
-      metricsPIAR.promedio.toFixed(2),
-      metricsPIAR.desviacion.toFixed(2),
-      metricsPIAR.minimo.toFixed(2),
-      metricsPIAR.maximo.toFixed(2)
+      typeof metricsPIAR.promedio === 'number' ? metricsPIAR.promedio.toFixed(2) : (metricsPIAR.promedio || 'N/A'),
+      typeof metricsPIAR.desviacion === 'number' ? metricsPIAR.desviacion.toFixed(2) : (metricsPIAR.desviacion || 'N/A'),
+      typeof metricsPIAR.minimo === 'number' ? metricsPIAR.minimo.toFixed(2) : (metricsPIAR.minimo || 'N/A'),
+      typeof metricsPIAR.maximo === 'number' ? metricsPIAR.maximo.toFixed(2) : (metricsPIAR.maximo || 'N/A')
     ];
   });
   

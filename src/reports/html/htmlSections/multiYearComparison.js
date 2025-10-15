@@ -36,15 +36,17 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
               const metrics = analysis.getGlobalMetrics(true);
               const metricsNoOutliers = analysis.getGlobalMetrics(true, true);
               
+              const formatValue = (val) => typeof val === 'number' ? val.toFixed(2) : (val || 'N/A');
+              
               return `
                 <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-green-50 transition-colors">
                   <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
                   <td class="px-4 py-3 text-center">${analysis.metadata.studentsWithoutPIAR}</td>
-                  <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${metrics.promedio.toFixed(2)}</td>
-                  <td class="px-4 py-3 text-center">${metrics.desviacion.toFixed(2)}</td>
-                  <td class="px-4 py-3 text-center">${metrics.minimo.toFixed(2)}</td>
-                  <td class="px-4 py-3 text-center">${metrics.maximo.toFixed(2)}</td>
-                  <td class="px-4 py-3 text-center text-blue-600 font-semibold">${metricsNoOutliers.promedio.toFixed(2)}</td>
+                  <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${formatValue(metrics.promedio)}</td>
+                  <td class="px-4 py-3 text-center">${formatValue(metrics.desviacion)}</td>
+                  <td class="px-4 py-3 text-center">${formatValue(metrics.minimo)}</td>
+                  <td class="px-4 py-3 text-center">${formatValue(metrics.maximo)}</td>
+                  <td class="px-4 py-3 text-center text-blue-600 font-semibold">${formatValue(metricsNoOutliers.promedio)}</td>
                 </tr>
               `;
             }).join('')}
@@ -72,14 +74,16 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
             ${sortedAnalyses.map((analysis, index) => {
               const metricsPIAR = analysis.getGlobalMetrics(false);
               
+              const formatValue = (val) => typeof val === 'number' ? val.toFixed(2) : (val || 'N/A');
+              
               return `
                 <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 transition-colors">
                   <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
                   <td class="px-4 py-3 text-center">${analysis.metadata.studentsWithPIAR}</td>
-                  <td class="px-4 py-3 text-center font-bold">${metricsPIAR.promedio.toFixed(2)}</td>
-                  <td class="px-4 py-3 text-center">${metricsPIAR.desviacion.toFixed(2)}</td>
-                  <td class="px-4 py-3 text-center">${metricsPIAR.minimo.toFixed(2)}</td>
-                  <td class="px-4 py-3 text-center">${metricsPIAR.maximo.toFixed(2)}</td>
+                  <td class="px-4 py-3 text-center font-bold">${formatValue(metricsPIAR.promedio)}</td>
+                  <td class="px-4 py-3 text-center">${formatValue(metricsPIAR.desviacion)}</td>
+                  <td class="px-4 py-3 text-center">${formatValue(metricsPIAR.minimo)}</td>
+                  <td class="px-4 py-3 text-center">${formatValue(metricsPIAR.maximo)}</td>
                 </tr>
               `;
             }).join('')}
