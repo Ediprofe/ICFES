@@ -249,6 +249,10 @@ export class Analysis {
   static fromJSON(json) {
     const analysis = new Analysis(json.year, json.rawData);
     analysis.filters = json.filters;
+    // Restaurar metadata si existe, sino se recalculará automáticamente
+    if (json.metadata) {
+      analysis.metadata = json.metadata;
+    }
     return analysis;
   }
 }
