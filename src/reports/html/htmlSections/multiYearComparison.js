@@ -13,43 +13,14 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   const years = sortedAnalyses.map(a => a.year);
   
-  // Preparar datos de métricas para cada año
+  // Preparar datos de métricas para cada año (solo global sin PIAR)
   const metricsData = sortedAnalyses.map(analysis => {
     const globalSinPIAR = analysis.getGlobalMetrics(true, false);
-    const globalConPIAR = analysis.getGlobalMetrics(false, false);
-    
-    // Métricas por área
-    const areaMetrics = ACADEMIC_AREAS.map(area => {
-      const areaSinPIAR = analysis.getAreaMetrics(area.columnName, true);
-      const areaConPIAR = analysis.getAreaMetrics(area.columnName, false);
-      
-      return {
-        area: area.name,
-        color: area.color,
-        sinPIAR: {
-          promedio: areaSinPIAR.promedio,
-          desviacion: areaSinPIAR.desviacion
-        },
-        conPIAR: {
-          promedio: areaConPIAR.promedio,
-          desviacion: areaConPIAR.desviacion
-        }
-      };
-    });
     
     return {
       year: analysis.year,
-      global: {
-        sinPIAR: {
-          promedio: globalSinPIAR.promedio,
-          desviacion: globalSinPIAR.desviacion
-        },
-        conPIAR: {
-          promedio: globalConPIAR.promedio,
-          desviacion: globalConPIAR.desviacion
-        }
-      },
-      areas: areaMetrics
+      promedio: globalSinPIAR.promedio,
+      desviacion: globalSinPIAR.desviacion
     };
   });
   
@@ -90,25 +61,19 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
       </button>
     </div>
     
-    <!-- Tabla de métricas globales -->
+    <!-- Tabla de métricas globales (solo sin PIAR) -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
       <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
-        <h3 class="text-xl font-bold text-white">📊 Métricas globales</h3>
+        <h3 class="text-xl font-bold text-white">📊 Métricas globales (sin PIAR)</h3>
+        <p class="text-blue-100 text-sm mt-1">Promedio y desviación estándar de los años seleccionados</p>
       </div>
       <div class="overflow-x-auto">
         <table id="combinedGlobalTable" class="min-w-full">
           <thead class="bg-gradient-to-r from-gray-700 to-gray-800">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase">Año</th>
-              <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Sin PIAR</th>
-              <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Con PIAR</th>
-            </tr>
-            <tr class="bg-gray-600">
-              <th class="px-6 py-2 text-left text-xs font-semibold text-gray-200"></th>
-              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
-              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
-              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
-              <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
+              <th class="px-8 py-4 text-left text-sm font-bold text-white uppercase">Año</th>
+              <th class="px-8 py-4 text-center text-sm font-bold text-white uppercase">Promedio global</th>
+              <th class="px-8 py-4 text-center text-sm font-bold text-white uppercase">Desviación estándar</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -118,40 +83,9 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
       </div>
     </div>
     
-    <!-- Tablas por área académica -->
-    ${ACADEMIC_AREAS.map((area, index) => `
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-        <div class="px-6 py-4" style="background: linear-gradient(135deg, ${area.color}15 0%, ${area.color}05 100%)">
-          <h3 class="text-xl font-bold text-gray-800">${area.name}</h3>
-        </div>
-        <div class="overflow-x-auto">
-          <table id="combinedAreaTable${index}" class="min-w-full">
-            <thead class="bg-gradient-to-r from-gray-700 to-gray-800">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-bold text-white uppercase">Año</th>
-                <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Sin PIAR</th>
-                <th class="px-6 py-3 text-center text-xs font-bold text-white uppercase" colspan="2">Con PIAR</th>
-              </tr>
-              <tr class="bg-gray-600">
-                <th class="px-6 py-2 text-left text-xs font-semibold text-gray-200"></th>
-                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
-                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
-                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Promedio</th>
-                <th class="px-6 py-2 text-center text-xs font-semibold text-gray-200">Desv. Est.</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <!-- Se llenará dinámicamente -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `).join('')}
-    
     <script>
-      // Datos de métricas
+      // Datos de métricas (solo global sin PIAR)
       const metricsData = ${JSON.stringify(metricsData)};
-      const academicAreas = ${JSON.stringify(ACADEMIC_AREAS.map(a => ({ name: a.name, color: a.color })))};
       
       function selectAllYears(select) {
         document.querySelectorAll('.year-selector').forEach(checkbox => {
@@ -171,33 +105,13 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
         globalTableBody.innerHTML = filteredData.map((data, index) => {
           const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
           return \`
-            <tr class="\${rowBg}">
-              <td class="px-6 py-4 text-sm font-bold text-gray-900">\${data.year}</td>
-              <td class="px-6 py-4 text-center text-sm font-bold text-blue-600">\${data.global.sinPIAR.promedio.toFixed(2)}</td>
-              <td class="px-6 py-4 text-center text-sm text-gray-700">\${data.global.sinPIAR.desviacion.toFixed(2)}</td>
-              <td class="px-6 py-4 text-center text-sm font-bold text-gray-600">\${data.global.conPIAR.promedio.toFixed(2)}</td>
-              <td class="px-6 py-4 text-center text-sm text-gray-700">\${data.global.conPIAR.desviacion.toFixed(2)}</td>
+            <tr class="\${rowBg} hover:bg-blue-50 transition-colors">
+              <td class="px-8 py-5 text-base font-bold text-gray-900">\${data.year}</td>
+              <td class="px-8 py-5 text-center text-lg font-bold text-blue-600">\${data.promedio.toFixed(2)}</td>
+              <td class="px-8 py-5 text-center text-base font-semibold text-gray-700">\${data.desviacion.toFixed(2)}</td>
             </tr>
           \`;
         }).join('');
-        
-        // Actualizar tablas por área
-        academicAreas.forEach((area, areaIndex) => {
-          const areaTableBody = document.querySelector(\`#combinedAreaTable\${areaIndex} tbody\`);
-          areaTableBody.innerHTML = filteredData.map((data, index) => {
-            const areaData = data.areas[areaIndex];
-            const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
-            return \`
-              <tr class="\${rowBg}">
-                <td class="px-6 py-4 text-sm font-bold text-gray-900">\${data.year}</td>
-                <td class="px-6 py-4 text-center text-sm font-bold" style="color: \${area.color}">\${areaData.sinPIAR.promedio.toFixed(2)}</td>
-                <td class="px-6 py-4 text-center text-sm text-gray-700">\${areaData.sinPIAR.desviacion.toFixed(2)}</td>
-                <td class="px-6 py-4 text-center text-sm font-bold text-gray-600">\${areaData.conPIAR.promedio.toFixed(2)}</td>
-                <td class="px-6 py-4 text-center text-sm text-gray-700">\${areaData.conPIAR.desviacion.toFixed(2)}</td>
-              </tr>
-            \`;
-          }).join('');
-        });
       }
       
       // Inicializar tabla al cargar
