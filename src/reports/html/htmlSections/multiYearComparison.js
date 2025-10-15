@@ -266,6 +266,71 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
       </div>
     </div>
     
+    <!-- Comparación de Grupos de Cohortes -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6 mt-6">
+      <div class="border-b-2 border-purple-500 pb-3 mb-6">
+        <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <span class="text-2xl">📊</span>
+          <span>Comparación de Grupos de Cohortes</span>
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">Selecciona dos grupos de años para comparar sus estadísticas</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Grupo A -->
+        <div class="border-2 border-blue-300 rounded-lg p-4 bg-blue-50">
+          <h4 class="text-lg font-bold text-blue-800 mb-3 flex items-center gap-2">
+            <span class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">A</span>
+            <span>Grupo A</span>
+          </h4>
+          <div class="space-y-2">
+            ${years.map(year => `
+              <label class="flex items-center gap-2 px-3 py-2 bg-white hover:bg-blue-100 rounded-lg cursor-pointer transition-colors border border-blue-200">
+                <input 
+                  type="checkbox" 
+                  class="cohort-group-a w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                  value="${year}"
+                  onchange="updateCohortComparison()"
+                >
+                <span class="font-semibold text-gray-800">${year}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+        
+        <!-- Grupo B -->
+        <div class="border-2 border-green-300 rounded-lg p-4 bg-green-50">
+          <h4 class="text-lg font-bold text-green-800 mb-3 flex items-center gap-2">
+            <span class="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">B</span>
+            <span>Grupo B</span>
+          </h4>
+          <div class="space-y-2">
+            ${years.map(year => `
+              <label class="flex items-center gap-2 px-3 py-2 bg-white hover:bg-green-100 rounded-lg cursor-pointer transition-colors border border-green-200">
+                <input 
+                  type="checkbox" 
+                  class="cohort-group-b w-4 h-4 text-green-600 rounded focus:ring-green-500" 
+                  value="${year}"
+                  onchange="updateCohortComparison()"
+                >
+                <span class="font-semibold text-gray-800">${year}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Resultados de la comparación -->
+      <div id="cohortComparisonResults" class="mt-6">
+        <div class="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
+          <p class="text-gray-600">
+            <span class="text-3xl mb-2 block">🎯</span>
+            Selecciona años en ambos grupos para ver la comparación
+          </p>
+        </div>
+      </div>
+    </div>
+    
     <script>
       // Datos para curvas de Gauss
       const gaussianData = ${JSON.stringify(gaussianData)};
@@ -606,6 +671,150 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
       window.addEventListener('DOMContentLoaded', () => {
         updateGaussianChart();
       });
+      
+      // Función para actualizar la comparación de grupos de cohortes
+      function updateCohortComparison() {
+        const groupACheckboxes = Array.from(document.querySelectorAll('.cohort-group-a:checked'));
+        const groupBCheckboxes = Array.from(document.querySelectorAll('.cohort-group-b:checked'));
+        
+        const groupAYears = groupACheckboxes.map(cb => parseInt(cb.value));
+        const groupBYears = groupBCheckboxes.map(cb => parseInt(cb.value));
+        
+        const resultsDiv = document.getElementById('cohortComparisonResults');
+        
+        // Validar que ambos grupos tengan al menos un año seleccionado
+        if (groupAYears.length === 0 || groupBYears.length === 0) {
+          resultsDiv.innerHTML = \`
+            <div class="p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 text-center">
+              <p class="text-gray-600">
+                <span class="text-3xl mb-2 block">🎯</span>
+                Selecciona años en ambos grupos para ver la comparación
+              </p>
+            </div>
+          \`;
+          return;
+        }
+        
+        // Obtener datos de cada grupo
+        const groupAData = groupAYears.map(year => 
+          gaussianData.find(d => d.year === year)
+        ).filter(d => d !== undefined);
+        
+        const groupBData = groupBYears.map(year => 
+          gaussianData.find(d => d.year === year)
+        ).filter(d => d !== undefined);
+        
+        // Calcular estadísticas del Grupo A
+        const groupAPromedio = groupAData.reduce((sum, d) => sum + d.promedio, 0) / groupAData.length;
+        const groupADesviacion = groupAData.reduce((sum, d) => sum + d.desviacion, 0) / groupAData.length;
+        
+        // Calcular estadísticas del Grupo B
+        const groupBPromedio = groupBData.reduce((sum, d) => sum + d.promedio, 0) / groupBData.length;
+        const groupBDesviacion = groupBData.reduce((sum, d) => sum + d.desviacion, 0) / groupBData.length;
+        
+        // Calcular diferencias
+        const difPromedio = groupBPromedio - groupAPromedio;
+        const difDesviacion = groupBDesviacion - groupADesviacion;
+        const difPromedioPercent = ((difPromedio / groupAPromedio) * 100);
+        const difDesviacionPercent = ((difDesviacion / groupADesviacion) * 100);
+        
+        // Determinar tendencias
+        const promedioTrend = difPromedio > 0 ? 'superior' : difPromedio < 0 ? 'inferior' : 'igual';
+        const promedioIcon = difPromedio > 0 ? '📈' : difPromedio < 0 ? '📉' : '➡️';
+        const promedioColor = difPromedio > 0 ? 'text-green-600' : difPromedio < 0 ? 'text-red-600' : 'text-gray-600';
+        
+        const consistenciaTrend = difDesviacion < 0 ? 'más homogéneo' : difDesviacion > 0 ? 'más disperso' : 'similar';
+        const consistenciaIcon = difDesviacion < 0 ? '✅' : difDesviacion > 0 ? '⚠️' : '➡️';
+        const consistenciaColor = difDesviacion < 0 ? 'text-green-600' : difDesviacion > 0 ? 'text-orange-600' : 'text-gray-600';
+        
+        // Generar HTML de resultados
+        resultsDiv.innerHTML = \`
+          <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border-2 border-purple-200">
+            <h4 class="text-lg font-bold text-purple-900 mb-4 flex items-center gap-2">
+              <span class="text-2xl">📊</span>
+              <span>RESULTADOS DE LA COMPARACIÓN</span>
+            </h4>
+            
+            <!-- Resumen de grupos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div class="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">A</span>
+                  <p class="text-sm font-bold text-gray-700">Grupo A</p>
+                </div>
+                <p class="text-xs text-gray-600 mb-2">Años: \${groupAYears.join(', ')}</p>
+                <div class="space-y-1">
+                  <p class="text-sm"><span class="font-semibold">Promedio:</span> <span class="text-blue-600 font-bold text-lg">\${groupAPromedio.toFixed(2)}</span></p>
+                  <p class="text-sm"><span class="font-semibold">Desv. Est.:</span> <span class="text-gray-700 font-bold">\${groupADesviacion.toFixed(2)}</span></p>
+                </div>
+              </div>
+              
+              <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">B</span>
+                  <p class="text-sm font-bold text-gray-700">Grupo B</p>
+                </div>
+                <p class="text-xs text-gray-600 mb-2">Años: \${groupBYears.join(', ')}</p>
+                <div class="space-y-1">
+                  <p class="text-sm"><span class="font-semibold">Promedio:</span> <span class="text-green-600 font-bold text-lg">\${groupBPromedio.toFixed(2)}</span></p>
+                  <p class="text-sm"><span class="font-semibold">Desv. Est.:</span> <span class="text-gray-700 font-bold">\${groupBDesviacion.toFixed(2)}</span></p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Diferencias -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 \${difPromedio >= 0 ? 'border-green-500' : 'border-red-500'}">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">\${promedioIcon}</span>
+                  <p class="text-sm font-bold text-gray-700">Diferencia en Promedio</p>
+                </div>
+                <p class="text-3xl font-extrabold \${promedioColor}">
+                  \${difPromedio > 0 ? '+' : ''}\${difPromedio.toFixed(2)}
+                </p>
+                <p class="text-xs text-gray-600 mt-1">
+                  \${Math.abs(difPromedioPercent).toFixed(2)}% \${difPromedio >= 0 ? 'mayor' : 'menor'}
+                </p>
+              </div>
+              
+              <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 \${difDesviacion <= 0 ? 'border-green-500' : 'border-orange-500'}">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">\${consistenciaIcon}</span>
+                  <p class="text-sm font-bold text-gray-700">Diferencia en Desv. Est.</p>
+                </div>
+                <p class="text-3xl font-extrabold \${consistenciaColor}">
+                  \${difDesviacion > 0 ? '+' : ''}\${difDesviacion.toFixed(2)}
+                </p>
+                <p class="text-xs text-gray-600 mt-1">
+                  \${Math.abs(difDesviacionPercent).toFixed(2)}% \${difDesviacion >= 0 ? 'mayor' : 'menor'}
+                </p>
+              </div>
+            </div>
+            
+            <!-- Análisis interpretativo -->
+            <div class="mt-4 p-4 bg-white rounded-lg border border-purple-200">
+              <p class="text-sm text-gray-800 leading-relaxed">
+                <strong class="text-purple-900">📝 Interpretación:</strong>
+                El <strong>Grupo B</strong> tiene un promedio global 
+                <strong class="\${promedioColor}">\${promedioTrend}</strong> 
+                al <strong>Grupo A</strong> por <strong>\${Math.abs(difPromedio).toFixed(2)} puntos</strong> 
+                (\${Math.abs(difPromedioPercent).toFixed(2)}%).
+                En cuanto a la consistencia, el Grupo B es 
+                <strong class="\${consistenciaColor}">\${consistenciaTrend}</strong>
+                (diferencia de \${Math.abs(difDesviacion).toFixed(2)} en desviación estándar).
+                \${difPromedio > 0 && difDesviacion < 0 ? 
+                  '<span class="text-green-600 font-bold"> ✨ El Grupo B muestra mejor rendimiento Y mayor homogeneidad.</span>' : 
+                  difPromedio > 0 ? 
+                    '<span class="text-blue-600 font-bold"> ⚡ El Grupo B tiene mejor promedio, pero mayor dispersión.</span>' :
+                    difPromedio < 0 && difDesviacion < 0 ?
+                      '<span class="text-orange-600 font-bold"> ⚖️ El Grupo B tiene menor promedio pero es más homogéneo.</span>' :
+                      '<span class="text-red-600 font-bold"> ⚠️ El Grupo A muestra mejores resultados en ambas métricas.</span>'
+                }
+              </p>
+            </div>
+          </div>
+        \`;
+      }
     </script>
   `;
 };
