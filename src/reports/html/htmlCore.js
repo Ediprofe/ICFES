@@ -105,9 +105,56 @@ export const generateHTMLTemplate = (title, year, isMultiYear = false) => {
       background-color: #dbeafe;
       color: #1e40af;
     }
+    
+    /* Botón flotante de exportar PDF */
+    .export-pdf-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 1000;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 50px;
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+      cursor: pointer;
+      border: none;
+      font-weight: 700;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .export-pdf-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(59, 130, 246, 0.6);
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    }
+    
+    .export-pdf-button:active {
+      transform: translateY(-1px);
+    }
+    
+    @media print {
+      .export-pdf-button { display: none !important; }
+    }
   </style>
 </head>
 <body class="bg-gray-50">
+  <!-- Botón flotante de exportar a PDF -->
+  <button class="export-pdf-button no-print" onclick="exportToPDF()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+      <line x1="16" y1="13" x2="8" y2="13"></line>
+      <line x1="16" y1="17" x2="8" y2="17"></line>
+      <polyline points="10 9 9 9 8 9"></polyline>
+    </svg>
+    <span>Exportar a PDF</span>
+  </button>
+  
   <div id="app" class="max-w-7xl mx-auto p-6">
     <!-- CONTENIDO SE INYECTA AQUÍ -->
   </div>
@@ -144,6 +191,12 @@ export const generateHTMLTemplate = (title, year, isMultiYear = false) => {
     // DATOS EMBEBIDOS COMO JSON
     const analysisData = {DATA_PLACEHOLDER};
     const comparisonData = {COMPARISON_PLACEHOLDER};
+    
+    // FUNCIÓN PARA EXPORTAR A PDF
+    function exportToPDF() {
+      // Usar la función de impresión del navegador que permite guardar como PDF
+      window.print();
+    }
     
     // FUNCIONES DE INTERACTIVIDAD
     {INTERACTIVITY_SCRIPT}
