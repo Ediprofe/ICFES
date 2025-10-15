@@ -10,10 +10,31 @@ import { ExportButtons } from './components/ExportButtons.jsx';
 import { useAnalysisStore } from './stores/analysisStore.js';
 
 function AppDebug() {
-  const hasData = useAnalysisStore((state) => state.hasData());
-  const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
-  const availableYears = useAnalysisStore((state) => state.getAvailableYears());
-  const activeAnalysis = useAnalysisStore((state) => state.getActiveAnalysis());
+  const hasData = useAnalysisStore((state) => {
+    try {
+      return state.hasData();
+    } catch {
+      return false;
+    }
+  });
+  
+  const comparisonMode = useAnalysisStore((state) => state.comparisonMode || false);
+  
+  const availableYears = useAnalysisStore((state) => {
+    try {
+      return state.getAvailableYears ? state.getAvailableYears() : [];
+    } catch {
+      return [];
+    }
+  });
+  
+  const activeAnalysis = useAnalysisStore((state) => {
+    try {
+      return state.getActiveAnalysis ? state.getActiveAnalysis() : null;
+    } catch {
+      return null;
+    }
+  });
   
   return (
     <div className="min-h-screen bg-gray-50 p-8">
