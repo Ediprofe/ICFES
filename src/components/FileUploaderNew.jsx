@@ -126,7 +126,7 @@ export const FileUploaderNew = () => {
             <FileSpreadsheet size={56} className="text-white" />
           </div>
           <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-4">
-            📊 Cargar datos ICFES
+            📊 Cargar datos pruebas tipo Saber
           </h2>
           <p className="text-xl text-gray-700 font-medium">
             Arrastra tu archivo Excel o haz clic para seleccionarlo

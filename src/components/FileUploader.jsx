@@ -35,7 +35,7 @@ export default function FileUploader({ onFileLoaded }) {
               <BarChart3 size={56} className="text-white" />
             </div>
             <h1 className="text-5xl font-extrabold tracking-tight">
-              Analizador ICFES
+              Reporte de resultados pruebas tipo Saber
             </h1>
           </div>
           <div className="h-1 w-32 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto mb-6 rounded-full"></div>

@@ -7,7 +7,7 @@ import PDFGenerator from './components/PDFGenerator';
 import GradeAreaCharts from './components/GradeAreaCharts';
 import HTMLExporter from './components/HTMLExporter';
 import { addPercentiles } from './utils/percentiles';
-import { Youtube, Music2, Globe, RefreshCw } from 'lucide-react';
+import { Youtube, Music2, Globe, RefreshCw, BarChart3 } from 'lucide-react';
 
 function App() {
   const [data, setData] = useState(null);
@@ -46,64 +46,95 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-4xl font-bold text-blue-600">
-              Análisis ICFES
-            </h1>
-            {data && (
-              <button
-                onClick={handleResetApp}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
-                title="Iniciar nuevo análisis"
-              >
-                <RefreshCw size={20} />
-                <span className="font-semibold">Nuevo Análisis</span>
-              </button>
-            )}
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-500 mb-2">Desarrollado por</p>
-            <a 
-              href="https://ediprofe.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors block mb-3"
-            >
-              ediprofe.com
-            </a>
-            <div className="flex items-center justify-end gap-3">
-              <a
-                href="https://www.youtube.com/@ProfeEdi"
-                target="_blank"
+      <div className="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl shadow-2xl overflow-hidden mb-6">
+        {/* Encabezado principal */}
+        <div className="p-8 text-white">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* Título y descripción */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-3">
+                  <BarChart3 size={40} className="text-white" />
+                </div>
+                <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">
+                  Reporte de resultados pruebas tipo Saber
+                </h1>
+              </div>
+              <p className="text-blue-100 text-lg ml-16">
+                Sistema de análisis de resultados académicos
+              </p>
+            </div>
+            
+            {/* Información del desarrollador */}
+            <div className="text-center lg:text-right bg-white/10 backdrop-blur-sm rounded-xl p-4">
+              <p className="text-sm text-blue-200 mb-1">Desarrollado por</p>
+              <a 
+                href="https://ediprofe.com" 
+                target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-red-600 hover:text-red-700 transition-colors"
-                title="YouTube"
+                className="text-2xl font-bold text-white hover:text-blue-200 transition-colors block mb-3"
               >
-                <Youtube size={24} fill="currentColor" />
+                ediprofe.com
               </a>
-              <a
-                href="https://www.tiktok.com/@ediprofe"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-gray-900 hover:text-gray-700 transition-colors"
-                title="TikTok"
-              >
-                <Music2 size={24} />
-              </a>
-              <a
-                href="https://ediprofe.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-blue-600 hover:text-blue-700 transition-colors"
-                title="Sitio Web"
-              >
-                <Globe size={24} />
-              </a>
+              <div className="flex items-center justify-center lg:justify-end gap-3">
+                <a
+                  href="https://www.youtube.com/@ProfeEdi"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors bg-white/20 rounded-full p-2"
+                  title="YouTube"
+                >
+                  <Youtube size={24} fill="currentColor" />
+                </a>
+                <a
+                  href="https://www.tiktok.com/@ediprofe"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-white hover:text-blue-200 transition-colors bg-white/20 rounded-full p-2"
+                  title="TikTok"
+                >
+                  <Music2 size={24} />
+                </a>
+                <a
+                  href="https://ediprofe.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-blue-200 hover:text-white transition-colors bg-white/20 rounded-full p-2"
+                  title="Sitio Web"
+                >
+                  <Globe size={24} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Barra de acciones (solo visible cuando hay datos) */}
+        {data && (
+          <div className="bg-white/10 backdrop-blur-sm border-t border-white/20 px-8 py-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-white">
+                <div className="bg-white/20 rounded-lg px-4 py-2">
+                  <p className="text-sm text-blue-100">Cohorte activa</p>
+                  <p className="text-2xl font-bold">2025</p>
+                </div>
+                <div className="bg-white/20 rounded-lg px-4 py-2">
+                  <p className="text-sm text-blue-100">Total estudiantes</p>
+                  <p className="text-2xl font-bold">{data.length}</p>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleResetApp}
+                className="flex items-center gap-2 px-6 py-3 bg-white text-blue-700 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl transform hover:scale-105 font-bold"
+                title="Iniciar nuevo análisis"
+              >
+                <RefreshCw size={20} />
+                <span>Nuevo análisis</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       
       {!data ? (

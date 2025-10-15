@@ -56,10 +56,11 @@ function AppDebug() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-extrabold mb-2">
-                📊 Analizador ICFES
+                📊 Análisis de pruebas tipo ICFES
               </h1>
               <p className="text-blue-100 text-lg">
                 Sistema de análisis de resultados académicos
+
               </p>
             </div>
             <div className="flex items-center gap-4">

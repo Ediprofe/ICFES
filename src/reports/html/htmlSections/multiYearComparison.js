@@ -1401,3 +1401,306 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
     </script>
   `;
 };
+
+/**
+ * Genera la sección de tendencia de promedios globales con efecto WOW
+ * Gráfico de barras con línea de tendencia punteada
+ */
+export const generateTrendChartSection = (analyses, sectionNumber) => {
+  const sortedAnalyses = [...analyses].sort((a, b) => {
+    // Ordenar por año (convertir a número si es posible)
+    const yearA = typeof a.year === 'string' ? parseInt(a.year) || a.year : a.year;
+    const yearB = typeof b.year === 'string' ? parseInt(b.year) || b.year : b.year;
+    
+    if (typeof yearA === 'number' && typeof yearB === 'number') {
+      return yearA - yearB;
+    }
+    return String(yearA).localeCompare(String(yearB));
+  });
+  
+  // Preparar datos de tendencia
+  const trendData = sortedAnalyses.map(analysis => {
+    const metricsSinPIAR = analysis.getGlobalMetrics(true, false);
+    const metricsConPIAR = analysis.getGlobalMetrics(false, false);
+    
+    return {
+      year: analysis.year,
+      sinPIAR: metricsSinPIAR.promedio,
+      conPIAR: metricsConPIAR.promedio
+    };
+  });
+  
+  return `
+    <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-t-lg p-6 mb-6 shadow-2xl">
+      <h2 class="text-3xl font-extrabold mb-2">🚀 ${sectionNumber}. Tendencia de Promedios Globales</h2>
+      <p class="text-purple-100 text-lg">Evolución del rendimiento académico entre cohortes</p>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-2xl p-8 mb-8">
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">📈 Evolución del Promedio Global</h3>
+        <p class="text-gray-600">Visualiza la tendencia del rendimiento académico a través de las cohortes</p>
+      </div>
+      
+      <!-- Selector de modo PIAR -->
+      <div class="mb-6 flex items-center justify-center gap-4">
+        <button 
+          id="btnSinPIAR" 
+          onclick="togglePIARMode('sinPIAR')"
+          class="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+        >
+          ✓ Sin PIAR
+        </button>
+        <button 
+          id="btnConPIAR" 
+          onclick="togglePIARMode('conPIAR')"
+          class="px-8 py-4 bg-gray-300 text-gray-600 rounded-xl font-bold text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+        >
+          Con PIAR
+        </button>
+      </div>
+      
+      <!-- Gráfico de tendencia -->
+      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-inner">
+        <div style="height: 500px; position: relative;">
+          <canvas id="chartTendenciaGlobal"></canvas>
+        </div>
+      </div>
+      
+      <!-- Tabla de datos -->
+      <div class="mt-8 overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden shadow-md">
+          <thead class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+            <tr>
+              <th class="px-6 py-4 text-left text-sm font-bold uppercase">Cohorte</th>
+              <th class="px-6 py-4 text-center text-sm font-bold uppercase">Promedio Sin PIAR</th>
+              <th class="px-6 py-4 text-center text-sm font-bold uppercase">Promedio Con PIAR</th>
+              <th class="px-6 py-4 text-center text-sm font-bold uppercase">Diferencia</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            ${trendData.map((data, index) => {
+              const diff = data.sinPIAR - data.conPIAR;
+              const bgClass = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+              
+              return `
+                <tr class="${bgClass} hover:bg-indigo-50 transition-colors">
+                  <td class="px-6 py-4 font-bold text-gray-800">${data.year}</td>
+                  <td class="px-6 py-4 text-center">
+                    <span class="inline-block px-4 py-2 bg-green-100 text-green-800 font-bold rounded-lg">
+                      ${data.sinPIAR.toFixed(2)}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-center">
+                    <span class="inline-block px-4 py-2 bg-blue-100 text-blue-800 font-bold rounded-lg">
+                      ${data.conPIAR.toFixed(2)}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-center">
+                    <span class="inline-block px-4 py-2 ${diff > 0 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'} font-bold rounded-lg">
+                      ${diff > 0 ? '+' : ''}${diff.toFixed(2)}
+                    </span>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <script>
+      // Datos de tendencia
+      const trendData = ${JSON.stringify(trendData)};
+      
+      // Variable global para el gráfico
+      let trendChart = null;
+      let currentMode = 'sinPIAR';
+      
+      // Función para crear/actualizar el gráfico
+      function createTrendChart(mode) {
+        const ctx = document.getElementById('chartTendenciaGlobal');
+        
+        // Destruir gráfico anterior si existe
+        if (trendChart) {
+          trendChart.destroy();
+        }
+        
+        // Configurar datos según el modo
+        const isSinPIAR = mode === 'sinPIAR';
+        const data = trendData.map(d => isSinPIAR ? d.sinPIAR : d.conPIAR);
+        const color = isSinPIAR 
+          ? { main: 'rgba(34, 197, 94, 0.9)', border: 'rgba(34, 197, 94, 1)', line: 'rgba(34, 197, 94, 1)' }
+          : { main: 'rgba(59, 130, 246, 0.9)', border: 'rgba(59, 130, 246, 1)', line: 'rgba(59, 130, 246, 1)' };
+        const label = isSinPIAR ? 'Sin PIAR' : 'Con PIAR';
+        
+        trendChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: trendData.map(d => String(d.year)),
+            datasets: [
+              {
+                type: 'line',
+                label: 'Tendencia',
+                data: data,
+                borderColor: color.line,
+                backgroundColor: 'transparent',
+                borderWidth: 3,
+                borderDash: [10, 5],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                tension: 0.4,
+                fill: false,
+                order: 0,
+                datalabels: {
+                  display: false
+                }
+              },
+              {
+                type: 'bar',
+                label: label,
+                data: data,
+                backgroundColor: color.main,
+                borderColor: color.border,
+                borderWidth: 2,
+                borderRadius: 10,
+                order: 1
+              }
+            ]
+          },
+          plugins: [ChartDataLabels],
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 1500,
+              easing: 'easeInOutQuart'
+            },
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Evolución del Promedio Global por Cohorte (' + label + ')',
+                font: { 
+                  size: 22, 
+                  weight: 'bold',
+                  family: 'system-ui, -apple-system, sans-serif'
+                },
+                color: '#1f2937',
+                padding: 20
+              },
+              legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                  font: { size: 14, weight: '600' },
+                  padding: 15,
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                }
+              },
+              datalabels: {
+                display: function(context) {
+                  return context.dataset.type === 'bar';
+                },
+                anchor: 'end',
+                align: 'top',
+                offset: 6,
+                formatter: (value) => value ? value.toFixed(1) : '',
+                font: { 
+                  weight: 'bold', 
+                  size: 15,
+                  family: 'system-ui, -apple-system, sans-serif'
+                },
+                color: '#1f2937',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: 6,
+                padding: {
+                  top: 6,
+                  bottom: 6,
+                  left: 8,
+                  right: 8
+                },
+                borderColor: color.border,
+                borderWidth: 2
+              },
+              tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                titleFont: { size: 15, weight: 'bold' },
+                bodyFont: { size: 14 },
+                padding: 14,
+                cornerRadius: 8,
+                callbacks: {
+                  label: function(context) {
+                    const label = context.dataset.label || '';
+                    const value = context.parsed.y;
+                    return label + ': ' + value.toFixed(2);
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  font: { 
+                    size: 15, 
+                    weight: 'bold',
+                    family: 'system-ui, -apple-system, sans-serif'
+                  },
+                  color: '#374151'
+                }
+              },
+              y: {
+                beginAtZero: false,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.06)',
+                  drawBorder: false
+                },
+                ticks: {
+                  font: { 
+                    size: 13,
+                    family: 'system-ui, -apple-system, sans-serif'
+                  },
+                  color: '#6b7280',
+                  callback: function(value) {
+                    return value.toFixed(0);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Función para alternar entre modos
+      function togglePIARMode(mode) {
+        currentMode = mode;
+        
+        // Actualizar estilos de botones
+        const btnSinPIAR = document.getElementById('btnSinPIAR');
+        const btnConPIAR = document.getElementById('btnConPIAR');
+        
+        if (mode === 'sinPIAR') {
+          btnSinPIAR.className = 'px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300';
+          btnConPIAR.className = 'px-8 py-4 bg-gray-300 text-gray-600 rounded-xl font-bold text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300';
+        } else {
+          btnSinPIAR.className = 'px-8 py-4 bg-gray-300 text-gray-600 rounded-xl font-bold text-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300';
+          btnConPIAR.className = 'px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300';
+        }
+        
+        // Recrear gráfico
+        createTrendChart(mode);
+      }
+      
+      // Inicializar gráfico con modo "Sin PIAR"
+      createTrendChart('sinPIAR');
+    </script>
+  `;
+};

@@ -6,8 +6,11 @@ import { BRANDING, COLORS } from '../../config/visualConfig.js';
 
 /**
  * Genera la estructura HTML base
+ * @param {string} title - Título del documento
+ * @param {string} year - Año del análisis
+ * @param {boolean} isMultiYear - Indica si es un análisis multi-año (disponible para uso futuro)
  */
-export const generateHTMLTemplate = (title, year, isMultiYear = false) => {
+export const generateHTMLTemplate = (title, year) => {
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -25,9 +28,58 @@ export const generateHTMLTemplate = (title, year, isMultiYear = false) => {
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
+    /* Marca de agua para impresión */
     @media print {
       .no-print { display: none !important; }
       .page-break { page-break-before: always; }
+      
+      body::before {
+        content: "ediprofe.com";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 120px;
+        font-weight: bold;
+        color: rgba(0, 0, 0, 0.05);
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+        letter-spacing: 0.1em;
+      }
+      
+      /* Simplificar header en impresión */
+      header {
+        background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+        padding: 20px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      header .flex {
+        flex-direction: column !important;
+        gap: 10px !important;
+      }
+      
+      header svg {
+        display: none !important;
+      }
+      
+      /* Simplificar footer en impresión */
+      footer {
+        background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+        padding: 20px !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      footer .grid {
+        display: block !important;
+      }
+      
+      footer .space-y-3 {
+        display: none !important;
+      }
     }
     
     .chart-container {
@@ -155,35 +207,171 @@ export const generateHTMLTemplate = (title, year, isMultiYear = false) => {
     <span>Exportar a PDF</span>
   </button>
   
+  <!-- Header con Branding -->
+  <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div class="flex-1">
+          <h1 class="text-4xl font-bold mb-2">
+            <a href="${BRANDING.url}" target="_blank" class="hover:text-blue-100 transition-colors">
+              ${BRANDING.name}
+            </a>
+          </h1>
+          <p class="text-blue-100 text-lg">
+            Guía Educativa para Ciencias y Matemáticas
+          </p>
+        </div>
+        <div class="flex gap-6 items-center">
+          <a href="${BRANDING.social.youtube}" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="YouTube">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <span class="text-sm font-medium">/profedi</span>
+          </a>
+          <a href="${BRANDING.social.tiktok}" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="TikTok">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+            </svg>
+            <span class="text-sm font-medium">@ediprofe</span>
+          </a>
+          <a href="${BRANDING.url}" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="Sitio Web">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Barra de información del reporte -->
+  <div class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 py-4">
+      <div class="flex items-center gap-2 text-sm text-gray-600">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span class="font-semibold text-gray-800">Reporte Académico ICFES</span>
+        <span class="text-gray-400">•</span>
+        <span>${year}</span>
+        <span class="text-gray-400">•</span>
+        <span>Generado con tecnología ${BRANDING.name}</span>
+      </div>
+    </div>
+  </div>
+
   <div id="app" class="max-w-7xl mx-auto p-6">
     <!-- CONTENIDO SE INYECTA AQUÍ -->
   </div>
   
-  <!-- Footer -->
-  <footer class="bg-white border-t border-gray-200 mt-12 py-8">
-    <div class="max-w-7xl mx-auto px-6 text-center">
-      <p class="text-sm text-gray-600 mb-2">Desarrollado por</p>
-      <a href="${BRANDING.url}" target="_blank" class="text-2xl font-bold text-blue-600 hover:text-blue-700">
-        ${BRANDING.name}
-      </a>
-      <div class="mt-4 flex justify-center gap-6 text-sm text-gray-500">
-        <a href="${BRANDING.social.youtube}" target="_blank" class="hover:text-blue-600">
-          YouTube: @ProfeEdi
-        </a>
-        <a href="${BRANDING.social.tiktok}" target="_blank" class="hover:text-blue-600">
-          TikTok: @ediprofe
-        </a>
-        <a href="${BRANDING.social.web}" target="_blank" class="hover:text-blue-600">
-          Web: ediprofe.com
-        </a>
+  <!-- Footer con branding mejorado -->
+  <footer class="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 mt-12 py-12 text-white">
+    <div class="max-w-7xl mx-auto px-6">
+      <!-- Sección principal -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <!-- Información de la marca -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <a href="https://ediprofe.com" target="_blank" class="text-3xl font-extrabold hover:text-blue-200 transition-colors">
+              ediprofe.com
+            </a>
+          </div>
+          <p class="text-blue-100 text-lg font-semibold mb-3">
+            Guía Educativa para Ciencias y Matemáticas
+          </p>
+          <p class="text-blue-200 leading-relaxed">
+            Explora lecciones estructuradas con videos explicativos, material didáctico y recursos descargables que simplifican el aprendizaje de conceptos complejos. Cada unidad temática contiene múltiples lecciones organizadas de forma progresiva para facilitar el aprendizaje paso a paso.
+          </p>
+        </div>
+        
+        <!-- Redes sociales y enlaces -->
+        <div class="flex flex-col justify-center">
+          <h3 class="text-xl font-bold mb-4">🌐 Síguenos en nuestras redes</h3>
+          <div class="space-y-3">
+            <!-- YouTube -->
+            <a href="https://www.youtube.com/@ProfeEdi" target="_blank" 
+               class="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 transform hover:scale-105 group">
+              <div class="bg-red-500 rounded-full p-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="font-bold">YouTube</p>
+                <p class="text-sm text-blue-200">/profedi</p>
+              </div>
+              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+            
+            <!-- TikTok -->
+            <a href="https://www.tiktok.com/@ediprofe" target="_blank" 
+               class="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 transform hover:scale-105 group">
+              <div class="bg-gray-900 rounded-full p-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="font-bold">TikTok</p>
+                <p class="text-sm text-blue-200">@ediprofe</p>
+              </div>
+              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+            
+            <!-- Sitio Web -->
+            <a href="https://ediprofe.com" target="_blank" 
+               class="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 transform hover:scale-105 group">
+              <div class="bg-blue-500 rounded-full p-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="2" y1="12" x2="22" y2="12"></line>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="font-bold">Sitio Web</p>
+                <p class="text-sm text-blue-200">ediprofe.com</p>
+              </div>
+              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
       </div>
-      <p class="mt-4 text-xs text-gray-400">
-        Generado el ${new Date().toLocaleDateString('es-ES', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        })}
-      </p>
+      
+      <!-- Línea divisoria y copyright -->
+      <div class="border-t border-white/20 pt-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+          <p class="text-blue-100 text-sm">
+            © ${new Date().getFullYear()} ${BRANDING.name} - Herramienta de Análisis Académico ICFES
+          </p>
+          <p class="text-blue-200 text-xs">
+            Reporte generado el ${new Date().toLocaleDateString('es-ES', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </p>
+        </div>
+        <div class="mt-4 text-center">
+          <p class="text-blue-200 text-xs italic">
+            "Simplificando el aprendizaje de conceptos complejos, un paso a la vez"
+          </p>
+        </div>
+      </div>
     </div>
   </footer>
   

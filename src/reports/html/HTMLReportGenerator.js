@@ -15,7 +15,8 @@ import {
   generateGaussianCurvesSection,
   generateGlobalComparisonSection,
   generateAreaComparisonSection,
-  generateAllStudentsTableSection
+  generateAllStudentsTableSection,
+  generateTrendChartSection
 } from './htmlSections/multiYearComparison.js';
 import { prepareAreaChartData, prepareGradeChartData, prepareComparisonChartData } from '../charts/chartDataPreparation.js';
 
@@ -33,8 +34,7 @@ export const generateHTML = (analysis, options = {}) => {
   // 1. Generar template base
   let html = generateHTMLTemplate(
     `Análisis ICFES ${analysis.year}${isMultiYear ? ' - Comparativo' : ''}`,
-    analysis.year,
-    isMultiYear
+    analysis.year
   );
   
   // 2. Preparar datos para gráficos
@@ -70,6 +70,7 @@ export const generateHTML = (analysis, options = {}) => {
   // Si es multi-año, usar secciones de comparación
   if (isMultiYear && comparisonAnalyses.length > 0) {
     
+    sections.push(generateTrendChartSection(allAnalyses, sectionNumber++));
     sections.push(generateAllStudentsTableSection(allAnalyses, sectionNumber++));
     sections.push(generateCombinedMetricsSection(allAnalyses, sectionNumber++));
     sections.push(generateGaussianCurvesSection(allAnalyses, sectionNumber++));
