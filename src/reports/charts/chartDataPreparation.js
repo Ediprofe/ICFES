@@ -50,6 +50,7 @@ export const prepareAreaChartData = (analysis, includePIAR = true) => {
   const desviacion = ACADEMIC_AREAS.map((area, index) => {
     const metricCon = metricsConPIAR[index];
     const metricSin = metricsSinPIAR[index];
+    const metricSinOut = metricsSinOutliers[index];
     
     return {
       area: area.shortName,
@@ -57,6 +58,7 @@ export const prepareAreaChartData = (analysis, includePIAR = true) => {
       areaId: area.id,
       conPIAR: parseFloat(metricCon.desviacion) || 0,
       sinPIAR: parseFloat(metricSin.desviacion) || 0,
+      sinOutliers: parseFloat(metricSinOut.desviacion) || 0,
       color: area.color,
       lightColor: area.lightColor,
       darkColor: area.darkColor

@@ -158,7 +158,7 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   const years = sortedAnalyses.map(a => a.year);
   
-  // Preparar datos de métricas para cada año
+  // Preparar datos de métricas para cada año (global)
   const gaussianData = sortedAnalyses.map(analysis => {
     const globalSinPIAR = analysis.getGlobalMetrics(true, false);
     
@@ -166,6 +166,29 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
       year: analysis.year,
       promedio: globalSinPIAR.promedio,
       desviacion: globalSinPIAR.desviacion
+    };
+  });
+  
+  // Preparar datos por área para cada año
+  const areasComparisonData = ACADEMIC_AREAS.map(area => {
+    return {
+      areaId: area.id,
+      areaName: area.name,
+      color: area.color,
+      data: sortedAnalyses.map(analysis => {
+        const chartData = prepareAreaChartData(analysis, true);
+        const areaData = chartData.promedios.find(item => item.areaId === area.id);
+        const areaDesv = chartData.desviacion.find(item => item.areaId === area.id);
+        return {
+          year: analysis.year,
+          sinPIAR: areaData ? areaData.sinPIAR : null,
+          conPIAR: areaData ? areaData.conPIAR : null,
+          sinOutliers: areaData ? areaData.sinOutliers : null,
+          desvSinPIAR: areaDesv ? areaDesv.sinPIAR : null,
+          desvConPIAR: areaDesv ? areaDesv.conPIAR : null,
+          desvSinOutliers: areaDesv ? areaDesv.sinOutliers : null
+        };
+      })
     };
   });
   
@@ -334,6 +357,7 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
     <script>
       // Datos para curvas de Gauss
       const gaussianData = ${JSON.stringify(gaussianData)};
+      const areasComparisonData = ${JSON.stringify(areasComparisonData)};
       const yearColors = ${JSON.stringify(yearColors)};
       
       // Función para calcular la distribución normal (campana de Gauss)
@@ -832,10 +856,59 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
               </p>
             </div>
           </div>
+          
+          <!-- Comparación por Áreas Académicas -->
+          <div class="mt-8 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg p-6 border-2 border-indigo-200">
+            <h4 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+              <span class="text-2xl">📚</span>
+              <span>COMPARACIÓN POR ÁREAS ACADÉMICAS</span>
+            </h4>
+            
+            <!-- Controles interactivos -->
+            <div class="mb-4 bg-white rounded-lg p-4 border border-indigo-200">
+              <div class="flex items-center gap-4 mb-2">
+                <span class="text-sm font-bold text-gray-700">Modo de visualización:</span>
+                <div class="flex gap-2">
+                  <button 
+                    onclick="setAreaComparisonMode('sinPIAR')" 
+                    id="btnAreaSinPIAR"
+                    class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
+                  >
+                    Sin PIAR
+                  </button>
+                  <button 
+                    onclick="setAreaComparisonMode('conPIAR')" 
+                    id="btnAreaConPIAR"
+                    class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors"
+                  >
+                    Con PIAR
+                  </button>
+                  <button 
+                    onclick="setAreaComparisonMode('sinOutliers')" 
+                    id="btnAreaSinOutliers"
+                    class="px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors"
+                  >
+                    Sin Outliers
+                  </button>
+                </div>
+              </div>
+              <p class="text-xs text-gray-600 italic">
+                <span id="areaComparisonModeLabel">Mostrando datos sin PIAR (métricas principales)</span>
+              </p>
+            </div>
+            
+            <!-- Gráficos por área -->
+            <div id="areaComparisonCharts" class="grid grid-cols-1 gap-6">
+              <!-- Se llenarán dinámicamente -->
+            </div>
+          </div>
         \`;
         
         // Crear gráficos de comparación
         createComparisonCharts(groupAPromedio, groupBPromedio, groupADesviacion, groupBDesviacion, groupAYears, groupBYears);
+        
+        // Crear gráficos de comparación por áreas
+        updateAreaComparisonCharts(groupAYears, groupBYears);
       }
       
       // Función para crear los gráficos de comparación
@@ -1024,6 +1097,279 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
             }
           });
         }
+      }
+      
+      // Variables para comparación por áreas
+      let areaComparisonMode = 'sinPIAR';
+      let areaComparisonCharts = {};
+      
+      // Función para cambiar el modo de visualización
+      function setAreaComparisonMode(mode) {
+        areaComparisonMode = mode;
+        
+        // Actualizar botones
+        document.getElementById('btnAreaSinPIAR').className = mode === 'sinPIAR' 
+          ? 'px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        document.getElementById('btnAreaConPIAR').className = mode === 'conPIAR' 
+          ? 'px-3 py-1 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        document.getElementById('btnAreaSinOutliers').className = mode === 'sinOutliers' 
+          ? 'px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        // Actualizar etiqueta
+        const labels = {
+          sinPIAR: 'Mostrando datos sin PIAR (métricas principales)',
+          conPIAR: 'Mostrando datos con PIAR (todos los estudiantes)',
+          sinOutliers: 'Mostrando datos sin outliers (valores atípicos excluidos)'
+        };
+        document.getElementById('areaComparisonModeLabel').textContent = labels[mode];
+        
+        // Actualizar gráficos
+        const groupACheckboxes = Array.from(document.querySelectorAll('.cohort-group-a:checked'));
+        const groupBCheckboxes = Array.from(document.querySelectorAll('.cohort-group-b:checked'));
+        const groupAYears = groupACheckboxes.map(cb => parseInt(cb.value));
+        const groupBYears = groupBCheckboxes.map(cb => parseInt(cb.value));
+        
+        if (groupAYears.length > 0 && groupBYears.length > 0) {
+          updateAreaComparisonCharts(groupAYears, groupBYears);
+        }
+      }
+      
+      // Función para actualizar gráficos de comparación por áreas
+      function updateAreaComparisonCharts(groupAYears, groupBYears) {
+        const container = document.getElementById('areaComparisonCharts');
+        
+        if (!container || groupAYears.length === 0 || groupBYears.length === 0) {
+          return;
+        }
+        
+        // Destruir gráficos anteriores
+        Object.values(areaComparisonCharts).forEach(chart => {
+          if (chart) chart.destroy();
+        });
+        areaComparisonCharts = {};
+        
+        // Generar HTML para cada área
+        let html = '';
+        
+        areasComparisonData.forEach((area, areaIndex) => {
+          // Calcular promedios y desviaciones para cada grupo
+          const groupAData = area.data.filter(d => groupAYears.includes(d.year));
+          const groupBData = area.data.filter(d => groupBYears.includes(d.year));
+          
+          // Seleccionar datos según el modo
+          const getPromedioValue = (d) => {
+            if (areaComparisonMode === 'sinPIAR') return d.sinPIAR;
+            if (areaComparisonMode === 'conPIAR') return d.conPIAR;
+            return d.sinOutliers;
+          };
+          
+          const getDesvValue = (d) => {
+            if (areaComparisonMode === 'sinPIAR') return d.desvSinPIAR;
+            if (areaComparisonMode === 'conPIAR') return d.desvConPIAR;
+            return d.desvSinOutliers;
+          };
+          
+          const groupAPromedios = groupAData.map(getPromedioValue).filter(v => v !== null);
+          const groupBPromedios = groupBData.map(getPromedioValue).filter(v => v !== null);
+          const groupADesviaciones = groupAData.map(getDesvValue).filter(v => v !== null);
+          const groupBDesviaciones = groupBData.map(getDesvValue).filter(v => v !== null);
+          
+          if (groupAPromedios.length === 0 || groupBPromedios.length === 0) {
+            return;
+          }
+          
+          const groupAPromedio = groupAPromedios.reduce((a, b) => a + b, 0) / groupAPromedios.length;
+          const groupBPromedio = groupBPromedios.reduce((a, b) => a + b, 0) / groupBPromedios.length;
+          const groupADesviacion = groupADesviaciones.reduce((a, b) => a + b, 0) / groupADesviaciones.length;
+          const groupBDesviacion = groupBDesviaciones.reduce((a, b) => a + b, 0) / groupBDesviaciones.length;
+          
+          const difPromedio = groupBPromedio - groupAPromedio;
+          const difDesviacion = groupBDesviacion - groupADesviacion;
+          
+          html += \`
+            <div class="bg-white rounded-lg p-4 shadow-md border-l-4" style="border-color: \${area.color}">
+              <h5 class="text-md font-bold mb-3" style="color: \${area.color}">\${area.areaName}</h5>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Resumen de grupos -->
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">A</span>
+                    <p class="text-xs font-bold text-gray-700">Grupo A</p>
+                  </div>
+                  <p class="text-xs text-gray-600 mb-1">Promedio: <span class="font-bold text-blue-600">\${isNaN(groupAPromedio) ? 'N/A' : groupAPromedio.toFixed(2)}</span></p>
+                  <p class="text-xs text-gray-600">Desv. Est.: <span class="font-bold">\${isNaN(groupADesviacion) ? 'N/A' : groupADesviacion.toFixed(2)}</span></p>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-3">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">B</span>
+                    <p class="text-xs font-bold text-gray-700">Grupo B</p>
+                  </div>
+                  <p class="text-xs text-gray-600 mb-1">Promedio: <span class="font-bold text-green-600">\${isNaN(groupBPromedio) ? 'N/A' : groupBPromedio.toFixed(2)}</span></p>
+                  <p class="text-xs text-gray-600">Desv. Est.: <span class="font-bold">\${isNaN(groupBDesviacion) ? 'N/A' : groupBDesviacion.toFixed(2)}</span></p>
+                </div>
+              </div>
+              
+              <!-- Gráficos -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p class="text-xs font-semibold text-gray-700 mb-2 text-center">Comparación de Promedios</p>
+                  <div style="height: 200px; position: relative;">
+                    <canvas id="areaPromedioChart\${areaIndex}"></canvas>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-gray-700 mb-2 text-center">Comparación de Desviaciones</p>
+                  <div style="height: 200px; position: relative;">
+                    <canvas id="areaDesviacionChart\${areaIndex}"></canvas>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Diferencias -->
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <div class="bg-gray-50 rounded p-2">
+                  <p class="text-xs text-gray-600">Dif. Promedio:</p>
+                  <p class="text-sm font-bold \${difPromedio >= 0 ? 'text-green-600' : 'text-red-600'}">
+                    \${isNaN(difPromedio) ? 'N/A' : (difPromedio > 0 ? '+' : '') + difPromedio.toFixed(2)}
+                  </p>
+                </div>
+                <div class="bg-gray-50 rounded p-2">
+                  <p class="text-xs text-gray-600">Dif. Desv. Est.:</p>
+                  <p class="text-sm font-bold \${difDesviacion <= 0 ? 'text-green-600' : 'text-orange-600'}">
+                    \${isNaN(difDesviacion) ? 'N/A' : (difDesviacion > 0 ? '+' : '') + difDesviacion.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          \`;
+          
+          // Crear gráficos después de insertar el HTML
+          setTimeout(() => {
+            // Gráfico de promedios
+            const ctxPromedio = document.getElementById('areaPromedioChart' + areaIndex);
+            if (ctxPromedio && !isNaN(groupAPromedio) && !isNaN(groupBPromedio)) {
+              const minPromedio = Math.min(groupAPromedio, groupBPromedio);
+              const maxPromedio = Math.max(groupAPromedio, groupBPromedio);
+              const rangePromedio = maxPromedio - minPromedio;
+              const paddingPromedio = rangePromedio > 0 ? rangePromedio * 0.2 : 5;
+              
+              areaComparisonCharts['promedio' + areaIndex] = new Chart(ctxPromedio, {
+                type: 'bar',
+                data: {
+                  labels: ['Grupo A', 'Grupo B'],
+                  datasets: [{
+                    label: 'Promedio',
+                    data: [groupAPromedio, groupBPromedio],
+                    backgroundColor: [
+                      'rgba(37, 99, 235, 0.8)',
+                      'rgba(34, 197, 94, 0.8)'
+                    ],
+                    borderColor: [
+                      'rgba(37, 99, 235, 1)',
+                      'rgba(34, 197, 94, 1)'
+                    ],
+                    borderWidth: 2
+                  }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                      anchor: 'end',
+                      align: 'top',
+                      formatter: (value) => value.toFixed(1),
+                      font: { weight: 'bold', size: 11 },
+                      color: '#1f2937'
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: false,
+                      min: Math.max(0, minPromedio - paddingPromedio),
+                      max: maxPromedio + paddingPromedio,
+                      ticks: {
+                        font: { size: 10 }
+                      }
+                    },
+                    x: {
+                      ticks: {
+                        font: { size: 10, weight: 'bold' }
+                      }
+                    }
+                  }
+                }
+              });
+            }
+            
+            // Gráfico de desviaciones
+            const ctxDesv = document.getElementById('areaDesviacionChart' + areaIndex);
+            if (ctxDesv && !isNaN(groupADesviacion) && !isNaN(groupBDesviacion)) {
+              const maxDesviacion = Math.max(groupADesviacion, groupBDesviacion);
+              const paddingDesviacion = maxDesviacion * 0.2;
+              
+              areaComparisonCharts['desviacion' + areaIndex] = new Chart(ctxDesv, {
+                type: 'bar',
+                data: {
+                  labels: ['Grupo A', 'Grupo B'],
+                  datasets: [{
+                    label: 'Desviación Estándar',
+                    data: [groupADesviacion, groupBDesviacion],
+                    backgroundColor: [
+                      'rgba(37, 99, 235, 0.8)',
+                      'rgba(34, 197, 94, 0.8)'
+                    ],
+                    borderColor: [
+                      'rgba(37, 99, 235, 1)',
+                      'rgba(34, 197, 94, 1)'
+                    ],
+                    borderWidth: 2
+                  }]
+                },
+                plugins: [ChartDataLabels],
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                      anchor: 'end',
+                      align: 'top',
+                      formatter: (value) => isNaN(value) ? 'N/A' : value.toFixed(1),
+                      font: { weight: 'bold', size: 11 },
+                      color: '#1f2937'
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      max: maxDesviacion + paddingDesviacion,
+                      ticks: {
+                        font: { size: 10 }
+                      }
+                    },
+                    x: {
+                      ticks: {
+                        font: { size: 10, weight: 'bold' }
+                      }
+                    }
+                  }
+                }
+              });
+            }
+          }, 100);
+        });
+        
+        container.innerHTML = html;
       }
     </script>
   `;
