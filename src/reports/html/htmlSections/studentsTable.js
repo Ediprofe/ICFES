@@ -33,41 +33,65 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
     </div>
     
     <!-- Filtros -->
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Buscar estudiante</label>
-        <input 
-          type="text" 
-          id="searchStudents" 
-          placeholder="Nombre o apellido..." 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onkeyup="filterStudentsTable()"
-        >
+    <div class="mb-6 no-print">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Buscar estudiante</label>
+          <input 
+            type="text" 
+            id="searchStudents" 
+            placeholder="Nombre o apellido..." 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onkeyup="filterStudentsTable()"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por grado</label>
+          <select 
+            id="gradeFilter" 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onchange="filterStudentsTable()"
+          >
+            <option value="">Todos los grados</option>
+            ${grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Puntaje mínimo</label>
+          <input 
+            type="number" 
+            id="minScoreFilter" 
+            placeholder="Ej: 300" 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onkeyup="filterStudentsTable()"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Puntaje máximo</label>
+          <input 
+            type="number" 
+            id="maxScoreFilter" 
+            placeholder="Ej: 400" 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onkeyup="filterStudentsTable()"
+          >
+        </div>
       </div>
       
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Filtrar por grado</label>
-        <select 
-          id="gradeFilter" 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onchange="filterStudentsTable()"
-        >
-          <option value="">Todos los grados</option>
-          ${grades.map(grade => `<option value="${grade}">${grade}</option>`).join('')}
-        </select>
-      </div>
-      
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Puntaje mínimo</label>
-        <input 
-          type="number" 
-          id="minScoreFilter" 
-          placeholder="Ej: 300" 
-          class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          onkeyup="filterStudentsTable()"
-        >
-      </div>
+      <!-- Contador de coincidencias -->
+      <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+          </svg>
+          <span class="text-sm font-semibold text-gray-700">Resultados:</span>
+        </div>
+        <div id="matchCounter" class="text-lg font-bold text-blue-600">
+          ${sortedData.length} estudiante${sortedData.length !== 1 ? 's' : ''}
+        </div>
       </div>
     </div>
     
@@ -180,6 +204,7 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
         const searchValue = document.getElementById('searchStudents').value.toLowerCase();
         const gradeValue = document.getElementById('gradeFilter').value;
         const minScore = parseFloat(document.getElementById('minScoreFilter').value) || 0;
+        const maxScore = parseFloat(document.getElementById('maxScoreFilter').value) || Infinity;
         
         const table = document.getElementById('studentsTable');
         const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
@@ -193,11 +218,13 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
           
           const matchesSearch = nombre.includes(searchValue) || apellido.includes(searchValue);
           const matchesGrade = !gradeValue || grade === gradeValue;
-          const matchesScore = global >= minScore;
+          const matchesMinScore = global >= minScore;
+          const matchesMaxScore = global <= maxScore;
           
           // Aplicar filtros normales
-          if (matchesSearch && matchesGrade && matchesScore) {
+          if (matchesSearch && matchesGrade && matchesMinScore && matchesMaxScore) {
             row.style.display = '';
+            visibleCount++;
           } else {
             row.style.display = 'none';
           }
@@ -207,8 +234,17 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
         if (!piarVisibleSingle) {
           const piarRows = document.querySelectorAll('.piar-row-single');
           piarRows.forEach(row => {
-            row.style.display = 'none';
+            if (row.style.display !== 'none') {
+              row.style.display = 'none';
+              visibleCount--;
+            }
           });
+        }
+        
+        // Actualizar contador de coincidencias
+        const matchCounter = document.getElementById('matchCounter');
+        if (matchCounter) {
+          matchCounter.textContent = \`\${visibleCount} estudiante\${visibleCount !== 1 ? 's' : ''}\`;
         }
         
         updateVisibleCountSingle();
