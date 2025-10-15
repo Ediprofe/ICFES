@@ -215,9 +215,9 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
   // Para cada área académica
-  ACADEMIC_AREAS.forEach((area) => {
-    // Verificar espacio
-    if (currentY > 240) {
+  ACADEMIC_AREAS.forEach((area, index) => {
+    // Nueva página para cada área (excepto la primera)
+    if (index > 0) {
       doc.addPage();
       currentY = 20;
     }
