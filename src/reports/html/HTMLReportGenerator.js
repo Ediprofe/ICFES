@@ -8,6 +8,11 @@ import { generateInteractivityScript } from './htmlInteractivity.js';
 import { generateCoverSection } from './htmlSections/coverSection.js';
 import { generateInteractiveChartsSection } from './htmlSections/interactiveCharts.js';
 import { generateStudentsTableSection } from './htmlSections/studentsTable.js';
+import { 
+  generateGlobalComparisonSection,
+  generateAreaComparisonSection,
+  generateAllStudentsTableSection
+} from './htmlSections/multiYearComparison.js';
 import { prepareAreaChartData, prepareGradeChartData, prepareComparisonChartData } from '../charts/chartDataPreparation.js';
 
 /**
@@ -43,17 +48,24 @@ export const generateHTML = (analysis, options = {}) => {
   // 3. Generar contenido de secciones
   let sectionNumber = 1;
   
-  const sections = [
-    generateCoverSection(analysis, isMultiYear, comparisonAnalyses.map(a => a.year)),
-    generateInteractiveChartsSection(sectionNumber++),
-    generateStudentsTableSection(analysis, sectionNumber++, excludePIAR)
-  ];
+  let sections = [];
   
-  // TODO: Agregar más secciones
-  // - Métricas por área
-  // - Top performers
-  // - Outliers
-  // - Comparación multi-año (si aplica)
+  // Portada
+  sections.push(generateCoverSection(analysis, isMultiYear, comparisonAnalyses.map(a => a.year)));
+  
+  // Si es multi-año, usar secciones de comparación
+  if (isMultiYear && comparisonAnalyses.length > 0) {
+    const allAnalyses = [analysis, ...comparisonAnalyses];
+    
+    sections.push(generateGlobalComparisonSection(allAnalyses, sectionNumber++));
+    sections.push(generateAreaComparisonSection(allAnalyses, sectionNumber++));
+    sections.push(generateAllStudentsTableSection(allAnalyses, sectionNumber++));
+    
+  } else {
+    // Modo de un solo año
+    sections.push(generateInteractiveChartsSection(sectionNumber++));
+    sections.push(generateStudentsTableSection(analysis, sectionNumber++, excludePIAR));
+  }
   
   const content = sections.join('\n');
   

@@ -10,6 +10,12 @@ import { generateAreaMetrics } from './pdfSections/areaMetrics.js';
 import { generateCharts } from './pdfSections/charts.js';
 import { generateTopPerformers } from './pdfSections/topPerformers.js';
 import { generateOutliers } from './pdfSections/outliers.js';
+import { 
+  generateGlobalComparisonSection, 
+  generateYearComparisonChart,
+  generateAreaComparisonSection,
+  generateAllStudentsTable 
+} from './pdfSections/multiYearComparison.js';
 
 /**
  * Genera un PDF completo con todas las secciones
@@ -40,31 +46,48 @@ export const generatePDF = (analysis, options = {}) => {
     comparisonYears: comparisonAnalyses.map(a => a.year)
   });
   
-  // 2. Listado de Estudiantes
-  addNewPage(doc);
-  generateStudentsList(doc, analysis, sectionNumber++, { excludePIAR });
-  
-  // 3. Métricas por Área
-  addNewPage(doc);
-  generateAreaMetrics(doc, analysis, sectionNumber++);
-  
-  // 4. Gráficos
-  addNewPage(doc);
-  generateCharts(doc, analysis, sectionNumber++);
-  
-  // 5. Top Performers
-  addNewPage(doc);
-  generateTopPerformers(doc, analysis, sectionNumber++);
-  
-  // 6. Outliers
-  addNewPage(doc);
-  generateOutliers(doc, analysis, sectionNumber++);
-  
-  // TODO: 7. Comparación Multi-Año (si aplica)
-  // if (isMultiYear && comparisonAnalyses.length > 0) {
-  //   addNewPage(doc);
-  //   generateComparison(doc, analysis, comparisonAnalyses, sectionNumber++);
-  // }
+  // Si es multi-año, generar secciones de comparación
+  if (isMultiYear && comparisonAnalyses.length > 0) {
+    const allAnalyses = [analysis, ...comparisonAnalyses];
+    
+    // 2. Comparación de Métricas Globales
+    addNewPage(doc);
+    let currentY = 20;
+    currentY = generateGlobalComparisonSection(doc, allAnalyses, currentY);
+    
+    // 3. Gráfico de Evolución
+    generateYearComparisonChart(doc, allAnalyses, currentY);
+    
+    // 4. Comparación por Áreas
+    addNewPage(doc);
+    generateAreaComparisonSection(doc, allAnalyses, 20);
+    
+    // 5. Tabla Completa de Estudiantes
+    generateAllStudentsTable(doc, allAnalyses, 20);
+    
+  } else {
+    // Modo de un solo año - secciones tradicionales
+    
+    // 2. Listado de Estudiantes
+    addNewPage(doc);
+    generateStudentsList(doc, analysis, sectionNumber++, { excludePIAR });
+    
+    // 3. Métricas por Área
+    addNewPage(doc);
+    generateAreaMetrics(doc, analysis, sectionNumber++);
+    
+    // 4. Gráficos
+    addNewPage(doc);
+    generateCharts(doc, analysis, sectionNumber++);
+    
+    // 5. Top Performers
+    addNewPage(doc);
+    generateTopPerformers(doc, analysis, sectionNumber++);
+    
+    // 6. Outliers
+    addNewPage(doc);
+    generateOutliers(doc, analysis, sectionNumber++);
+  }
   
   // Agregar pies de página a todas las páginas
   const totalPages = getCurrentPageNumber(doc);
