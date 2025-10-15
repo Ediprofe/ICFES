@@ -7,28 +7,41 @@ import { drawTable, drawBarChart } from '../pdfHelpers.js';
 import { ACADEMIC_AREAS } from '../../../config/columnConfig.js';
 import { prepareAreaChartData } from '../../charts/chartDataPreparation.js';
 
+// Helper para convertir hex a RGB
+const hexToRgb = (hex) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 37, g: 99, b: 235 }; // blue-600 por defecto
+};
+
 /**
  * Genera la sección de comparación de métricas globales
  */
 export const generateGlobalComparisonSection = (doc, analyses, startY) => {
   let currentY = startY;
   
-  // Título de la sección
-  doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(37, 99, 235);
-  doc.text('📊 Comparación de Métricas Globales', 20, currentY);
+  // Título de la sección con diseño mejorado
+  doc.setFillColor(37, 99, 235); // blue-600
+  doc.rect(15, currentY - 8, 180, 12, 'F');
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('1. COMPARACION DE METRICAS GLOBALES', 20, currentY);
   currentY += 10;
   
   // Ordenar análisis por año
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
-  // Tabla de comparación - Sin PIAR (métricas principales)
-  doc.setFontSize(12);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(0);
-  doc.text('Sin PIAR (Métricas Principales)', 20, currentY);
-  currentY += 8;
+  // Subtítulo - Sin PIAR
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(22, 163, 74); // green-600
+  doc.text('SIN PIAR (Metricas Principales)', 20, currentY);
+  currentY += 6;
   
   const sinPIARColumns = ['Año', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo', 'Sin Outliers'];
   const sinPIARRows = sortedAnalyses.map(analysis => {
@@ -60,12 +73,12 @@ export const generateGlobalComparisonSection = (doc, analyses, startY) => {
   
   currentY += 5;
   
-  // Tabla de comparación - Con PIAR
-  doc.setFontSize(12);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(0);
-  doc.text('Con PIAR', 20, currentY);
-  currentY += 8;
+  // Subtítulo - Con PIAR
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(107, 114, 128); // gray-500
+  doc.text('CON PIAR (Todos los Estudiantes)', 20, currentY);
+  currentY += 6;
   
   const conPIARColumns = ['Año', 'Estudiantes', 'Promedio', 'Desv. Est.', 'Mínimo', 'Máximo'];
   const conPIARRows = sortedAnalyses.map(analysis => {
@@ -151,12 +164,15 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
     currentY = 20;
   }
   
-  // Título de la sección
-  doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(37, 99, 235);
-  doc.text('📚 Comparación por Áreas Académicas', 20, currentY);
-  currentY += 10;
+  // Título de la sección con diseño mejorado
+  doc.setFillColor(37, 99, 235); // blue-600
+  doc.rect(15, currentY - 8, 180, 12, 'F');
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text('2. COMPARACION POR AREAS ACADEMICAS', 20, currentY);
+  currentY += 12;
   
   const sortedAnalyses = [...analyses].sort((a, b) => a.year - b.year);
   
@@ -168,11 +184,14 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
       currentY = 20;
     }
     
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(0);
-    doc.text(`${area.name}`, 20, currentY);
-    currentY += 8;
+    // Nombre del área con color
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    const areaColor = area.color || '#2563eb';
+    const rgb = hexToRgb(areaColor);
+    doc.setTextColor(rgb.r, rgb.g, rgb.b);
+    doc.text(area.name.toUpperCase(), 20, currentY);
+    currentY += 6;
     
     // Tabla de comparación para esta área
     const columns = ['Año', 'Promedio Sin PIAR', 'Desv. Est.', 'Sin Outliers', 'Promedio Con PIAR'];

@@ -20,13 +20,10 @@ const hexToRgb = (hex) => {
 };
 
 /**
- * Dibuja una tabla usando autoTable
+ * Dibuja una tabla usando autoTable con diseño mejorado
  */
 export const drawTable = (doc, columns, rows, startY, options = {}) => {
   const {
-    headStyles = TABLE_CONFIG.styles.header,
-    bodyStyles = TABLE_CONFIG.styles.body,
-    alternateRowStyles = TABLE_CONFIG.styles.alternateRow,
     columnStyles = {},
     margin = { left: 20, right: 20 }
   } = options;
@@ -35,35 +32,44 @@ export const drawTable = (doc, columns, rows, startY, options = {}) => {
     startY,
     head: [columns],
     body: rows,
-    theme: 'striped',
+    theme: 'plain',
     headStyles: {
-      fillColor: hexToRgb(headStyles.fillColor),
-      textColor: headStyles.textColor,
-      fontStyle: headStyles.fontStyle,
-      fontSize: headStyles.fontSize,
+      fillColor: [37, 99, 235], // blue-600
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 10,
       halign: 'center',
       valign: 'middle',
-      cellPadding: 4,
-      lineWidth: 0.1,
-      lineColor: [255, 255, 255]
+      cellPadding: 5,
+      lineWidth: 0,
+      minCellHeight: 12
     },
     bodyStyles: {
-      fontSize: bodyStyles.fontSize,
-      textColor: hexToRgb(bodyStyles.textColor),
-      cellPadding: 3,
+      fontSize: 9,
+      textColor: [31, 41, 55], // gray-800
+      cellPadding: 4,
       lineWidth: 0.1,
-      lineColor: [220, 220, 220],
-      valign: 'middle'
+      lineColor: [229, 231, 235], // gray-200
+      valign: 'middle',
+      minCellHeight: 10
     },
     alternateRowStyles: {
-      fillColor: hexToRgb(alternateRowStyles.fillColor)
+      fillColor: [249, 250, 251] // gray-50
     },
     columnStyles,
     margin,
     styles: {
       overflow: 'linebreak',
       cellWidth: 'wrap',
-      minCellHeight: 8
+      font: 'helvetica',
+      lineColor: [229, 231, 235],
+      lineWidth: 0.1
+    },
+    didParseCell: function(data) {
+      // Mejorar primera fila del body
+      if (data.section === 'body' && data.row.index === 0) {
+        data.cell.styles.fillColor = [239, 246, 255]; // blue-50
+      }
     }
   });
   
