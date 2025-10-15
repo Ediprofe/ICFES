@@ -90,7 +90,7 @@ export const drawBarChart = (doc, data, x, y, width, height, title, options = {}
   } = options;
   
   const barWidth = width / (data.length * (showComparison ? 2.5 : 1.5));
-  const chartHeight = height - 35;
+  const chartHeight = height - 40; // Aumentado de 35 a 40 para más espacio para rótulos
   const barSpacing = barWidth * 0.3;
   
   // Calcular escala
@@ -112,7 +112,7 @@ export const drawBarChart = (doc, data, x, y, width, height, title, options = {}
   doc.setFontSize(11);
   doc.setFont(undefined, 'bold');
   doc.text(title, x + width / 2, y, { align: 'center' });
-  y += 10;
+  y += 12; // Aumentado de 10 a 12 para más separación
   
   // Eje Y con líneas de referencia
   doc.setDrawColor(200);
@@ -153,7 +153,7 @@ export const drawBarChart = (doc, data, x, y, width, height, title, options = {}
         doc.setFontSize(8);
         doc.setTextColor(107, 114, 128);
         doc.setFont(undefined, 'bold');
-        doc.text(item.conPIAR.toFixed(1), xPos + (barWidth - barSpacing) / 2, y + chartHeight - barHeightConPIAR - 2, { align: 'center' });
+        doc.text(item.conPIAR.toFixed(1), xPos + (barWidth - barSpacing) / 2, y + chartHeight - barHeightConPIAR - 3, { align: 'center' });
       }
     }
     
@@ -171,7 +171,7 @@ export const drawBarChart = (doc, data, x, y, width, height, title, options = {}
       doc.setFontSize(8);
       doc.setTextColor(color[0], color[1], color[2]);
       doc.setFont(undefined, 'bold');
-      doc.text(item.sinPIAR.toFixed(1), xPosSinPIAR + (barWidth - barSpacing) / 2, y + chartHeight - barHeightSinPIAR - 2, { align: 'center' });
+      doc.text(item.sinPIAR.toFixed(1), xPosSinPIAR + (barWidth - barSpacing) / 2, y + chartHeight - barHeightSinPIAR - 3, { align: 'center' });
     }
     
     // Etiqueta del área
