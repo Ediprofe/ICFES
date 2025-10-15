@@ -67,6 +67,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
             }
           ]
         },
+        plugins: [ChartDataLabels],
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -87,6 +88,14 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
               formatter: (value) => value ? value.toFixed(1) : '',
               font: { weight: 'bold', size: 11 },
               color: '#1f2937'
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                }
+              }
             }
           },
           scales: {
@@ -126,6 +135,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
             }
           ]
         },
+        plugins: [ChartDataLabels],
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -146,6 +156,14 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
               formatter: (value) => value ? value.toFixed(1) : '',
               font: { weight: 'bold', size: 11 },
               color: '#1f2937'
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                }
+              }
             }
           },
           scales: {
@@ -299,6 +317,109 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
         </div>
       </div>
     `).join('')}
+    
+    <!-- Gráficos de Evolución por Área -->
+    <div class="mt-8 mb-8">
+      <h3 class="text-xl font-bold text-center text-blue-600 mb-6">Gráficos de Evolución por Área</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        ${ACADEMIC_AREAS.map((area, areaIndex) => `
+          <div class="bg-white rounded-lg shadow-md p-4">
+            <canvas id="chartAreaEvolution${areaIndex}" height="250"></canvas>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    
+    <script>
+      // Preparar datos de evolución por área
+      const areasEvolutionData = ${JSON.stringify(ACADEMIC_AREAS.map(area => {
+        return {
+          areaId: area.id,
+          areaName: area.name,
+          color: area.color,
+          data: sortedAnalyses.map(analysis => {
+            const chartData = prepareAreaChartData(analysis, true);
+            const areaData = chartData.promedios.find(item => item.areaId === area.id);
+            const areaDesv = chartData.desviacion.find(item => item.areaId === area.id);
+            return {
+              year: analysis.year,
+              sinPIAR: areaData ? areaData.sinPIAR : null,
+              conPIAR: areaData ? areaData.conPIAR : null,
+              desvSinPIAR: areaDesv ? areaDesv.sinPIAR : null,
+              desvConPIAR: areaDesv ? areaDesv.conPIAR : null
+            };
+          })
+        };
+      }))};
+      
+      // Crear gráficos de evolución por área
+      areasEvolutionData.forEach((areaEvolution, index) => {
+        new Chart(document.getElementById('chartAreaEvolution' + index), {
+          type: 'bar',
+          data: {
+            labels: areaEvolution.data.map(d => d.year),
+            datasets: [
+              {
+                label: 'Sin PIAR',
+                data: areaEvolution.data.map(d => d.sinPIAR),
+                backgroundColor: areaEvolution.color + 'CC',
+                borderColor: areaEvolution.color,
+                borderWidth: 1
+              },
+              {
+                label: 'Con PIAR',
+                data: areaEvolution.data.map(d => d.conPIAR),
+                backgroundColor: 'rgba(107, 114, 128, 0.8)',
+                borderColor: 'rgba(107, 114, 128, 1)',
+                borderWidth: 1
+              }
+            ]
+          },
+          plugins: [ChartDataLabels],
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: true,
+                text: areaEvolution.areaName + ' - Evolución del Promedio',
+                font: { size: 14, weight: 'bold' }
+              },
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              datalabels: {
+                display: true,
+                anchor: 'end',
+                align: 'top',
+                formatter: (value) => value ? value.toFixed(1) : '',
+                font: { weight: 'bold', size: 10 },
+                color: '#1f2937'
+              },
+              tooltip: {
+                enabled: true,
+                callbacks: {
+                  label: function(context) {
+                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: {
+                  callback: function(value) {
+                    return value.toFixed(0);
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+    </script>
   `;
 };
 
