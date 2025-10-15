@@ -173,7 +173,7 @@ export const generateInteractivityScript = () => {
               type: 'linear',
               title: {
                 display: true,
-                text: 'Año'
+                text: 'Cohorte'
               }
             },
             y: {

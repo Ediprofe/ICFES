@@ -242,6 +242,13 @@ export const ExportButtons = () => {
         <p className="mt-3 text-xs text-gray-600 bg-white/50 p-2 rounded-lg">
           ℹ️ Solo datos de la cohorte {activeAnalysis.year} ({activeAnalysis.metadata.studentsWithoutPIAR} estudiantes sin PIAR)
         </p>
+        <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+          <p className="text-xs text-gray-700 font-semibold mb-1">💡 Tip: Exportar HTML a PDF</p>
+          <p className="text-xs text-gray-600">
+            Descarga el HTML y ábrelo en tu navegador. Luego usa <strong>Ctrl+P</strong> (Cmd+P en Mac) → 
+            "Guardar como PDF" → Activa <strong>"Gráficos de fondo"</strong> para obtener un PDF perfecto con todos los colores y gráficos.
+          </p>
+        </div>
       </div>
       
       {/* Exportación comparativa (solo si hay múltiples años) */}
@@ -283,6 +290,13 @@ export const ExportButtons = () => {
           <p className="mt-3 text-xs text-gray-600 bg-white/50 p-2 rounded-lg">
             ℹ️ Compara {availableYears.length} cohortes: <strong>{availableYears.sort().join(', ')}</strong> • Incluye todas las métricas y estudiantes de todas las cohortes
           </p>
+          <div className="mt-3 p-3 bg-purple-50 border-l-4 border-purple-500 rounded-lg">
+            <p className="text-xs text-gray-700 font-semibold mb-1">💡 Tip: Exportar HTML a PDF</p>
+            <p className="text-xs text-gray-600">
+              El HTML comparativo está optimizado para PDF. Usa <strong>Ctrl+P</strong> (Cmd+P en Mac) → 
+              "Guardar como PDF" → Activa <strong>"Gráficos de fondo"</strong>. Los saltos de página están controlados automáticamente.
+            </p>
+          </div>
         </div>
       )}
     </div>

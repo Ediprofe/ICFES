@@ -28,11 +28,77 @@ export const generateHTMLTemplate = (title, year) => {
   <script src="https://cdn.tailwindcss.com"></script>
   
   <style>
-    /* Marca de agua para impresión */
+    /* ========================================
+       ESTILOS PARA IMPRESIÓN Y EXPORTACIÓN PDF
+       ======================================== */
     @media print {
-      .no-print { display: none !important; }
-      .page-break { page-break-before: always; }
+      /* Configuración de página - HORIZONTAL para presentaciones */
+      @page {
+        size: A4 landscape;
+        margin: 1cm 1.5cm;
+      }
       
+      /* Ocultar elementos no imprimibles */
+      .no-print { display: none !important; }
+      
+      /* Control de saltos de página */
+      .page-break { 
+        page-break-before: always; 
+        break-before: always;
+      }
+      
+      .page-break-after { 
+        page-break-after: always; 
+        break-after: always;
+      }
+      
+      .avoid-break { 
+        page-break-inside: avoid; 
+        break-inside: avoid;
+      }
+      
+      /* Evitar que elementos importantes se corten */
+      .bg-white, .rounded-lg, .shadow-lg, .shadow-md {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      
+      /* Tablas */
+      table { 
+        page-break-inside: auto;
+        break-inside: auto;
+      }
+      
+      tr { 
+        page-break-inside: avoid; 
+        page-break-after: auto;
+        break-inside: avoid;
+        break-after: auto;
+      }
+      
+      thead { 
+        display: table-header-group;
+      }
+      
+      tfoot { 
+        display: table-footer-group;
+      }
+      
+      /* Gráficos */
+      canvas {
+        max-width: 100% !important;
+        height: auto !important;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      
+      .chart-container {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin: 10px 0;
+      }
+      
+      /* Marca de agua */
       body::before {
         content: "ediprofe.com";
         position: fixed;
@@ -48,29 +114,36 @@ export const generateHTMLTemplate = (title, year) => {
         letter-spacing: 0.1em;
       }
       
-      /* Simplificar header en impresión */
+      /* Preservar colores de fondo */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+      }
+      
+      /* Header simplificado */
       header {
         background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
-        padding: 20px !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        padding: 15px !important;
+        page-break-after: avoid;
+        break-after: avoid;
       }
       
       header .flex {
         flex-direction: column !important;
-        gap: 10px !important;
+        gap: 8px !important;
       }
       
       header svg {
         display: none !important;
       }
       
-      /* Simplificar footer en impresión */
+      /* Footer simplificado */
       footer {
         background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
-        padding: 20px !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        padding: 15px !important;
+        page-break-before: avoid;
+        break-before: avoid;
       }
       
       footer .grid {
@@ -79,6 +152,105 @@ export const generateHTMLTemplate = (title, year) => {
       
       footer .space-y-3 {
         display: none !important;
+      }
+      
+      /* Ajustar márgenes y espaciado */
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      
+      /* Reducir espaciado para PDF */
+      .mb-8 { margin-bottom: 1rem !important; }
+      .mb-6 { margin-bottom: 0.75rem !important; }
+      .mt-8 { margin-top: 1rem !important; }
+      .mt-6 { margin-top: 0.75rem !important; }
+      .p-6 { padding: 0.75rem !important; }
+      .p-4 { padding: 0.5rem !important; }
+      
+      /* Sombras más sutiles */
+      .shadow-lg, .shadow-md {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+      }
+      
+      /* Optimizar fuentes */
+      body {
+        font-size: 10pt;
+        line-height: 1.3;
+      }
+      
+      h1 { font-size: 18pt; }
+      h2 { font-size: 16pt; }
+      h3 { font-size: 14pt; }
+      h4 { font-size: 12pt; }
+      
+      /* Botones y controles interactivos */
+      button, .cursor-pointer {
+        display: none !important;
+      }
+      
+      /* Inputs y selects */
+      input, select {
+        border: 1px solid #ccc !important;
+        background: white !important;
+      }
+      
+      /* Mejorar contraste de texto */
+      .text-gray-600 {
+        color: #4b5563 !important;
+      }
+      
+      .text-gray-700 {
+        color: #374151 !important;
+      }
+      
+      /* Asegurar que los badges se vean bien */
+      .rounded-full {
+        border-radius: 9999px !important;
+      }
+      
+      /* Optimizar tablas para impresión */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      
+      th, td {
+        padding: 3px 6px !important;
+        font-size: 8pt;
+      }
+      
+      /* Tabla de estudiantes más compacta en horizontal */
+      #allStudentsTable th,
+      #allStudentsTable td {
+        padding: 2px 4px !important;
+        font-size: 7pt;
+      }
+      
+      #allStudentsTable .rounded-full {
+        font-size: 6pt !important;
+        padding: 1px 4px !important;
+      }
+      
+      /* Evitar que las secciones se corten */
+      section, article, .section-container {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      
+      /* Si una sección es muy grande, permitir corte pero no en elementos hijos */
+      .large-section {
+        page-break-inside: auto;
+      }
+      
+      .large-section > div {
+        page-break-inside: avoid;
+        break-inside: avoid;
       }
     }
     
@@ -254,8 +426,6 @@ export const generateHTMLTemplate = (title, year) => {
         <span class="font-semibold text-gray-800">Reporte Académico ICFES</span>
         <span class="text-gray-400">•</span>
         <span>${year}</span>
-        <span class="text-gray-400">•</span>
-        <span>Generado con tecnología ${BRANDING.name}</span>
       </div>
     </div>
   </div>
@@ -292,7 +462,7 @@ export const generateHTMLTemplate = (title, year) => {
         
         <!-- Redes sociales y enlaces -->
         <div class="flex flex-col justify-center">
-          <h3 class="text-xl font-bold mb-4">🌐 Síguenos en nuestras redes</h3>
+          <h3 class="text-xl font-bold mb-4">🌐 Sígueme en redes</h3>
           <div class="space-y-3">
             <!-- YouTube -->
             <a href="https://www.youtube.com/@ProfeEdi" target="_blank" 

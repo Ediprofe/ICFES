@@ -742,7 +742,7 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
                   <span class="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">A</span>
                   <p class="text-sm font-bold text-gray-700">Grupo A</p>
                 </div>
-                <p class="text-xs text-gray-600 mb-2">Años: \${groupAYears.join(', ')}</p>
+                <p class="text-xs text-gray-600 mb-2">Cohortes: \${groupAYears.join(', ')}</p>
                 <div class="space-y-1">
                   <p class="text-sm"><span class="font-semibold">Promedio:</span> <span class="text-blue-600 font-bold text-lg">\${groupAPromedio.toFixed(2)}</span></p>
                   <p class="text-sm"><span class="font-semibold">Desv. Est.:</span> <span class="text-gray-700 font-bold">\${groupADesviacion.toFixed(2)}</span></p>
@@ -754,10 +754,29 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
                   <span class="bg-green-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">B</span>
                   <p class="text-sm font-bold text-gray-700">Grupo B</p>
                 </div>
-                <p class="text-xs text-gray-600 mb-2">Años: \${groupBYears.join(', ')}</p>
+                <p class="text-xs text-gray-600 mb-2">Cohortes: \${groupBYears.join(', ')}</p>
                 <div class="space-y-1">
                   <p class="text-sm"><span class="font-semibold">Promedio:</span> <span class="text-green-600 font-bold text-lg">\${groupBPromedio.toFixed(2)}</span></p>
                   <p class="text-sm"><span class="font-semibold">Desv. Est.:</span> <span class="text-gray-700 font-bold">\${groupBDesviacion.toFixed(2)}</span></p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Gráficos de comparación -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <!-- Gráfico de Promedios -->
+              <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h5 class="text-sm font-bold text-gray-800 mb-3 text-center">Comparación de Promedios</h5>
+                <div style="height: 250px; position: relative;">
+                  <canvas id="cohortComparisonPromedioChart"></canvas>
+                </div>
+              </div>
+              
+              <!-- Gráfico de Desviaciones -->
+              <div class="bg-white rounded-lg p-4 shadow-sm">
+                <h5 class="text-sm font-bold text-gray-800 mb-3 text-center">Comparación de Desviaciones Estándar</h5>
+                <div style="height: 250px; position: relative;">
+                  <canvas id="cohortComparisonDesviacionChart"></canvas>
                 </div>
               </div>
             </div>
@@ -814,6 +833,197 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
             </div>
           </div>
         \`;
+        
+        // Crear gráficos de comparación
+        createComparisonCharts(groupAPromedio, groupBPromedio, groupADesviacion, groupBDesviacion, groupAYears, groupBYears);
+      }
+      
+      // Función para crear los gráficos de comparación
+      let promedioComparisonChart = null;
+      let desviacionComparisonChart = null;
+      
+      function createComparisonCharts(groupAPromedio, groupBPromedio, groupADesviacion, groupBDesviacion, groupAYears, groupBYears) {
+        // Destruir gráficos anteriores si existen
+        if (promedioComparisonChart) {
+          promedioComparisonChart.destroy();
+        }
+        if (desviacionComparisonChart) {
+          desviacionComparisonChart.destroy();
+        }
+        
+        // Gráfico de Promedios
+        const ctxPromedio = document.getElementById('cohortComparisonPromedioChart');
+        if (ctxPromedio) {
+          promedioComparisonChart = new Chart(ctxPromedio, {
+            type: 'bar',
+            data: {
+              labels: ['Grupo A', 'Grupo B'],
+              datasets: [{
+                label: 'Promedio Global',
+                data: [groupAPromedio, groupBPromedio],
+                backgroundColor: [
+                  'rgba(37, 99, 235, 0.8)',  // Azul para Grupo A
+                  'rgba(34, 197, 94, 0.8)'   // Verde para Grupo B
+                ],
+                borderColor: [
+                  'rgba(37, 99, 235, 1)',
+                  'rgba(34, 197, 94, 1)'
+                ],
+                borderWidth: 2
+              }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                },
+                title: {
+                  display: false
+                },
+                datalabels: {
+                  anchor: 'end',
+                  align: 'top',
+                  formatter: (value) => value.toFixed(2),
+                  font: {
+                    weight: 'bold',
+                    size: 14
+                  },
+                  color: '#1f2937'
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const label = context.label;
+                      const value = context.parsed.y;
+                      const years = label === 'Grupo A' ? groupAYears.join(', ') : groupBYears.join(', ');
+                      return [
+                        \`Promedio: \${value.toFixed(2)}\`,
+                        \`Cohortes: \${years}\`
+                      ];
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  min: Math.min(groupAPromedio, groupBPromedio) - 10,
+                  max: Math.max(groupAPromedio, groupBPromedio) + 10,
+                  title: {
+                    display: true,
+                    text: 'Promedio Global',
+                    font: {
+                      size: 12,
+                      weight: 'bold'
+                    }
+                  },
+                  ticks: {
+                    callback: function(value) {
+                      return value.toFixed(0);
+                    }
+                  }
+                },
+                x: {
+                  ticks: {
+                    font: {
+                      size: 12,
+                      weight: 'bold'
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+        
+        // Gráfico de Desviaciones Estándar
+        const ctxDesviacion = document.getElementById('cohortComparisonDesviacionChart');
+        if (ctxDesviacion) {
+          desviacionComparisonChart = new Chart(ctxDesviacion, {
+            type: 'bar',
+            data: {
+              labels: ['Grupo A', 'Grupo B'],
+              datasets: [{
+                label: 'Desviación Estándar',
+                data: [groupADesviacion, groupBDesviacion],
+                backgroundColor: [
+                  'rgba(37, 99, 235, 0.8)',  // Azul para Grupo A
+                  'rgba(34, 197, 94, 0.8)'   // Verde para Grupo B
+                ],
+                borderColor: [
+                  'rgba(37, 99, 235, 1)',
+                  'rgba(34, 197, 94, 1)'
+                ],
+                borderWidth: 2
+              }]
+            },
+            plugins: [ChartDataLabels],
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false
+                },
+                title: {
+                  display: false
+                },
+                datalabels: {
+                  anchor: 'end',
+                  align: 'top',
+                  formatter: (value) => value.toFixed(2),
+                  font: {
+                    weight: 'bold',
+                    size: 14
+                  },
+                  color: '#1f2937'
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const label = context.label;
+                      const value = context.parsed.y;
+                      const years = label === 'Grupo A' ? groupAYears.join(', ') : groupBYears.join(', ');
+                      return [
+                        \`Desv. Est.: \${value.toFixed(2)}\`,
+                        \`Cohortes: \${years}\`
+                      ];
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Desviación Estándar',
+                    font: {
+                      size: 12,
+                      weight: 'bold'
+                    }
+                  },
+                  ticks: {
+                    callback: function(value) {
+                      return value.toFixed(0);
+                    }
+                  }
+                },
+                x: {
+                  ticks: {
+                    font: {
+                      size: 12,
+                      weight: 'bold'
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
       }
     </script>
   `;
@@ -891,7 +1101,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
           plugins: {
             title: {
               display: true,
-              text: 'Evolución del Promedio Global por Año',
+              text: 'Evolución del Promedio Global por Cohorte',
               font: { size: 16, weight: 'bold' }
             },
             legend: {
@@ -959,7 +1169,7 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
           plugins: {
             title: {
               display: true,
-              text: 'Evolución de la Desviación Estándar por Año',
+              text: 'Evolución de la Desviación Estándar por Cohorte',
               font: { size: 16, weight: 'bold' }
             },
             legend: {
@@ -1157,10 +1367,18 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
         </div>
         
         <!-- Gráfico de evolución del área -->
-        <div class="bg-white rounded-lg shadow-md p-4">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
           <h4 class="text-md font-semibold text-gray-700 mb-2">Gráfico de Evolución - ${area.name}</h4>
           <div style="height: 300px; position: relative;">
             <canvas id="chartAreaEvolution${areaIndex}"></canvas>
+          </div>
+        </div>
+        
+        <!-- Gráfico de evolución de desviación estándar del área -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <h4 class="text-md font-semibold text-gray-700 mb-2">Evolución de Desviación Estándar - ${area.name}</h4>
+          <div style="height: 300px; position: relative;">
+            <canvas id="chartAreaStdDevEvolution${areaIndex}"></canvas>
           </div>
         </div>
       </div>
@@ -1172,6 +1390,7 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
       
       // Crear gráficos de evolución por área
       areasEvolutionData.forEach((areaEvolution, index) => {
+        // Gráfico de promedio
         new Chart(document.getElementById('chartAreaEvolution' + index), {
           type: 'bar',
           data: {
@@ -1225,6 +1444,78 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
             scales: {
               y: {
                 beginAtZero: false,
+                ticks: {
+                  callback: function(value) {
+                    return value.toFixed(0);
+                  }
+                }
+              }
+            }
+          }
+        });
+        
+        // Gráfico de desviación estándar
+        new Chart(document.getElementById('chartAreaStdDevEvolution' + index), {
+          type: 'bar',
+          data: {
+            labels: areaEvolution.data.map(d => d.year),
+            datasets: [
+              {
+                label: 'Sin PIAR',
+                data: areaEvolution.data.map(d => d.desvSinPIAR),
+                backgroundColor: areaEvolution.color + 'CC',
+                borderColor: areaEvolution.color,
+                borderWidth: 1
+              },
+              {
+                label: 'Con PIAR',
+                data: areaEvolution.data.map(d => d.desvConPIAR),
+                backgroundColor: 'rgba(107, 114, 128, 0.8)',
+                borderColor: 'rgba(107, 114, 128, 1)',
+                borderWidth: 1
+              }
+            ]
+          },
+          plugins: [ChartDataLabels],
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: false
+              },
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              datalabels: {
+                display: true,
+                anchor: 'end',
+                align: 'top',
+                formatter: (value) => value ? value.toFixed(1) : '',
+                font: { weight: 'bold', size: 10 },
+                color: '#1f2937'
+              },
+              tooltip: {
+                enabled: true,
+                callbacks: {
+                  label: function(context) {
+                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Desviación Estándar',
+                  font: {
+                    size: 12,
+                    weight: 'bold'
+                  }
+                },
                 ticks: {
                   callback: function(value) {
                     return value.toFixed(0);
@@ -1390,7 +1681,7 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
       <table id="allStudentsTable" class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
         <thead class="bg-blue-600 text-white">
           <tr>
-              <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(0)">Cohorte ⬍</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(0)">Cohorte ⬍</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(1)">Nombre</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(2)">Apellido</th>
             <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(3)">Grado</th>
@@ -1403,54 +1694,64 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
             <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortAllStudentsTable(10)">Inglés</th>
           </tr>
         </thead>
-        <tbody>
-          ${allStudents.map((student) => {
-            // Color por año: 2025 = azul, 2024 = gris, otros = verde
-            const yearColor = student.year === 2025 ? 'bg-blue-50' : student.year === 2024 ? 'bg-gray-50' : 'bg-green-50';
-            const yearBadge = student.year === 2025 ? 'bg-blue-600' : student.year === 2024 ? 'bg-gray-600' : 'bg-green-600';
-            // Resaltado para PIAR
-            const piarHighlight = student.piar ? 'bg-yellow-100 border-l-4 border-yellow-500' : '';
-            const rowClass = student.piar ? 'piar-row' : 'no-piar-row';
-            
-            return `
-            <tr class="border-b border-gray-200 hover:opacity-75 transition-opacity ${yearColor} ${piarHighlight} ${rowClass}" 
-                data-year="${student.year}" 
-                data-grade="${student.grado}" 
-                data-global="${student.global}"
-                data-piar="${student.piar ? 'si' : 'no'}">
-              <td class="px-4 py-3 text-center">
-                <span class="px-3 py-1 ${yearBadge} text-white rounded-full text-sm font-bold">${student.year}</span>
-              </td>
-              <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.nombre}</td>
-              <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.apellido}</td>
-              <td class="px-4 py-3 text-center">
-                <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">${student.grado}</span>
-              </td>
-              <td class="px-4 py-3 text-center">
-                ${student.piar ? '<span class="px-2 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">SÍ</span>' : '<span class="px-2 py-1 bg-gray-300 text-gray-700 rounded-full text-xs">NO</span>'}
-              </td>
-              <td class="px-4 py-3 text-right font-bold text-lg ${student.global >= 300 ? 'text-green-600' : 'text-gray-700'}">
-                ${student.global != null ? student.global.toFixed(1) : 'N/A'}
-              </td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.lectura != null ? student.lectura.toFixed(1) : 'N/A'}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.matematicas != null ? student.matematicas.toFixed(1) : 'N/A'}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.sociales != null ? student.sociales.toFixed(1) : 'N/A'}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.naturales != null ? student.naturales.toFixed(1) : 'N/A'}</td>
-              <td class="px-4 py-3 text-right text-sm text-gray-700">${student.ingles != null ? student.ingles.toFixed(1) : 'N/A'}</td>
-            </tr>
-          `;
-          }).join('')}
+        <tbody id="allStudentsTableBody">
+          <!-- Se llenará dinámicamente con JavaScript -->
         </tbody>
       </table>
     </div>
     
-    <p class="text-sm text-gray-600 mt-4">
-      Mostrando <strong id="visibleCountAll">${allStudents.length}</strong> de <strong>${allStudents.length}</strong> estudiantes
-    </p>
+    <!-- Controles de paginación -->
+    <div class="mt-6 flex flex-col md:flex-row items-center justify-between gap-4 bg-gray-50 p-4 rounded-lg">
+      <div class="flex items-center gap-4">
+        <label class="text-sm font-medium text-gray-700">Filas por página:</label>
+        <select 
+          id="rowsPerPage" 
+          onchange="changeRowsPerPage()"
+          class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="25">25</option>
+          <option value="50" selected>50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="all">Todos</option>
+        </select>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button 
+          id="prevPageBtn"
+          onclick="changePage(-1)" 
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+        >
+          ← Anterior
+        </button>
+        <span id="pageInfo" class="text-sm font-medium text-gray-700 px-4">Página 1 de 1</span>
+        <button 
+          id="nextPageBtn"
+          onclick="changePage(1)" 
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+        >
+          Siguiente →
+        </button>
+      </div>
+      
+      <p class="text-sm text-gray-600">
+        Mostrando <strong id="visibleCountAll">0</strong> de <strong id="totalCountAll">${allStudents.length}</strong> estudiantes
+      </p>
+    </div>
     
     </div> <!-- Fin del contenedor colapsable -->
     
     <script>
+      // Datos de todos los estudiantes
+      const allStudentsData = ${JSON.stringify(allStudents)};
+      
+      // Estado de paginación
+      let currentPage = 1;
+      let rowsPerPage = 50;
+      let filteredStudents = [...allStudentsData];
+      let piarVisible = true;
+      
       // Estado del toggle de la tabla multi-año
       let studentsTableVisibleMulti = true;
       
@@ -1476,19 +1777,127 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
         }
       }
       
-      let piarVisible = true; // Estado inicial: PIAR visible
+      // Función para renderizar una fila de estudiante
+      function renderStudentRow(student) {
+        const yearColor = student.year === 2025 ? 'bg-blue-50' : student.year === 2024 ? 'bg-gray-50' : 'bg-green-50';
+        const yearBadge = student.year === 2025 ? 'bg-blue-600' : student.year === 2024 ? 'bg-gray-600' : 'bg-green-600';
+        const piarHighlight = student.piar ? 'bg-yellow-100 border-l-4 border-yellow-500' : '';
+        const rowClass = student.piar ? 'piar-row' : 'no-piar-row';
+        
+        return \`
+          <tr class="border-b border-gray-200 hover:opacity-75 transition-opacity \${yearColor} \${piarHighlight} \${rowClass}" 
+              data-year="\${student.year}" 
+              data-grade="\${student.grado}" 
+              data-global="\${student.global}"
+              data-piar="\${student.piar ? 'si' : 'no'}">
+            <td class="px-4 py-3 text-center">
+              <span class="px-3 py-1 \${yearBadge} text-white rounded-full text-sm font-bold">\${student.year}</span>
+            </td>
+            <td class="px-4 py-3 text-sm text-gray-900 font-medium">\${student.nombre}</td>
+            <td class="px-4 py-3 text-sm text-gray-900 font-medium">\${student.apellido}</td>
+            <td class="px-4 py-3 text-center">
+              <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">\${student.grado}</span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              \${student.piar ? '<span class="px-2 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">SÍ</span>' : '<span class="px-2 py-1 bg-gray-300 text-gray-700 rounded-full text-xs">NO</span>'}
+            </td>
+            <td class="px-4 py-3 text-right font-bold text-lg \${student.global >= 300 ? 'text-green-600' : 'text-gray-700'}">
+              \${student.global != null ? student.global.toFixed(1) : 'N/A'}
+            </td>
+            <td class="px-4 py-3 text-right text-sm text-gray-700">\${student.lectura != null ? student.lectura.toFixed(1) : 'N/A'}</td>
+            <td class="px-4 py-3 text-right text-sm text-gray-700">\${student.matematicas != null ? student.matematicas.toFixed(1) : 'N/A'}</td>
+            <td class="px-4 py-3 text-right text-sm text-gray-700">\${student.sociales != null ? student.sociales.toFixed(1) : 'N/A'}</td>
+            <td class="px-4 py-3 text-right text-sm text-gray-700">\${student.naturales != null ? student.naturales.toFixed(1) : 'N/A'}</td>
+            <td class="px-4 py-3 text-right text-sm text-gray-700">\${student.ingles != null ? student.ingles.toFixed(1) : 'N/A'}</td>
+          </tr>
+        \`;
+      }
+      
+      // Función para renderizar la tabla
+      function renderTable() {
+        const tbody = document.getElementById('allStudentsTableBody');
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = rowsPerPage === 'all' ? filteredStudents.length : startIndex + rowsPerPage;
+        const pageStudents = filteredStudents.slice(startIndex, endIndex);
+        
+        tbody.innerHTML = pageStudents.map(student => renderStudentRow(student)).join('');
+        
+        // Actualizar controles de paginación
+        updatePaginationControls();
+        updateVisibleCount();
+      }
+      
+      // Función para actualizar controles de paginación
+      function updatePaginationControls() {
+        const totalPages = rowsPerPage === 'all' ? 1 : Math.ceil(filteredStudents.length / rowsPerPage);
+        const pageInfo = document.getElementById('pageInfo');
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        
+        pageInfo.textContent = \`Página \${currentPage} de \${totalPages}\`;
+        
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage >= totalPages;
+        
+        if (prevBtn.disabled) {
+          prevBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
+          prevBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        } else {
+          prevBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
+          prevBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }
+        
+        if (nextBtn.disabled) {
+          nextBtn.classList.add('bg-gray-300', 'cursor-not-allowed');
+          nextBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        } else {
+          nextBtn.classList.remove('bg-gray-300', 'cursor-not-allowed');
+          nextBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }
+      }
+      
+      // Función para cambiar de página
+      function changePage(direction) {
+        const totalPages = rowsPerPage === 'all' ? 1 : Math.ceil(filteredStudents.length / rowsPerPage);
+        currentPage = Math.max(1, Math.min(currentPage + direction, totalPages));
+        renderTable();
+      }
+      
+      // Función para cambiar filas por página
+      function changeRowsPerPage() {
+        const select = document.getElementById('rowsPerPage');
+        rowsPerPage = select.value === 'all' ? 'all' : parseInt(select.value);
+        currentPage = 1;
+        renderTable();
+      }
+      
+      // Función para aplicar filtros
+      function applyFilters() {
+        const searchValue = document.getElementById('searchAllStudents').value.toLowerCase();
+        const yearValue = document.getElementById('yearFilter').value;
+        const gradeValue = document.getElementById('gradeFilterAll').value;
+        const minScore = parseFloat(document.getElementById('minScoreFilterAll').value) || 0;
+        const maxScore = parseFloat(document.getElementById('maxScoreFilterAll').value) || Infinity;
+        
+        filteredStudents = allStudentsData.filter(student => {
+          const matchesSearch = student.nombre.toLowerCase().includes(searchValue) || 
+                               student.apellido.toLowerCase().includes(searchValue);
+          const matchesYear = !yearValue || student.year.toString() === yearValue;
+          const matchesGrade = !gradeValue || student.grado === gradeValue;
+          const matchesMinScore = student.global >= minScore;
+          const matchesMaxScore = student.global <= maxScore;
+          const matchesPiar = piarVisible || !student.piar;
+          
+          return matchesSearch && matchesYear && matchesGrade && matchesMinScore && matchesMaxScore && matchesPiar;
+        });
+        
+        currentPage = 1;
+        renderTable();
+        updateMatchCounter();
+      }
       
       function togglePiarVisibility() {
         piarVisible = !piarVisible;
-        const piarRows = document.querySelectorAll('.piar-row');
-        
-        piarRows.forEach(row => {
-          if (piarVisible) {
-            row.style.display = '';
-          } else {
-            row.style.display = 'none';
-          }
-        });
         
         // Actualizar texto del botón
         const statusSpan = document.getElementById('piarStatus');
@@ -1496,117 +1905,122 @@ export const generateAllStudentsTableSection = (analyses, sectionNumber) => {
           statusSpan.textContent = piarVisible ? 'Sí' : 'No';
         }
         
-        // Actualizar contador
-        updateVisibleCount();
+        // Re-aplicar filtros
+        applyFilters();
         updatePiarCountMulti();
       }
       
       function updatePiarCountMulti() {
-        const piarRows = document.querySelectorAll('.piar-row');
-        const visiblePiarRows = Array.from(piarRows).filter(row => row.style.display !== 'none');
+        const piarStudents = allStudentsData.filter(s => s.piar);
+        const visiblePiarStudents = filteredStudents.filter(s => s.piar);
         const countDiv = document.getElementById('piarCount');
         if (countDiv) {
-          countDiv.textContent = \`Estudiantes con PIAR: \${visiblePiarRows.length} de \${piarRows.length}\`;
+          countDiv.textContent = \`Estudiantes con PIAR: \${visiblePiarStudents.length} de \${piarStudents.length}\`;
         }
       }
       
-      // Inicializar contador al cargar
-      window.addEventListener('DOMContentLoaded', () => {
-        updatePiarCountMulti();
-      });
-      
       function updateVisibleCount() {
-        const table = document.getElementById('allStudentsTable');
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-        let visibleCount = 0;
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = rowsPerPage === 'all' ? filteredStudents.length : startIndex + rowsPerPage;
+        const showing = Math.min(endIndex - startIndex, filteredStudents.length - startIndex);
         
-        for (let row of rows) {
-          if (row.style.display !== 'none') {
-            visibleCount++;
-          }
+        document.getElementById('visibleCountAll').textContent = showing;
+        document.getElementById('totalCountAll').textContent = filteredStudents.length;
+      }
+      
+      function updateMatchCounter() {
+        const matchCounter = document.getElementById('matchCounterAll');
+        if (matchCounter) {
+          matchCounter.textContent = \`\${filteredStudents.length} estudiante\${filteredStudents.length !== 1 ? 's' : ''}\`;
         }
-        
-        document.getElementById('visibleCountAll').textContent = visibleCount;
       }
       
       function filterAllStudentsTable() {
-        const searchValue = document.getElementById('searchAllStudents').value.toLowerCase();
-        const yearValue = document.getElementById('yearFilter').value;
-        const gradeValue = document.getElementById('gradeFilterAll').value;
-        const minScore = parseFloat(document.getElementById('minScoreFilterAll').value) || 0;
-        const maxScore = parseFloat(document.getElementById('maxScoreFilterAll').value) || Infinity;
-        
-        const table = document.getElementById('allStudentsTable');
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-        let visibleCount = 0;
-        
-        for (let row of rows) {
-          const nombre = row.cells[1].textContent.toLowerCase();
-          const apellido = row.cells[2].textContent.toLowerCase();
-          const year = row.getAttribute('data-year');
-          const grade = row.getAttribute('data-grade');
-          const piar = row.getAttribute('data-piar');
-          const global = parseFloat(row.getAttribute('data-global'));
-          
-          const matchesSearch = nombre.includes(searchValue) || apellido.includes(searchValue);
-          const matchesYear = !yearValue || year === yearValue;
-          const matchesGrade = !gradeValue || grade === gradeValue;
-          const matchesMinScore = global >= minScore;
-          const matchesMaxScore = global <= maxScore;
-          
-          // Aplicar filtros normales
-          if (matchesSearch && matchesYear && matchesGrade && matchesMinScore && matchesMaxScore) {
-            row.style.display = '';
-            visibleCount++;
-          } else {
-            row.style.display = 'none';
-          }
-        }
-        
-        // Aplicar toggle de PIAR después de los filtros
-        if (!piarVisible) {
-          const piarRows = document.querySelectorAll('.piar-row');
-          piarRows.forEach(row => {
-            if (row.style.display !== 'none') {
-              row.style.display = 'none';
-              visibleCount--;
-            }
-          });
-        }
-        
-        // Actualizar contador de coincidencias
-        const matchCounter = document.getElementById('matchCounterAll');
-        if (matchCounter) {
-          matchCounter.textContent = \`\${visibleCount} estudiante\${visibleCount !== 1 ? 's' : ''}\`;
-        }
-        
-        updateVisibleCount();
+        applyFilters();
       }
       
       let sortDirectionAll = {};
+      let sortColumnIndex = null;
+      
       function sortAllStudentsTable(columnIndex) {
-        const table = document.getElementById('allStudentsTable');
-        const tbody = table.getElementsByTagName('tbody')[0];
-        const rows = Array.from(tbody.getElementsByTagName('tr'));
-        
         sortDirectionAll[columnIndex] = !sortDirectionAll[columnIndex];
         const direction = sortDirectionAll[columnIndex] ? 1 : -1;
+        sortColumnIndex = columnIndex;
         
-        rows.sort((a, b) => {
-          let aValue = a.cells[columnIndex].textContent.trim();
-          let bValue = b.cells[columnIndex].textContent.trim();
+        const columnMap = {
+          0: 'year',
+          1: 'nombre',
+          2: 'apellido',
+          3: 'grado',
+          4: 'piar',
+          5: 'global',
+          6: 'lectura',
+          7: 'matematicas',
+          8: 'sociales',
+          9: 'naturales',
+          10: 'ingles'
+        };
+        
+        const field = columnMap[columnIndex];
+        
+        filteredStudents.sort((a, b) => {
+          let aValue = a[field];
+          let bValue = b[field];
           
-          // Si es numérico
-          if (!isNaN(aValue) && !isNaN(bValue)) {
-            return direction * (parseFloat(aValue) - parseFloat(bValue));
+          // Manejar valores booleanos (PIAR)
+          if (typeof aValue === 'boolean') {
+            return direction * ((aValue ? 1 : 0) - (bValue ? 1 : 0));
           }
           
-          // Si es texto
-          return direction * aValue.localeCompare(bValue);
+          // Manejar valores numéricos
+          if (typeof aValue === 'number' && typeof bValue === 'number') {
+            return direction * (aValue - bValue);
+          }
+          
+          // Manejar valores de texto
+          return direction * String(aValue).localeCompare(String(bValue));
         });
         
-        rows.forEach(row => tbody.appendChild(row));
+        renderTable();
       }
+      
+      // Inicializar tabla al cargar
+      window.addEventListener('DOMContentLoaded', () => {
+        renderTable();
+        updatePiarCountMulti();
+      });
+      
+      // Detectar cuando se va a imprimir y mostrar TODA la tabla
+      window.addEventListener('beforeprint', () => {
+        const tbody = document.getElementById('allStudentsTableBody');
+        const container = document.getElementById('studentsTableContainerMulti');
+        
+        // Si la tabla está visible (no colapsada)
+        if (container && container.style.maxHeight !== '0') {
+          // Renderizar TODOS los estudiantes filtrados
+          tbody.innerHTML = filteredStudents.map(student => renderStudentRow(student)).join('');
+          
+          // Ocultar controles de paginación en impresión
+          const paginationControls = container.querySelector('.mt-6.flex');
+          if (paginationControls) {
+            paginationControls.classList.add('no-print');
+          }
+        }
+      });
+      
+      // Restaurar paginación después de imprimir
+      window.addEventListener('afterprint', () => {
+        renderTable();
+        
+        // Restaurar controles de paginación
+        const container = document.getElementById('studentsTableContainerMulti');
+        if (container) {
+          const paginationControls = container.querySelector('.mt-6.flex');
+          if (paginationControls) {
+            paginationControls.classList.remove('no-print');
+          }
+        }
+      });
     </script>
   `;
 };

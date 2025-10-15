@@ -24,11 +24,11 @@ export const generateCoverSection = (analysis, isMultiYear = false, comparisonYe
         </h1>
         <div class="h-1 w-32 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto mb-6 rounded-full"></div>
         <p class="text-3xl font-semibold mb-2">
-          ${isMultiYear ? 'Análisis Comparativo Multi-Año' : `Año ${analysis.year}`}
+          ${isMultiYear ? 'Análisis Comparativo Multi-Cohorte' : `Cohorte ${analysis.year}`}
         </p>
         ${isMultiYear ? `
           <p class="text-xl opacity-90 font-light">
-            Años: ${[analysis.year, ...comparisonYears].sort((a, b) => b - a).join(' • ')}
+            Cohortes: ${[analysis.year, ...comparisonYears].sort((a, b) => b - a).join(' • ')}
           </p>
         ` : ''}
       </div>
@@ -37,14 +37,14 @@ export const generateCoverSection = (analysis, isMultiYear = false, comparisonYe
     ${isMultiYear && allAnalyses.length > 0 ? `
       <!-- Resumen por año -->
       <div class="mb-8">
-        <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">📊 Resumen por Año</h2>
+        <h2 class="text-2xl font-bold text-center text-blue-600 mb-6">📊 Resumen por Cohorte</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           ${allAnalyses.sort((a, b) => b.year - a.year).map((yearAnalysis, index) => `
             <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 ${index % 2 === 0 ? 'border-blue-600' : 'border-indigo-600'}">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-3xl font-bold text-blue-600">${yearAnalysis.year}</h3>
                 <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                  Año ${index + 1}
+                  Cohorte ${index + 1}
                 </span>
               </div>
               

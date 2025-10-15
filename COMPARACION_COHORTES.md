@@ -17,7 +17,15 @@ Para cada grupo se calcula:
 - **Promedio Global** (sin PIAR): Promedio de los promedios de los años seleccionados
 - **Desviación Estándar**: Promedio de las desviaciones estándar de los años seleccionados
 
-### 3. Comparación Automática
+### 3. Visualización con Gráficos de Barras
+El sistema presenta dos gráficos de barras interactivos:
+- **Gráfico de Promedios**: Compara visualmente los promedios globales de ambos grupos
+- **Gráfico de Desviaciones Estándar**: Compara la dispersión de los datos
+- Colores distintivos: Azul para Grupo A, Verde para Grupo B
+- Etiquetas con valores exactos sobre cada barra
+- Tooltips informativos con los años incluidos en cada grupo
+
+### 4. Comparación Automática
 El sistema muestra:
 - **Diferencia en Promedio**: Diferencia absoluta y porcentual entre grupos
 - **Diferencia en Desviación Estándar**: Diferencia absoluta y porcentual entre grupos
@@ -39,6 +47,9 @@ El sistema muestra:
 - ✅ Cálculos precisos con redondeo apropiado
 - ✅ Feedback visual inmediato
 - ✅ Interpretación automática de resultados
+- ✅ Visualización con gráficos de barras interactivos
+- ✅ Destrucción apropiada de gráficos anteriores (evita memory leaks)
+- ✅ Tooltips informativos en los gráficos
 - ✅ Diseño responsive
 - ✅ Accesibilidad con labels y controles claros
 
