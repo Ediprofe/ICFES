@@ -34,16 +34,28 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
                   ${areaData.students.map((student) => {
                     const medals = ['🥇', '🥈', '🥉'];
                     const rankNum = student.ranking || 0;
-                    const medal = rankNum <= 3 && rankNum > 0 ? medals[rankNum - 1] : `#${rankNum}`;
+                    const isTopThree = rankNum <= 3 && rankNum > 0;
+                    const medal = isTopThree ? medals[rankNum - 1] : '';
+                    
                     return `
-                      <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:shadow-md transition-shadow">
-                        <div class="flex items-center gap-2">
-                          <span class="text-2xl font-bold text-gray-700">${medal}</span>
+                      <div class="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-lg transition-all border border-gray-100 ${!isTopThree ? 'hover:border-gray-300' : ''}">
+                        <div class="flex items-center gap-3">
+                          ${isTopThree ? `
+                            <span class="text-3xl">${medal}</span>
+                          ` : `
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full font-bold text-white text-sm" style="background: linear-gradient(135deg, ${areaData.color} 0%, ${areaData.color}CC 100%)">
+                              #${rankNum}
+                            </div>
+                          `}
                           <div>
-                            <p class="font-semibold text-gray-800 text-sm">${student.nombre} ${student.apellido}</p>
+                            <p class="font-bold text-gray-900 text-sm">${student.nombre} ${student.apellido}</p>
+                            ${!isTopThree ? `<p class="text-xs text-gray-500">Puesto ${rankNum}</p>` : ''}
                           </div>
                         </div>
-                        <span class="text-lg font-bold" style="color: ${areaData.color}">${student.puntaje.toFixed(1)}</span>
+                        <div class="text-right">
+                          <span class="text-xl font-bold" style="color: ${areaData.color}">${student.puntaje.toFixed(1)}</span>
+                          ${!isTopThree ? `<p class="text-xs text-gray-500">puntos</p>` : ''}
+                        </div>
                       </div>
                     `;
                   }).join('')}
@@ -70,16 +82,28 @@ export const generateTopPerformersSection = (analysis, sectionNumber) => {
                   ${gradeData.top.map((student) => {
                     const medals = ['🥇', '🥈', '🥉'];
                     const rankNum = student.ranking || 0;
-                    const medal = rankNum <= 3 && rankNum > 0 ? medals[rankNum - 1] : `#${rankNum}`;
+                    const isTopThree = rankNum <= 3 && rankNum > 0;
+                    const medal = isTopThree ? medals[rankNum - 1] : '';
+                    
                     return `
-                      <div class="flex items-center justify-between p-2 bg-white rounded-lg hover:shadow-md transition-shadow">
-                        <div class="flex items-center gap-2">
-                          <span class="text-2xl font-bold text-gray-700">${medal}</span>
+                      <div class="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-lg transition-all border border-gray-100 ${!isTopThree ? 'hover:border-indigo-300' : ''}">
+                        <div class="flex items-center gap-3">
+                          ${isTopThree ? `
+                            <span class="text-3xl">${medal}</span>
+                          ` : `
+                            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white text-sm shadow-md">
+                              #${rankNum}
+                            </div>
+                          `}
                           <div>
-                            <p class="font-semibold text-gray-800 text-sm">${student.nombre} ${student.apellido}</p>
+                            <p class="font-bold text-gray-900 text-sm">${student.nombre} ${student.apellido}</p>
+                            ${!isTopThree ? `<p class="text-xs text-gray-500">Puesto ${rankNum}</p>` : ''}
                           </div>
                         </div>
-                        <span class="text-lg font-bold text-indigo-600">${student.global.toFixed(1)}</span>
+                        <div class="text-right">
+                          <span class="text-xl font-bold text-indigo-600">${student.global.toFixed(1)}</span>
+                          ${!isTopThree ? `<p class="text-xs text-gray-500">puntos</p>` : ''}
+                        </div>
                       </div>
                     `;
                   }).join('')}
