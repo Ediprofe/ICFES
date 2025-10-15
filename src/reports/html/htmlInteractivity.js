@@ -69,6 +69,25 @@ export const generateInteractivityScript = () => {
             legend: {
               display: showComparison && showPIAR,
               position: 'top'
+            },
+            datalabels: {
+              display: true,
+              anchor: 'end',
+              align: 'top',
+              formatter: (value) => value ? value.toFixed(1) : '',
+              font: {
+                weight: 'bold',
+                size: 11
+              },
+              color: '#1f2937'
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                }
+              }
             }
           },
           scales: {
