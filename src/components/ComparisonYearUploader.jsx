@@ -18,7 +18,16 @@ export const ComparisonYearUploader = () => {
   const error = useAnalysisStore((state) => state.error);
   const loadComparisonYear = useAnalysisStore((state) => state.loadComparisonYear);
   const clearError = useAnalysisStore((state) => state.clearError);
-  const availableYears = useAnalysisStore((state) => state.getAvailableYears());
+  const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
+  
+  // Obtener años disponibles directamente del Map
+  const availableYears = multiYearAnalysis?.analyses 
+    ? (multiYearAnalysis.analyses instanceof Map
+        ? Array.from(multiYearAnalysis.analyses.keys())
+        : (Array.isArray(multiYearAnalysis.analyses)
+            ? multiYearAnalysis.analyses.map(a => a.year)
+            : Object.keys(multiYearAnalysis.analyses).map(Number)))
+    : [];
   
   const handleDrag = (e) => {
     e.preventDefault();
