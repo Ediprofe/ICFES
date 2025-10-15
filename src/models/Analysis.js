@@ -8,7 +8,7 @@ import {
   stdDev, 
   findOutliers, 
   calculateAreaMetrics, 
-  getTop5BySubject, 
+  getTopByArea, 
   getTop3ByGrade, 
   getMetricsByGrade, 
   getGradeAverages 
@@ -202,7 +202,7 @@ export class Analysis {
       return this._calculationCache.get(cacheKey);
     }
     
-    const top = getTop5BySubject(this.processedData, area).slice(0, n);
+    const top = getTopByArea(this.processedData, area, n, false);
     this._calculationCache.set(cacheKey, top);
     
     return top;
