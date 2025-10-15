@@ -16,6 +16,7 @@ const useAnalysisStore = create(
         // Estado
         multiYearAnalysis: new MultiYearAnalysis(),
         comparisonMode: false,
+        waitingForMoreYears: false, // Nuevo: indica si está esperando más archivos
         loading: false,
         error: null,
         
@@ -125,11 +126,15 @@ const useAnalysisStore = create(
         },
         
         enableComparisonMode: () => {
-          set({ comparisonMode: true });
+          set({ comparisonMode: true, waitingForMoreYears: true });
         },
         
         disableComparisonMode: () => {
-          set({ comparisonMode: false });
+          set({ comparisonMode: false, waitingForMoreYears: false });
+        },
+        
+        finishLoadingYears: () => {
+          set({ waitingForMoreYears: false });
         },
         
         setBaseYear: (year) => {
@@ -175,6 +180,7 @@ const useAnalysisStore = create(
           set({
             multiYearAnalysis: new MultiYearAnalysis(),
             comparisonMode: false,
+            waitingForMoreYears: false,
             loading: false,
             error: null
           });

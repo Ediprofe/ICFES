@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Upload, FileSpreadsheet, AlertCircle, X } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle, X, CheckCircle } from 'lucide-react';
 import { useAnalysisStore } from '../stores/analysisStore.js';
 import { LoadingSpinner } from './LoadingSpinner.jsx';
 
@@ -16,7 +16,9 @@ export const ComparisonYearUploader = () => {
   
   const loading = useAnalysisStore((state) => state.loading);
   const error = useAnalysisStore((state) => state.error);
+  const waitingForMoreYears = useAnalysisStore((state) => state.waitingForMoreYears);
   const loadComparisonYear = useAnalysisStore((state) => state.loadComparisonYear);
+  const finishLoadingYears = useAnalysisStore((state) => state.finishLoadingYears);
   const clearError = useAnalysisStore((state) => state.clearError);
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
   
@@ -195,13 +197,24 @@ export const ComparisonYearUploader = () => {
         
         {availableYears.length > 0 && (
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                {availableYears.length}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                  {availableYears.length}
+                </div>
+                <p className="text-sm font-bold text-gray-800">
+                  Años cargados:
+                </p>
               </div>
-              <p className="text-sm font-bold text-gray-800">
-                Años cargados:
-              </p>
+              {waitingForMoreYears && (
+                <button
+                  onClick={() => finishLoadingYears()}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-300 font-bold shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  <CheckCircle size={18} />
+                  <span>Finalizar carga</span>
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               {availableYears.sort((a, b) => b - a).map(year => (
@@ -210,6 +223,11 @@ export const ComparisonYearUploader = () => {
                 </span>
               ))}
             </div>
+            {waitingForMoreYears && (
+              <p className="text-xs text-blue-600 mt-3 font-medium">
+                💡 Puedes cargar más años o hacer clic en "Finalizar carga" para ver los botones de exportación
+              </p>
+            )}
           </div>
         )}
       </div>

@@ -13,6 +13,8 @@ import { RefreshCw } from 'lucide-react';
 function AppDebug() {
   // Acceder directamente al estado sin llamar funciones
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
+  const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
+  const waitingForMoreYears = useAnalysisStore((state) => state.waitingForMoreYears);
   const reset = useAnalysisStore((state) => state.reset);
   
   const handleNewAnalysis = () => {
@@ -40,6 +42,10 @@ function AppDebug() {
     : [];
   
   const activeYear = multiYearAnalysis?.baseYear || (availableYears.length > 0 ? availableYears[0] : null);
+  
+  // Determinar si se deben mostrar los botones de exportación
+  // Se muestran si: hay datos Y (no está en modo comparación O no está esperando más años)
+  const showExportButtons = hasData && (!comparisonMode || !waitingForMoreYears);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-8">
@@ -86,10 +92,31 @@ function AppDebug() {
           <>
             <DataPreview />
             
-            {/* Siempre mostrar uploader si hay datos, para poder agregar más años */}
-            <ComparisonYearUploader />
+            {/* Mostrar uploader si está en modo comparación */}
+            {comparisonMode && <ComparisonYearUploader />}
             
-            <ExportButtons />
+            {/* Mostrar botones de exportación solo cuando no está esperando más años */}
+            {showExportButtons && <ExportButtons />}
+            
+            {/* Mensaje de ayuda si está esperando más años */}
+            {waitingForMoreYears && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6 shadow-lg">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl">⏳</div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">
+                      Esperando más archivos...
+                    </h3>
+                    <p className="text-gray-700 mb-3">
+                      Puedes cargar más años para el análisis comparativo o finalizar la carga para ver los botones de exportación.
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      💡 <strong>Tip:</strong> Haz clic en "Finalizar carga" en la sección de arriba cuando hayas terminado de cargar todos los años.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
