@@ -1,9 +1,9 @@
 /**
  * ✅ Componente: Botones de Exportación
- * Botones para exportar a PDF y HTML
+ * Botones para exportar a PDF y HTML, y resetear análisis
  */
 
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, RefreshCw } from 'lucide-react';
 import { useAnalysisStore } from '../stores/analysisStore.js';
 import { generatePDF } from '../reports/pdf/PDFReportGenerator.js';
 import { generateHTML } from '../reports/html/HTMLReportGenerator.js';
@@ -11,6 +11,7 @@ import { generateHTML } from '../reports/html/HTMLReportGenerator.js';
 export const ExportButtons = () => {
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
   const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
+  const reset = useAnalysisStore((state) => state.reset);
   
   if (!multiYearAnalysis) return null;
   
@@ -26,6 +27,12 @@ export const ExportButtons = () => {
   const comparisonAnalyses = multiYearAnalysis.comparisonYears
     ?.map(year => multiYearAnalysis.analyses instanceof Map ? multiYearAnalysis.analyses.get(year) : null)
     .filter(a => a !== null) || [];
+  
+  const handleNewAnalysis = () => {
+    if (confirm('¿Estás seguro de que deseas iniciar un nuevo análisis? Se perderán los datos actuales.')) {
+      reset();
+    }
+  };
   
   const handleExportPDF = () => {
     try {
@@ -55,7 +62,17 @@ export const ExportButtons = () => {
   
   return (
     <div className="bg-white rounded-lg shadow p-6 mb-6">
-      <h3 className="text-lg font-semibold mb-4 text-gray-800">Exportar Informe</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Exportar Informe</h3>
+        <button
+          onClick={handleNewAnalysis}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+        >
+          <RefreshCw size={18} />
+          <span>Nuevo Análisis</span>
+        </button>
+      </div>
+      
       <div className="flex flex-wrap gap-4">
         <button
           onClick={handleExportPDF}

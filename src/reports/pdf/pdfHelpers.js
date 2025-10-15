@@ -35,25 +35,35 @@ export const drawTable = (doc, columns, rows, startY, options = {}) => {
     startY,
     head: [columns],
     body: rows,
-    theme: 'grid',
+    theme: 'striped',
     headStyles: {
       fillColor: hexToRgb(headStyles.fillColor),
       textColor: headStyles.textColor,
       fontStyle: headStyles.fontStyle,
       fontSize: headStyles.fontSize,
-      halign: 'center'
+      halign: 'center',
+      valign: 'middle',
+      cellPadding: 4,
+      lineWidth: 0.1,
+      lineColor: [255, 255, 255]
     },
     bodyStyles: {
       fontSize: bodyStyles.fontSize,
-      textColor: hexToRgb(bodyStyles.textColor)
+      textColor: hexToRgb(bodyStyles.textColor),
+      cellPadding: 3,
+      lineWidth: 0.1,
+      lineColor: [220, 220, 220],
+      valign: 'middle'
     },
     alternateRowStyles: {
       fillColor: hexToRgb(alternateRowStyles.fillColor)
     },
     columnStyles,
     margin,
-    didDrawPage: (data) => {
-      // Callback para cada página si es necesario
+    styles: {
+      overflow: 'linebreak',
+      cellWidth: 'wrap',
+      minCellHeight: 8
     }
   });
   
@@ -223,7 +233,7 @@ export const drawLineChart = (doc, series, x, y, width, height, title, options =
   doc.setTextColor(0);
   
   // Dibujar líneas para cada serie
-  series.forEach((serie, serieIndex) => {
+  series.forEach((serie) => {
     const area = ACADEMIC_AREAS.find(a => a.id === serie.areaId);
     const colorRgb = area ? hexToRgb(area.color) : hexToRgb(COLORS.primary);
     const color = [colorRgb.r, colorRgb.g, colorRgb.b];
