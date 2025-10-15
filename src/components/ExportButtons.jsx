@@ -9,11 +9,23 @@ import { generatePDF } from '../reports/pdf/PDFReportGenerator.js';
 import { generateHTML } from '../reports/html/HTMLReportGenerator.js';
 
 export const ExportButtons = () => {
-  const activeAnalysis = useAnalysisStore((state) => state.getActiveAnalysis());
+  const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
   const comparisonMode = useAnalysisStore((state) => state.comparisonMode);
-  const comparisonAnalyses = useAnalysisStore((state) => state.getComparisonAnalyses());
+  
+  if (!multiYearAnalysis) return null;
+  
+  // Obtener análisis activo directamente del Map
+  const baseYear = multiYearAnalysis.baseYear;
+  const activeAnalysis = multiYearAnalysis.analyses instanceof Map 
+    ? multiYearAnalysis.analyses.get(baseYear)
+    : null;
   
   if (!activeAnalysis) return null;
+  
+  // Obtener análisis de comparación
+  const comparisonAnalyses = multiYearAnalysis.comparisonYears
+    ?.map(year => multiYearAnalysis.analyses instanceof Map ? multiYearAnalysis.analyses.get(year) : null)
+    .filter(a => a !== null) || [];
   
   const handleExportPDF = () => {
     try {

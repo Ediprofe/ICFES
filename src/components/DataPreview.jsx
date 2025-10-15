@@ -7,7 +7,15 @@ import { Users, BookOpen, TrendingUp } from 'lucide-react';
 import { useAnalysisStore } from '../stores/analysisStore.js';
 
 export const DataPreview = () => {
-  const activeAnalysis = useAnalysisStore((state) => state.getActiveAnalysis());
+  const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
+  
+  if (!multiYearAnalysis) return null;
+  
+  // Obtener análisis activo directamente del Map
+  const baseYear = multiYearAnalysis.baseYear;
+  const activeAnalysis = multiYearAnalysis.analyses instanceof Map 
+    ? multiYearAnalysis.analyses.get(baseYear)
+    : null;
   
   if (!activeAnalysis) return null;
   
