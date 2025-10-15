@@ -115,16 +115,24 @@ export const ComparisonYearUploader = () => {
   
   return (
     <>
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800">
-          Cargar Año Adicional para Comparación
-        </h3>
+      <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-xl p-6 mb-6 border-2 border-blue-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full p-3 shadow-lg">
+            <FileSpreadsheet className="text-white" size={24} />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-800">
+              📅 Cargar año adicional para comparación
+            </h3>
+            <p className="text-sm text-gray-600">Agrega más años para análisis comparativo multi-año</p>
+          </div>
+        </div>
         
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+          <div className="mb-4 p-4 bg-red-50 border-2 border-red-300 rounded-xl flex items-start gap-3 shadow-md animate-shake">
+            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={24} />
             <div className="flex-1">
-              <p className="text-red-800 font-medium">Error al cargar el archivo</p>
+              <p className="text-red-800 font-bold text-lg">⚠️ Error al cargar el archivo</p>
               <p className="text-red-700 text-sm mt-1">{error}</p>
             </div>
           </div>
@@ -137,45 +145,73 @@ export const ComparisonYearUploader = () => {
           onDrop={handleDrop}
           onSubmit={(e) => e.preventDefault()}
         >
-          <label
-            htmlFor="comparison-file-upload"
-            className={`
-              relative flex flex-col items-center justify-center
-              w-full h-48 border-2 border-dashed rounded-lg
-              cursor-pointer transition-all
-              ${dragActive 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-              }
-            `}
-          >
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              {dragActive ? (
-                <Upload className="w-12 h-12 text-blue-500 mb-3" />
-              ) : (
-                <FileSpreadsheet className="w-12 h-12 text-gray-400 mb-3" />
-              )}
-              
-              <p className="mb-2 text-base font-semibold text-gray-700">
-                {dragActive ? 'Suelta el archivo aquí' : 'Cargar otro año'}
-              </p>
-              <p className="text-sm text-gray-500">
-                Archivo Excel (.xlsx o .xls)
-              </p>
-            </div>
-            <input
-              id="comparison-file-upload"
-              type="file"
-              className="hidden"
-              accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-              onChange={handleChange}
-            />
-          </label>
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
+            <label
+              htmlFor="comparison-file-upload"
+              className={`
+                relative flex flex-col items-center justify-center
+                w-full h-56 border-3 border-dashed rounded-2xl
+                cursor-pointer transition-all duration-300 shadow-lg
+                ${dragActive 
+                  ? 'border-green-500 bg-gradient-to-br from-green-50 to-teal-50 scale-105' 
+                  : 'border-green-400 bg-white hover:bg-gradient-to-br hover:from-green-50 hover:to-teal-50'
+                }
+              `}
+            >
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <div className={`rounded-full p-6 mb-4 shadow-xl transition-all duration-300 ${
+                  dragActive 
+                    ? 'bg-gradient-to-br from-green-600 to-teal-700 scale-110' 
+                    : 'bg-gradient-to-br from-green-500 to-teal-600 group-hover:scale-110'
+                }`}>
+                  {dragActive ? (
+                    <Upload className="w-12 h-12 text-white" />
+                  ) : (
+                    <FileSpreadsheet className="w-12 h-12 text-white" />
+                  )}
+                </div>
+                
+                <p className="mb-2 text-xl font-bold text-gray-800">
+                  {dragActive ? '🎯 Suelta el archivo aquí' : '📄 Cargar otro año'}
+                </p>
+                <p className="text-sm text-gray-600 font-medium">
+                  Archivo Excel (.xlsx o .xls)
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Arrastra y suelta o haz clic para seleccionar
+                </p>
+              </div>
+              <input
+                id="comparison-file-upload"
+                type="file"
+                className="hidden"
+                accept=".xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                onChange={handleChange}
+              />
+            </label>
+          </div>
         </form>
         
-        <p className="mt-4 text-sm text-gray-600">
-          📊 Años cargados: <strong>{availableYears.join(', ')}</strong>
-        </p>
+        {availableYears.length > 0 && (
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                {availableYears.length}
+              </div>
+              <p className="text-sm font-bold text-gray-800">
+                Años cargados:
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {availableYears.sort((a, b) => b - a).map(year => (
+                <span key={year} className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-bold shadow-md">
+                  {year}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Diálogo de etiqueta de año */}

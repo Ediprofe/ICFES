@@ -105,12 +105,15 @@ export const FileUploaderNew = () => {
   
   return (
     <>
-      <div className="bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Cargar Datos ICFES
+      <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-2xl p-8 border-2 border-blue-200">
+        <div className="text-center mb-8">
+          <div className="inline-block bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full p-4 mb-4 shadow-lg">
+            <FileSpreadsheet size={48} className="text-white" />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-800 mb-3">
+            📊 Cargar datos ICFES
           </h2>
-          <p className="text-gray-600">
+          <p className="text-lg text-gray-600">
             Arrastra tu archivo Excel o haz clic para seleccionarlo
           </p>
         </div>
@@ -132,32 +135,43 @@ export const FileUploaderNew = () => {
           onDrop={handleDrop}
           onSubmit={(e) => e.preventDefault()}
         >
-          <label
-            htmlFor="file-upload"
-            className={`
-              relative flex flex-col items-center justify-center
-              w-full h-64 border-2 border-dashed rounded-lg
-              cursor-pointer transition-all
-              ${dragActive 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-              }
-            `}
-          >
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              {dragActive ? (
-                <Upload className="w-16 h-16 text-blue-500 mb-4" />
-              ) : (
-                <FileSpreadsheet className="w-16 h-16 text-gray-400 mb-4" />
-              )}
-              
-              <p className="mb-2 text-lg font-semibold text-gray-700">
-                {dragActive ? 'Suelta el archivo aquí' : 'Haz clic o arrastra el archivo'}
-              </p>
-              <p className="text-sm text-gray-500">
-                Archivo Excel (.xlsx o .xls)
-              </p>
-            </div>
+          <div className="relative group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
+            <label
+              htmlFor="file-upload"
+              className={`
+                relative flex flex-col items-center justify-center
+                w-full h-72 border-3 border-dashed rounded-2xl
+                cursor-pointer transition-all duration-300 shadow-lg
+                ${dragActive 
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 scale-105' 
+                  : 'border-blue-400 bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50'
+                }
+              `}
+            >
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <div className={`rounded-full p-6 mb-6 shadow-xl transition-all duration-300 ${
+                  dragActive 
+                    ? 'bg-gradient-to-br from-blue-600 to-indigo-700 scale-110' 
+                    : 'bg-gradient-to-br from-blue-500 to-indigo-600 group-hover:scale-110'
+                }`}>
+                  {dragActive ? (
+                    <Upload className="w-16 h-16 text-white" />
+                  ) : (
+                    <FileSpreadsheet className="w-16 h-16 text-white" />
+                  )}
+                </div>
+                
+                <p className="mb-3 text-2xl font-bold text-gray-800">
+                  {dragActive ? '🎯 Suelta el archivo aquí' : '📂 Haz clic o arrastra el archivo'}
+                </p>
+                <p className="text-base text-gray-600 font-medium">
+                  Archivo Excel (.xlsx o .xls)
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Tamaño máximo: 10MB
+                </p>
+              </div>
             <input
               id="file-upload"
               type="file"
@@ -166,6 +180,7 @@ export const FileUploaderNew = () => {
               onChange={handleChange}
             />
           </label>
+          </div>
         </form>
         
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">

@@ -3,9 +3,6 @@ import { generatePDF } from '../utils/pdfBuilder';
 
 export default function PDFGenerator({ data }) {
   const handleDownload = () => {
-    console.log('Botón de descarga presionado');
-    console.log('Datos disponibles:', data ? data.length : 0);
-    
     if (!data || data.length === 0) {
       alert('No hay datos para generar el informe');
       return;

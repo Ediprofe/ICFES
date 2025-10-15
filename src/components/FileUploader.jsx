@@ -21,25 +21,44 @@ export default function FileUploader({ onFileLoaded }) {
   
   return (
     <div className="space-y-6">
-      {/* Título principal con descripción */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-8 text-center text-white">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <BarChart3 size={48} />
-          <h1 className="text-4xl font-bold">Analiza los resultados ICFES de tu colegio</h1>
+      {/* Título principal con descripción mejorado */}
+      <div className="relative bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 rounded-2xl shadow-2xl p-12 text-center text-white overflow-hidden">
+        {/* Efecto de fondo animado */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
         </div>
-        <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-          Carga tu archivo Excel y obtén análisis interactivos en vivo, archivo HTML para presentaciones sin internet, y reporte PDF.
-        </p>
+        
+        <div className="relative">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
+              <BarChart3 size={56} className="text-white" />
+            </div>
+            <h1 className="text-5xl font-extrabold tracking-tight">
+              Analizador ICFES
+            </h1>
+          </div>
+          <div className="h-1 w-32 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto mb-6 rounded-full"></div>
+          <p className="text-2xl text-blue-100 max-w-4xl mx-auto font-light leading-relaxed">
+            Carga tu archivo Excel y obtén <span className="font-bold">análisis interactivos en vivo</span>, archivo HTML para presentaciones sin internet, y reporte PDF profesional.
+          </p>
+        </div>
       </div>
       
-      {/* Zona de carga PRIMERO */}
-      <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-blue-600 rounded-lg bg-white hover:bg-blue-50 transition-colors">
-        <Upload size={48} className="text-blue-600 mb-4" />
-        <label className="cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
-          Seleccionar archivo Excel
-          <input type="file" accept=".xlsx,.xlsm" onChange={handleFile} className="hidden" />
-        </label>
-        <p className="text-sm text-gray-500 mt-4">Soporta archivos .xlsx y .xlsm</p>
+      {/* Zona de carga mejorada */}
+      <div className="relative group">
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
+        <div className="relative flex flex-col items-center justify-center h-64 border-3 border-dashed border-blue-600 rounded-2xl bg-white hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 shadow-lg">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full p-6 mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300">
+            <Upload size={48} className="text-white" />
+          </div>
+          <label className="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-indigo-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-bold text-lg">
+            📂 Seleccionar archivo Excel
+            <input type="file" accept=".xlsx,.xlsm" onChange={handleFile} className="hidden" />
+          </label>
+          <p className="text-sm text-gray-600 mt-6 font-medium">✅ Soporta archivos .xlsx y .xlsm</p>
+          <p className="text-xs text-gray-500 mt-2">Arrastra y suelta tu archivo aquí o haz clic para seleccionar</p>
+        </div>
       </div>
       
       {/* Video de demostración */}

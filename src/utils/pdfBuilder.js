@@ -144,8 +144,6 @@ const drawBarChart = (doc, data, x, y, width, height, title, yAxisMax = 100, sho
 };
 
 export const generatePDF = (data) => {
-  console.log('Iniciando generación de PDF con', data.length, 'estudiantes');
-  
   const doc = new jsPDF();
   
   // Asignar autoTable al documento para compatibilidad con jsPDF 3.x
@@ -1321,7 +1319,5 @@ export const generatePDF = (data) => {
   const fechaArchivo = new Date().toISOString().split('T')[0];
   const nombreArchivo = `informe-icfes-${fechaArchivo}.pdf`;
   
-  console.log('PDF generado, descargando como:', nombreArchivo);
   doc.save(nombreArchivo);
-  console.log('Descarga completada');
 };
