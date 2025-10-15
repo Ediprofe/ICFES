@@ -31,8 +31,8 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
       <h2 class="text-2xl font-bold">${sectionNumber}. COMPARACION DE METRICAS GLOBALES</h2>
     </div>
     
-    <!-- Gráficos de Evolución -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Gráficos de Evolución (uno debajo del otro) -->
+    <div class="space-y-6 mb-8">
       <div class="bg-white rounded-lg shadow-md p-4">
         <div style="height: 350px; position: relative;">
           <canvas id="chartEvolucionPromedio"></canvas>

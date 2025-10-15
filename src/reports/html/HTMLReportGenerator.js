@@ -9,6 +9,7 @@ import { generateCoverSection } from './htmlSections/coverSection.js';
 import { generateInteractiveChartsSection } from './htmlSections/interactiveCharts.js';
 import { generateStudentsTableSection } from './htmlSections/studentsTable.js';
 import { generateTopPerformersSection } from './htmlSections/topPerformers.js';
+import { generateOutliersSection } from './htmlSections/outliers.js';
 import { 
   generateGlobalComparisonSection,
   generateAreaComparisonSection,
@@ -67,15 +68,16 @@ export const generateHTML = (analysis, options = {}) => {
   // Si es multi-año, usar secciones de comparación
   if (isMultiYear && comparisonAnalyses.length > 0) {
     
+    sections.push(generateAllStudentsTableSection(allAnalyses, sectionNumber++));
     sections.push(generateGlobalComparisonSection(allAnalyses, sectionNumber++));
     sections.push(generateAreaComparisonSection(allAnalyses, sectionNumber++));
-    sections.push(generateAllStudentsTableSection(allAnalyses, sectionNumber++));
     
   } else {
     // Modo de un solo año
     sections.push(generateStudentsTableSection(analysis, sectionNumber++, excludePIAR));
     sections.push(generateTopPerformersSection(analysis, sectionNumber++));
     sections.push(generateInteractiveChartsSection(sectionNumber++));
+    sections.push(generateOutliersSection(analysis, sectionNumber++));
   }
   
   const content = sections.join('\n');

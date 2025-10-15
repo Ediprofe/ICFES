@@ -51,20 +51,21 @@ export const generatePDF = (analysis, options = {}) => {
   if (isMultiYear && comparisonAnalyses.length > 0) {
     const allAnalyses = [analysis, ...comparisonAnalyses];
     
-    // 2. Comparación de Métricas Globales
+    // 2. Tabla Completa de Estudiantes (primero)
+    addNewPage(doc);
+    generateAllStudentsTable(doc, allAnalyses, 20);
+    
+    // 3. Comparación de Métricas Globales
     addNewPage(doc);
     let currentY = 20;
     currentY = generateGlobalComparisonSection(doc, allAnalyses, currentY);
     
-    // 3. Gráfico de Evolución
+    // 4. Gráfico de Evolución
     generateYearComparisonChart(doc, allAnalyses, currentY);
     
-    // 4. Comparación por Áreas
+    // 5. Comparación por Áreas
     addNewPage(doc);
     generateAreaComparisonSection(doc, allAnalyses, 20);
-    
-    // 5. Tabla Completa de Estudiantes
-    generateAllStudentsTable(doc, allAnalyses, 20);
     
   } else {
     // Modo de un solo año - secciones tradicionales
