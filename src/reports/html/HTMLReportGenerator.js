@@ -8,6 +8,7 @@ import { generateInteractivityScript } from './htmlInteractivity.js';
 import { generateCoverSection } from './htmlSections/coverSection.js';
 import { generateInteractiveChartsSection } from './htmlSections/interactiveCharts.js';
 import { generateStudentsTableSection } from './htmlSections/studentsTable.js';
+import { generateTopPerformersSection } from './htmlSections/topPerformers.js';
 import { 
   generateGlobalComparisonSection,
   generateAreaComparisonSection,
@@ -73,6 +74,7 @@ export const generateHTML = (analysis, options = {}) => {
   } else {
     // Modo de un solo año
     sections.push(generateStudentsTableSection(analysis, sectionNumber++, excludePIAR));
+    sections.push(generateTopPerformersSection(analysis, sectionNumber++));
     sections.push(generateInteractiveChartsSection(sectionNumber++));
   }
   
