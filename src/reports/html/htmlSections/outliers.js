@@ -3,9 +3,19 @@
  */
 
 import { generateSectionHeader } from '../htmlCore.js';
+import { zScore } from '../../../utils/calculations/index.js';
 
 export const generateOutliersSection = (analysis, sectionNumber) => {
-  const outliers = analysis.getOutliers();
+  // Obtener outliers usando la misma lógica que el PDF
+  const globalMetrics = analysis.getGlobalMetrics(false); // Sin PIAR
+  const outliers = globalMetrics.outliers || [];
+  
+  // Calcular métricas para z-scores
+  const dataSinPIAR = analysis.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
+  const globals = dataSinPIAR.map(s => s.Global).filter(v => v !== null && v !== undefined && !isNaN(v));
+  const avg = globals.reduce((a, b) => a + b, 0) / globals.length;
+  const variance = globals.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / (globals.length - 1);
+  const sd = Math.sqrt(variance);
   
   return `
     ${generateSectionHeader('Valores Atípicos (Outliers)', sectionNumber, '⚠️')}
@@ -46,26 +56,27 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-              ${outliers.map((outlier, index) => {
-                const isLow = outlier.zScore < -3;
+              ${outliers.map((student, index) => {
+                const z = zScore(student.Global, avg, sd);
+                const isLow = z < 0;
                 const typeColor = isLow ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800';
-                const typeText = isLow ? 'Bajo' : 'Alto';
+                const typeText = isLow ? 'Inferior' : 'Superior';
                 const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 
                 return `
                   <tr class="${rowBg} hover:bg-yellow-50 transition-colors">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${outlier.Nombre}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${outlier.Apellido}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${student.Nombre}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${student.Apellido}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
                       <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                        ${outlier.Grupo}
+                        ${student.Grupo}
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold ${isLow ? 'text-blue-600' : 'text-red-600'}">
-                      ${outlier.Global.toFixed(1)}
+                      ${student.Global.toFixed(1)}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-mono ${isLow ? 'text-blue-600' : 'text-red-600'}">
-                      ${outlier.zScore.toFixed(2)}
+                      ${z.toFixed(2)}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">
                       <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${typeColor}">
