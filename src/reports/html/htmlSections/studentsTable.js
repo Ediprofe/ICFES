@@ -5,10 +5,9 @@
 import { generateSectionHeader } from '../htmlCore.js';
 import { ACADEMIC_AREAS } from '../../../config/columnConfig.js';
 
-export const generateStudentsTableSection = (analysis, sectionNumber, excludePIAR = true) => {
-  const data = excludePIAR
-    ? analysis.processedData.filter(s => s['¿PIAR?'] !== 'Sí')
-    : analysis.processedData;
+export const generateStudentsTableSection = (analysis, sectionNumber, excludePIAR = false) => {
+  // Incluir todos los estudiantes por defecto
+  const data = analysis.processedData;
   
   const sortedData = [...data].sort((a, b) => b.Global - a.Global);
   
@@ -18,8 +17,19 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
   return `
     ${generateSectionHeader('Listado de Estudiantes', sectionNumber, '📋')}
     
-    <!-- Filtros -->
-    <div class="mb-6 no-print grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- Botón Toggle PIAR -->
+    <div class="mb-6 no-print">
+      <div class="mb-4">
+        <button 
+          id="togglePiarBtnSingle" 
+          onclick="togglePiarVisibilitySingle()"
+          class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md transition-colors"
+        >
+          👁️ Mostrar/Ocultar Estudiantes con PIAR
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Buscar estudiante</label>
         <input 
@@ -53,6 +63,7 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
           onkeyup="filterStudentsTable()"
         >
       </div>
+      </div>
     </div>
     
     <!-- Tabla -->
@@ -64,20 +75,29 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(1)">Nombre</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(2)">Apellido</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(3)">Grado</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(4)">Global ⬍</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(4)">PIAR</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(5)">Global ⬍</th>
             ${ACADEMIC_AREAS.map(area => 
-              `<th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(${5 + ACADEMIC_AREAS.indexOf(area)})">${area.shortName}</th>`
+              `<th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(${6 + ACADEMIC_AREAS.indexOf(area)})">${area.shortName}</th>`
             ).join('')}
           </tr>
         </thead>
         <tbody>
-          ${sortedData.map((student, index) => `
-            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors" data-grade="${student.Grupo}" data-global="${student.Global}">
+          ${sortedData.map((student, index) => {
+            const isPiar = student['¿PIAR?'] === 'Sí';
+            const piarHighlight = isPiar ? 'bg-yellow-100 border-l-4 border-yellow-500' : '';
+            const rowClass = isPiar ? 'piar-row-single' : 'no-piar-row-single';
+            
+            return `
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors ${piarHighlight} ${rowClass}" data-grade="${student.Grupo}" data-global="${student.Global}" data-piar="${isPiar ? 'si' : 'no'}">
               <td class="px-4 py-3 text-sm text-gray-700">${index + 1}</td>
               <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.Nombre}</td>
               <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.Apellido}</td>
               <td class="px-4 py-3 text-sm text-gray-700">
                 <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">${student.Grupo}</span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                ${isPiar ? '<span class="px-2 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">SÍ</span>' : '<span class="px-2 py-1 bg-gray-300 text-gray-700 rounded-full text-xs">NO</span>'}
               </td>
               <td class="px-4 py-3 text-sm text-right font-bold ${student.Global >= 300 ? 'text-green-600' : 'text-gray-700'}">
                 ${student.Global ? student.Global.toFixed(1) : 'N/A'}
@@ -87,7 +107,8 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
                 return `<td class="px-4 py-3 text-sm text-right text-gray-700">${score ? score.toFixed(1) : 'N/A'}</td>`;
               }).join('')}
             </tr>
-          `).join('')}
+          `;
+          }).join('')}
         </tbody>
       </table>
     </div>
@@ -97,6 +118,38 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
     </p>
     
     <script>
+      let piarVisibleSingle = true; // Estado inicial: PIAR visible
+      
+      function togglePiarVisibilitySingle() {
+        piarVisibleSingle = !piarVisibleSingle;
+        const piarRows = document.querySelectorAll('.piar-row-single');
+        
+        piarRows.forEach(row => {
+          if (piarVisibleSingle) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Actualizar contador
+        updateVisibleCountSingle();
+      }
+      
+      function updateVisibleCountSingle() {
+        const table = document.getElementById('studentsTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+        let visibleCount = 0;
+        
+        for (let row of rows) {
+          if (row.style.display !== 'none') {
+            visibleCount++;
+          }
+        }
+        
+        document.getElementById('visibleCount').textContent = visibleCount;
+      }
+      
       function filterStudentsTable() {
         const searchValue = document.getElementById('searchStudents').value.toLowerCase();
         const gradeValue = document.getElementById('gradeFilter').value;
@@ -116,15 +169,23 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
           const matchesGrade = !gradeValue || grade === gradeValue;
           const matchesScore = global >= minScore;
           
+          // Aplicar filtros normales
           if (matchesSearch && matchesGrade && matchesScore) {
             row.style.display = '';
-            visibleCount++;
           } else {
             row.style.display = 'none';
           }
         }
         
-        document.getElementById('visibleCount').textContent = visibleCount;
+        // Aplicar toggle de PIAR después de los filtros
+        if (!piarVisibleSingle) {
+          const piarRows = document.querySelectorAll('.piar-row-single');
+          piarRows.forEach(row => {
+            row.style.display = 'none';
+          });
+        }
+        
+        updateVisibleCountSingle();
       }
       
       let sortDirection = {};
