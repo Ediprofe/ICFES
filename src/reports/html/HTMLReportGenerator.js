@@ -69,10 +69,10 @@ export const generateHTML = (analysis, options = {}) => {
   // Si es multi-año, usar secciones de comparación
   if (isMultiYear && comparisonAnalyses.length > 0) {
     
+    sections.push(generateAllStudentsTableSection(allAnalyses, sectionNumber++));
     sections.push(generateCombinedMetricsSection(allAnalyses, sectionNumber++));
     sections.push(generateGlobalComparisonSection(allAnalyses, sectionNumber++));
     sections.push(generateAreaComparisonSection(allAnalyses, sectionNumber++));
-    sections.push(generateAllStudentsTableSection(allAnalyses, sectionNumber++));
     
   } else {
     // Modo de un solo año
