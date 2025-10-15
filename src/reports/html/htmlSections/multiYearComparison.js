@@ -27,12 +27,12 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
   return `
     <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg p-4 mb-6">
       <h2 class="text-2xl font-bold">${sectionNumber}. Tabla de métricas combinadas</h2>
-      <p class="text-purple-100 text-sm mt-1">Selecciona los años que deseas comparar</p>
+      <p class="text-purple-100 text-sm mt-1">Selecciona los años que deseas combinar</p>
     </div>
     
     <!-- Selector de años -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-      <h3 class="text-lg font-bold text-gray-800 mb-4">📅 Seleccionar años para comparar</h3>
+      <h3 class="text-lg font-bold text-gray-800 mb-4">📅 Seleccionar años a promediar</h3>
       <div class="flex flex-wrap gap-3 mb-4">
         ${years.map(year => `
           <label class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-purple-100 rounded-lg cursor-pointer transition-colors border-2 border-transparent hover:border-purple-500">
@@ -100,9 +100,21 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
         
         const filteredData = metricsData.filter(data => selectedYears.includes(data.year));
         
+        // Calcular promedio combinado (promedio de promedios)
+        const promedioCombinado = filteredData.length > 0
+          ? filteredData.reduce((sum, data) => sum + data.promedio, 0) / filteredData.length
+          : 0;
+        
+        // Calcular desviación estándar combinada (promedio de desviaciones)
+        const desviacionCombinada = filteredData.length > 0
+          ? filteredData.reduce((sum, data) => sum + data.desviacion, 0) / filteredData.length
+          : 0;
+        
         // Actualizar tabla global
         const globalTableBody = document.querySelector('#combinedGlobalTable tbody');
-        globalTableBody.innerHTML = filteredData.map((data, index) => {
+        
+        // Filas de años individuales
+        const rowsHTML = filteredData.map((data, index) => {
           const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
           return \`
             <tr class="\${rowBg} hover:bg-blue-50 transition-colors">
@@ -112,6 +124,23 @@ export const generateCombinedMetricsSection = (analyses, sectionNumber) => {
             </tr>
           \`;
         }).join('');
+        
+        // Fila de promedio combinado
+        const combinedRowHTML = filteredData.length > 0 ? \`
+          <tr class="bg-gradient-to-r from-purple-100 to-pink-100 border-t-4 border-purple-500">
+            <td class="px-8 py-5 text-base font-extrabold text-purple-900 uppercase">
+              📊 Combinado
+            </td>
+            <td class="px-8 py-5 text-center text-xl font-extrabold text-purple-700">
+              \${promedioCombinado.toFixed(2)}
+            </td>
+            <td class="px-8 py-5 text-center text-lg font-extrabold text-purple-700">
+              \${desviacionCombinada.toFixed(2)}
+            </td>
+          </tr>
+        \` : '';
+        
+        globalTableBody.innerHTML = rowsHTML + combinedRowHTML;
       }
       
       // Inicializar tabla al cargar
