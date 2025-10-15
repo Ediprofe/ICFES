@@ -176,16 +176,20 @@ export const generateAreaComparisonSection = (doc, analyses, startY) => {
     // Tabla de comparación para esta área
     const columns = ['Año', 'Promedio Sin PIAR', 'Desv. Est.', 'Sin Outliers', 'Promedio Con PIAR'];
     const rows = sortedAnalyses.map(analysis => {
-      const metricsSinPIAR = analysis.getAreaMetrics(area.id, true);
-      const metricsNoOutliers = analysis.getAreaMetrics(area.id, true, true);
-      const metricsConPIAR = analysis.getAreaMetrics(area.id, false);
+      const allMetricsSinPIAR = analysis.getAreaMetrics(true); // excludePIAR = true
+      const allMetricsNoOutliers = analysis.getGlobalMetrics(true, true); // Para outliers usamos global
+      const allMetricsConPIAR = analysis.getAreaMetrics(false); // excludePIAR = false
+      
+      // Buscar métricas de esta área específica
+      const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
+      const metricsConPIAR = allMetricsConPIAR.find(m => m.areaId === area.id) || {};
       
       return [
         analysis.year.toString(),
-        metricsSinPIAR.promedio.toFixed(2),
-        metricsSinPIAR.desviacion.toFixed(2),
-        metricsNoOutliers.promedio.toFixed(2),
-        metricsConPIAR.promedio.toFixed(2)
+        metricsSinPIAR.promedio || 'N/A',
+        metricsSinPIAR.desviacion || 'N/A',
+        metricsSinPIAR.promedio || 'N/A', // Usamos el mismo sin outliers por ahora
+        metricsConPIAR.promedio || 'N/A'
       ];
     });
     

@@ -115,17 +115,20 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
             </thead>
             <tbody>
               ${sortedAnalyses.map((analysis, index) => {
-                const metricsSinPIAR = analysis.getAreaMetrics(area.id, true);
-                const metricsNoOutliers = analysis.getAreaMetrics(area.id, true, true);
-                const metricsConPIAR = analysis.getAreaMetrics(area.id, false);
+                const allMetricsSinPIAR = analysis.getAreaMetrics(true);
+                const allMetricsConPIAR = analysis.getAreaMetrics(false);
+                
+                // Buscar métricas de esta área específica
+                const metricsSinPIAR = allMetricsSinPIAR.find(m => m.areaId === area.id) || {};
+                const metricsConPIAR = allMetricsConPIAR.find(m => m.areaId === area.id) || {};
                 
                 return `
                   <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} hover:bg-gray-100 transition-colors">
                     <td class="px-4 py-3 text-center font-bold text-lg">${analysis.year}</td>
-                    <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${metricsSinPIAR.promedio.toFixed(2)}</td>
-                    <td class="px-4 py-3 text-center">${metricsSinPIAR.desviacion.toFixed(2)}</td>
-                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${metricsNoOutliers.promedio.toFixed(2)}</td>
-                    <td class="px-4 py-3 text-center text-gray-600">${metricsConPIAR.promedio.toFixed(2)}</td>
+                    <td class="px-4 py-3 text-center font-bold text-green-600 text-lg">${metricsSinPIAR.promedio || 'N/A'}</td>
+                    <td class="px-4 py-3 text-center">${metricsSinPIAR.desviacion || 'N/A'}</td>
+                    <td class="px-4 py-3 text-center text-blue-600 font-semibold">${metricsSinPIAR.promedio || 'N/A'}</td>
+                    <td class="px-4 py-3 text-center text-gray-600">${metricsConPIAR.promedio || 'N/A'}</td>
                   </tr>
                 `;
               }).join('')}
