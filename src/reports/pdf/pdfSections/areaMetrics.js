@@ -16,28 +16,28 @@ export const generateAreaMetrics = (doc, analysis, sectionNumber) => {
   // Obtener datos preparados
   const chartData = prepareAreaChartData(analysis, true);
   
-  // Preparar datos para la tabla
-  const columns = ['Área', 'Promedio\nCon PIAR', 'Promedio\nSin PIAR', 'Desv. Est.\nCon PIAR', 'Desv. Est.\nSin PIAR'];
+  // Preparar datos para la tabla con mejor formato
+  const columns = ['Área Académica', 'Prom. Sin PIAR', 'Desv. Est.', 'Sin Outliers', 'Prom. Con PIAR'];
   
   const rows = chartData.promedios.map((item, index) => {
     const desv = chartData.desviacion[index];
     return [
       item.areaCompleta,
-      item.conPIAR.toFixed(2),
       item.sinPIAR.toFixed(2),
-      desv.conPIAR.toFixed(2),
-      desv.sinPIAR.toFixed(2)
+      desv.sinPIAR.toFixed(2),
+      item.sinOutliers.toFixed(2),
+      item.conPIAR.toFixed(2)
     ];
   });
   
-  // Dibujar tabla
+  // Dibujar tabla con mejor distribución
   y = drawTable(doc, columns, rows, y, {
     columnStyles: {
-      0: { cellWidth: 50 },
-      1: { cellWidth: 25, halign: 'center' },
-      2: { cellWidth: 25, halign: 'center' },
-      3: { cellWidth: 25, halign: 'center' },
-      4: { cellWidth: 25, halign: 'center' }
+      0: { halign: 'left', cellWidth: 50, fontStyle: 'bold' },
+      1: { halign: 'center', cellWidth: 30, fontStyle: 'bold', textColor: [22, 163, 74] },
+      2: { halign: 'center', cellWidth: 25 },
+      3: { halign: 'center', cellWidth: 30, textColor: [59, 130, 246] },
+      4: { halign: 'center', cellWidth: 30, textColor: [107, 114, 128] }
     }
   });
   

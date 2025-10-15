@@ -58,12 +58,14 @@ export const drawTable = (doc, columns, rows, startY, options = {}) => {
     },
     columnStyles,
     margin,
+    tableWidth: 'auto', // Usar ancho automático inteligente
     styles: {
       overflow: 'linebreak',
-      cellWidth: 'wrap',
+      cellWidth: 'auto', // Ancho automático en lugar de wrap
       font: 'helvetica',
       lineColor: [229, 231, 235],
-      lineWidth: 0.1
+      lineWidth: 0.1,
+      halign: 'left' // Alineación por defecto
     },
     didParseCell: function(data) {
       // Mejorar primera fila del body

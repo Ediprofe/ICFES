@@ -29,7 +29,7 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
       doc.text(area.name, 20, y);
       y += 5;
       
-      // Tabla
+      // Tabla con mejor distribución
       const columns = ['#', 'Nombre', 'Apellido', 'Puntaje'];
       const rows = topStudents.map((student, index) => [
         String(index + 1),
@@ -40,10 +40,10 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
       
       y = drawTable(doc, columns, rows, y, {
         columnStyles: {
-          0: { cellWidth: 10, halign: 'center' },
-          1: { cellWidth: 50 },
-          2: { cellWidth: 50 },
-          3: { cellWidth: 20, halign: 'center' }
+          0: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },
+          1: { cellWidth: 50, halign: 'left' },
+          2: { cellWidth: 50, halign: 'left' },
+          3: { cellWidth: 25, halign: 'center', fontStyle: 'bold', textColor: [22, 163, 74] }
         }
       });
       
@@ -67,7 +67,7 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
       doc.text(gradeData.grado, 20, y);
       y += 5;
       
-      // Tabla
+      // Tabla con mejor distribución
       const columns = ['#', 'Nombre', 'Apellido', 'Global'];
       const rows = gradeData.top.map((student, index) => [
         String(index + 1),
@@ -78,10 +78,10 @@ export const generateTopPerformers = (doc, analysis, sectionNumber) => {
       
       y = drawTable(doc, columns, rows, y, {
         columnStyles: {
-          0: { cellWidth: 10, halign: 'center' },
-          1: { cellWidth: 50 },
-          2: { cellWidth: 50 },
-          3: { cellWidth: 20, halign: 'center' }
+          0: { cellWidth: 15, halign: 'center', fontStyle: 'bold' },
+          1: { cellWidth: 50, halign: 'left' },
+          2: { cellWidth: 50, halign: 'left' },
+          3: { cellWidth: 25, halign: 'center', fontStyle: 'bold', textColor: [22, 163, 74] }
         }
       });
       
