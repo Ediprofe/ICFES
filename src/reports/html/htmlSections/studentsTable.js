@@ -4,6 +4,7 @@
 
 import { generateSectionHeader } from '../htmlCore.js';
 import { ACADEMIC_AREAS } from '../../../config/columnConfig.js';
+import { calculateGlobalMetrics } from '../../../utils/calculations/metrics.js';
 
 export const generateStudentsTableSection = (analysis, sectionNumber, excludePIAR = false) => {
   // Incluir todos los estudiantes por defecto
@@ -13,6 +14,24 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
   
   // Obtener grados únicos para el filtro
   const grades = [...new Set(sortedData.map(s => s.Grupo))].sort();
+  
+  // Calcular métricas para clasificación de desempeño (sin PIAR)
+  const metricsSinPIAR = calculateGlobalMetrics(data, true);
+  const promedio = metricsSinPIAR.promedio;
+  const desviacion = metricsSinPIAR.desviacion;
+  
+  // Función para clasificar desempeño basado en desviación estándar
+  const clasificarDesempeno = (puntaje) => {
+    if (puntaje < promedio - desviacion) return 'bajo';
+    if (puntaje < promedio) return 'medio-bajo';
+    if (puntaje <= promedio + desviacion) return 'medio-alto';
+    return 'alto';
+  };
+  
+  // Agregar clasificación a cada estudiante
+  sortedData.forEach(student => {
+    student.desempeno = clasificarDesempeno(student.Global);
+  });
   
   return `
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6 flex items-center justify-between">
@@ -51,7 +70,7 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
     
     <!-- Filtros -->
     <div class="mb-6 no-print">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Buscar estudiante</label>
           <input 
@@ -76,6 +95,21 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
         </div>
         
         <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Desempeño</label>
+          <select 
+            id="performanceFilter" 
+            class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onchange="filterStudentsTable()"
+          >
+            <option value="">Todos los niveles</option>
+            <option value="bajo">🟥 Bajo (< μ - 1σ)</option>
+            <option value="medio-bajo">🟨 Medio-bajo (μ - 1σ a μ)</option>
+            <option value="medio-alto">🟩 Medio-alto (μ a μ + 1σ)</option>
+            <option value="alto">🟦 Alto (> μ + 1σ)</option>
+          </select>
+        </div>
+        
+        <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Puntaje mínimo</label>
           <input 
             type="number" 
@@ -95,6 +129,29 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
             class="px-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             onkeyup="filterStudentsTable()"
           >
+        </div>
+      </div>
+      
+      <!-- Leyenda de desempeño -->
+      <div class="mb-4 p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg border border-gray-200">
+        <div class="text-xs font-semibold text-gray-700 mb-2">📊 Clasificación de desempeño (basada en μ = ${promedio.toFixed(2)}, σ = ${desviacion.toFixed(2)}):</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+          <div class="flex items-center gap-1">
+            <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+            <span class="text-gray-600"><strong>Bajo:</strong> < ${(promedio - desviacion).toFixed(1)} (~16%)</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+            <span class="text-gray-600"><strong>Medio-bajo:</strong> ${(promedio - desviacion).toFixed(1)} - ${promedio.toFixed(1)} (~34%)</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+            <span class="text-gray-600"><strong>Medio-alto:</strong> ${promedio.toFixed(1)} - ${(promedio + desviacion).toFixed(1)} (~34%)</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+            <span class="text-gray-600"><strong>Alto:</strong> > ${(promedio + desviacion).toFixed(1)} (~16%)</span>
+          </div>
         </div>
       </div>
       
@@ -122,9 +179,10 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(2)">Apellido</th>
             <th class="px-4 py-3 text-left text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(3)">Grado</th>
             <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(4)">PIAR</th>
-            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(5)">Global ⬍</th>
+            <th class="px-4 py-3 text-center text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(5)">Desempeño</th>
+            <th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(6)">Global ⬍</th>
             ${ACADEMIC_AREAS.map(area => 
-              `<th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(${6 + ACADEMIC_AREAS.indexOf(area)})">${area.shortName}</th>`
+              `<th class="px-4 py-3 text-right text-sm font-semibold cursor-pointer hover:bg-blue-700" onclick="sortStudentsTable(${7 + ACADEMIC_AREAS.indexOf(area)})">${area.shortName}</th>`
             ).join('')}
           </tr>
         </thead>
@@ -134,8 +192,16 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
             const piarHighlight = isPiar ? 'bg-yellow-100 border-l-4 border-yellow-500' : '';
             const rowClass = isPiar ? 'piar-row-single' : 'no-piar-row-single';
             
+            // Badge de desempeño
+            const desempenoBadges = {
+              'bajo': '<span class="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-bold">🟥 Bajo</span>',
+              'medio-bajo': '<span class="px-2 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">🟨 M-Bajo</span>',
+              'medio-alto': '<span class="px-2 py-1 bg-green-500 text-white rounded-full text-xs font-bold">🟩 M-Alto</span>',
+              'alto': '<span class="px-2 py-1 bg-blue-500 text-white rounded-full text-xs font-bold">🟦 Alto</span>'
+            };
+            
             return `
-            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors ${piarHighlight} ${rowClass}" data-grade="${student.Grupo}" data-global="${student.Global}" data-piar="${isPiar ? 'si' : 'no'}">
+            <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors ${piarHighlight} ${rowClass}" data-grade="${student.Grupo}" data-global="${student.Global}" data-piar="${isPiar ? 'si' : 'no'}" data-performance="${student.desempeno}">
               <td class="px-4 py-3 text-sm text-gray-700">${index + 1}</td>
               <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.Nombre}</td>
               <td class="px-4 py-3 text-sm text-gray-900 font-medium">${student.Apellido}</td>
@@ -144,6 +210,9 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
               </td>
               <td class="px-4 py-3 text-center">
                 ${isPiar ? '<span class="px-2 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">SÍ</span>' : '<span class="px-2 py-1 bg-gray-300 text-gray-700 rounded-full text-xs">NO</span>'}
+              </td>
+              <td class="px-4 py-3 text-center">
+                ${desempenoBadges[student.desempeno]}
               </td>
               <td class="px-4 py-3 text-sm text-right font-bold ${student.Global >= 300 ? 'text-green-600' : 'text-gray-700'}">
                 ${student.Global ? student.Global.toFixed(1) : 'N/A'}
@@ -247,6 +316,7 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
       function filterStudentsTable() {
         const searchValue = document.getElementById('searchStudents').value.toLowerCase();
         const gradeValue = document.getElementById('gradeFilter').value;
+        const performanceValue = document.getElementById('performanceFilter').value;
         const minScore = parseFloat(document.getElementById('minScoreFilter').value) || 0;
         const maxScore = parseFloat(document.getElementById('maxScoreFilter').value) || Infinity;
         
@@ -258,15 +328,17 @@ export const generateStudentsTableSection = (analysis, sectionNumber, excludePIA
           const nombre = row.cells[1].textContent.toLowerCase();
           const apellido = row.cells[2].textContent.toLowerCase();
           const grade = row.getAttribute('data-grade');
+          const performance = row.getAttribute('data-performance');
           const global = parseFloat(row.getAttribute('data-global'));
           
           const matchesSearch = nombre.includes(searchValue) || apellido.includes(searchValue);
           const matchesGrade = !gradeValue || grade === gradeValue;
+          const matchesPerformance = !performanceValue || performance === performanceValue;
           const matchesMinScore = global >= minScore;
           const matchesMaxScore = global <= maxScore;
           
           // Aplicar filtros normales
-          if (matchesSearch && matchesGrade && matchesMinScore && matchesMaxScore) {
+          if (matchesSearch && matchesGrade && matchesPerformance && matchesMinScore && matchesMaxScore) {
             row.style.display = '';
             visibleCount++;
           } else {
