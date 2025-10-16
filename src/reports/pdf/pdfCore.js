@@ -93,6 +93,17 @@ export const drawFooter = (doc, pageNumber, additionalInfo = '') => {
     { align: 'right' }
   );
   
+  // Texto descriptivo (centrado, arriba del número de página)
+  doc.setFontSize(7);
+  doc.setTextColor(120, 120, 120); // gray-600
+  const descripcion = 'Herramienta de análisis para colegios y profesores - Identifica insights que guíen decisiones pedagógicas';
+  doc.text(
+    descripcion,
+    width / 2,
+    height - 15,
+    { align: 'center' }
+  );
+  
   doc.setTextColor(0, 0, 0);
 };
 

@@ -453,10 +453,10 @@ export const generateHTMLTemplate = (title, year) => {
             </a>
           </div>
           <p class="text-blue-100 text-lg font-semibold mb-3">
-            Guía Educativa para Ciencias y Matemáticas
+            Herramienta de Análisis de Resultados ICFES
           </p>
           <p class="text-blue-200 leading-relaxed">
-            Explora lecciones estructuradas con videos explicativos, material didáctico y recursos descargables que simplifican el aprendizaje de conceptos complejos. Cada unidad temática contiene múltiples lecciones organizadas de forma progresiva para facilitar el aprendizaje paso a paso.
+            Este material puede ser utilizado internamente por colegios y profesores que deseen analizar resultados de pruebas ICFES y encontrar insights que guíen la toma de decisiones pedagógicas. La plataforma facilita la identificación de fortalezas, áreas de mejora y tendencias en el rendimiento académico.
           </p>
         </div>
         
