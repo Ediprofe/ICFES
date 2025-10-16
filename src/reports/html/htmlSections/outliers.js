@@ -32,8 +32,8 @@ export const generateOutliersSection = (analysis, sectionNumber) => {
           <div class="text-sm text-blue-800">
             <p class="mb-2">Los <strong>outliers</strong> son estudiantes con puntajes que se alejan significativamente del promedio del grupo (±3 desviaciones estándar).</p>
             <ul class="list-disc list-inside space-y-1">
-              <li><strong>Outliers Superiores:</strong> Estudiantes con rendimiento excepcional, muy por encima del promedio. Pueden beneficiarse de programas de enriquecimiento académico.</li>
-              <li><strong>Outliers Inferiores:</strong> Estudiantes con rendimiento significativamente bajo. Requieren apoyo adicional y seguimiento personalizado.</li>
+              <li><strong>Outliers superiores:</strong> Estudiantes con rendimiento excepcional, muy por encima del promedio. Pueden beneficiarse de programas de enriquecimiento académico.</li>
+              <li><strong>Outliers inferiores:</strong> Estudiantes con rendimiento significativamente bajo. Requieren apoyo adicional y seguimiento personalizado.</li>
             </ul>
           </div>
         </div>

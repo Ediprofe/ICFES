@@ -205,7 +205,7 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
   
   return `
     <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-lg p-4 mb-6">
-      <h2 class="text-2xl font-bold">${sectionNumber}. Curvas de distribución normal (Campana de Gauss)</h2>
+      <h2 class="text-2xl font-bold">${sectionNumber}. Curvas de distribución normal (campana de Gauss)</h2>
       <p class="text-indigo-100 text-sm mt-1">Visualiza la distribución de promedios globales sin PIAR por año</p>
     </div>
     
@@ -290,12 +290,12 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
       </div>
     </div>
     
-    <!-- Comparación de Grupos de Cohortes -->
+    <!-- Comparación de grupos de cohortes -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6 mt-6">
       <div class="border-b-2 border-purple-500 pb-3 mb-6">
         <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
           <span class="text-2xl">📊</span>
-          <span>Comparación de Grupos de Cohortes</span>
+          <span>Comparación de grupos de cohortes</span>
         </h3>
         <p class="text-sm text-gray-600 mt-1">Selecciona dos grupos de años para comparar sus estadísticas</p>
       </div>
@@ -442,7 +442,7 @@ export const generateGaussianCurvesSection = (analyses, sectionNumber) => {
               <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 \${promedioChange > 0 ? 'border-green-500' : 'border-red-500'}">
                 <div class="flex items-center gap-2 mb-2">
                   <span class="text-2xl">\${promedioIcon}</span>
-                  <p class="text-sm font-bold text-gray-700">Cambio en Promedio</p>
+                  <p class="text-sm font-bold text-gray-700">Cambio en promedio</p>
                 </div>
                 <p class="text-3xl font-extrabold \${promedioChange > 0 ? 'text-green-600' : 'text-red-600'}">
                   \${promedioChange > 0 ? '+' : ''}\${promedioChange.toFixed(2)}
@@ -1546,19 +1546,55 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
   const evolutionData = sortedAnalyses.map(analysis => {
     const metricsSinPIAR = analysis.getGlobalMetrics(true, false);
     const metricsConPIAR = analysis.getGlobalMetrics(false, false);
+    const metricsLote = analysis.getGlobalMetrics(false, true); // Con PIAR, sin outliers (±2σ)
     
     return {
       year: analysis.year,
       promedioSinPIAR: metricsSinPIAR.promedio,
       promedioConPIAR: metricsConPIAR.promedio,
+      promedioLote: metricsLote.promedio,
       desviacionSinPIAR: metricsSinPIAR.desviacion,
-      desviacionConPIAR: metricsConPIAR.desviacion
+      desviacionConPIAR: metricsConPIAR.desviacion,
+      desviacionLote: metricsLote.desviacion
     };
   });
   
   return `
     <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6">
       <h2 class="text-2xl font-bold">${sectionNumber}. Comparación de métricas globales</h2>
+    </div>
+    
+    <!-- Controles Interactivos -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="text-sm font-bold text-gray-700">Mostrar:</span>
+        <div class="flex gap-2 flex-wrap">
+          <button 
+            onclick="toggleGlobalDataset('sinPIAR')" 
+            id="btnGlobalSinPIAR"
+            class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
+          >
+            Sin PIAR
+          </button>
+          <button 
+            onclick="toggleGlobalDataset('conPIAR')" 
+            id="btnGlobalConPIAR"
+            class="px-3 py-1 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors"
+          >
+            Con PIAR
+          </button>
+          <button 
+            onclick="toggleGlobalDataset('lote')" 
+            id="btnGlobalLote"
+            class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
+          >
+            Rendimiento típico (lote)
+          </button>
+        </div>
+      </div>
+      <p class="text-xs text-gray-600 italic mt-2">
+        Haz clic en los botones para mostrar/ocultar cada conjunto de datos. Puedes ver uno, dos o los tres al mismo tiempo.
+      </p>
     </div>
     
     <!-- Gráficos de Evolución (uno debajo del otro) -->
@@ -1579,138 +1615,212 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
       // Datos para gráficos de evolución
       const evolutionData = ${JSON.stringify(evolutionData)};
       
-      // Gráfico de Evolución del Promedio Global
-      new Chart(document.getElementById('chartEvolucionPromedio'), {
-        type: 'bar',
-        data: {
-          labels: evolutionData.map(d => d.year),
-          datasets: [
-            {
-              label: 'Sin PIAR',
-              data: evolutionData.map(d => d.promedioSinPIAR),
-              backgroundColor: 'rgba(22, 163, 74, 0.8)',
-              borderColor: 'rgba(22, 163, 74, 1)',
-              borderWidth: 1
-            },
-            {
-              label: 'Con PIAR',
-              data: evolutionData.map(d => d.promedioConPIAR),
-              backgroundColor: 'rgba(107, 114, 128, 0.8)',
-              borderColor: 'rgba(107, 114, 128, 1)',
-              borderWidth: 1
-            }
-          ]
-        },
-        plugins: [ChartDataLabels],
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: {
-              display: true,
-              text: 'Evolución del Promedio Global por Cohorte',
-              font: { size: 16, weight: 'bold' }
-            },
-            legend: {
-              display: true,
-              position: 'top'
-            },
-            datalabels: {
-              display: true,
-              anchor: 'end',
-              align: 'top',
-              formatter: (value) => value ? value.toFixed(1) : '',
-              font: { weight: 'bold', size: 11 },
-              color: '#1f2937'
-            },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: function(context) {
-                  return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: false,
-              min: 280,
-              max: 320,
-              ticks: {
-                callback: function(value) {
-                  return value.toFixed(0);
-                }
-              }
-            }
-          }
-        }
-      });
+      // Estado de visibilidad de datasets
+      let globalDatasetVisibility = {
+        sinPIAR: true,
+        conPIAR: true,
+        lote: true
+      };
       
-      // Gráfico de Evolución de la Desviación Estándar
-      new Chart(document.getElementById('chartEvolucionDesviacion'), {
-        type: 'bar',
-        data: {
-          labels: evolutionData.map(d => d.year),
-          datasets: [
-            {
-              label: 'Sin PIAR',
-              data: evolutionData.map(d => d.desviacionSinPIAR),
-              backgroundColor: 'rgba(59, 130, 246, 0.8)',
-              borderColor: 'rgba(59, 130, 246, 1)',
-              borderWidth: 1
-            },
-            {
-              label: 'Con PIAR',
-              data: evolutionData.map(d => d.desviacionConPIAR),
-              backgroundColor: 'rgba(107, 114, 128, 0.8)',
-              borderColor: 'rgba(107, 114, 128, 1)',
-              borderWidth: 1
-            }
-          ]
-        },
-        plugins: [ChartDataLabels],
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: {
-              display: true,
-              text: 'Evolución de la Desviación Estándar por Cohorte',
-              font: { size: 16, weight: 'bold' }
-            },
-            legend: {
-              display: true,
-              position: 'top'
-            },
-            datalabels: {
-              display: true,
-              anchor: 'end',
-              align: 'top',
-              formatter: (value) => value ? value.toFixed(1) : '',
-              font: { weight: 'bold', size: 11 },
-              color: '#1f2937'
-            },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: function(context) {
-                  return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+      // Variables para los gráficos
+      let chartEvolucionPromedio = null;
+      let chartEvolucionDesviacion = null;
+      
+      // Función para toggle de datasets
+      function toggleGlobalDataset(dataset) {
+        globalDatasetVisibility[dataset] = !globalDatasetVisibility[dataset];
+        
+        // Actualizar botones
+        const btnSinPIAR = document.getElementById('btnGlobalSinPIAR');
+        const btnConPIAR = document.getElementById('btnGlobalConPIAR');
+        const btnLote = document.getElementById('btnGlobalLote');
+        
+        btnSinPIAR.className = globalDatasetVisibility.sinPIAR
+          ? 'px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        btnConPIAR.className = globalDatasetVisibility.conPIAR
+          ? 'px-3 py-1 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        btnLote.className = globalDatasetVisibility.lote
+          ? 'px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        // Actualizar gráficos
+        updateGlobalCharts();
+      }
+      
+      // Función para actualizar gráficos
+      function updateGlobalCharts() {
+        // Destruir gráficos anteriores
+        if (chartEvolucionPromedio) chartEvolucionPromedio.destroy();
+        if (chartEvolucionDesviacion) chartEvolucionDesviacion.destroy();
+        
+        // Crear datasets para PROMEDIO según visibilidad
+        const datasetsPromedio = [];
+        
+        if (globalDatasetVisibility.sinPIAR) {
+          datasetsPromedio.push({
+            label: 'Sin PIAR',
+            data: evolutionData.map(d => d.promedioSinPIAR),
+            backgroundColor: 'rgba(22, 163, 74, 0.8)',
+            borderColor: 'rgba(22, 163, 74, 1)',
+            borderWidth: 1
+          });
+        }
+        
+        if (globalDatasetVisibility.conPIAR) {
+          datasetsPromedio.push({
+            label: 'Con PIAR',
+            data: evolutionData.map(d => d.promedioConPIAR),
+            backgroundColor: 'rgba(107, 114, 128, 0.8)',
+            borderColor: 'rgba(107, 114, 128, 1)',
+            borderWidth: 1
+          });
+        }
+        
+        if (globalDatasetVisibility.lote) {
+          datasetsPromedio.push({
+            label: 'Rendimiento típico (lote)',
+            data: evolutionData.map(d => d.promedioLote),
+            backgroundColor: 'rgba(147, 51, 234, 0.8)',
+            borderColor: 'rgba(147, 51, 234, 1)',
+            borderWidth: 1
+          });
+        }
+        
+        // Crear datasets para DESVIACIÓN (solo Sin PIAR y Con PIAR, NO lote)
+        const datasetsDesviacion = [];
+        
+        if (globalDatasetVisibility.sinPIAR) {
+          datasetsDesviacion.push({
+            label: 'Sin PIAR',
+            data: evolutionData.map(d => d.desviacionSinPIAR),
+            backgroundColor: 'rgba(22, 163, 74, 0.8)',
+            borderColor: 'rgba(22, 163, 74, 1)',
+            borderWidth: 1
+          });
+        }
+        
+        if (globalDatasetVisibility.conPIAR) {
+          datasetsDesviacion.push({
+            label: 'Con PIAR',
+            data: evolutionData.map(d => d.desviacionConPIAR),
+            backgroundColor: 'rgba(107, 114, 128, 0.8)',
+            borderColor: 'rgba(107, 114, 128, 1)',
+            borderWidth: 1
+          });
+        }
+        
+        // Gráfico de Evolución del Promedio Global
+        chartEvolucionPromedio = new Chart(document.getElementById('chartEvolucionPromedio'), {
+          type: 'bar',
+          data: {
+            labels: evolutionData.map(d => d.year),
+            datasets: datasetsPromedio
+          },
+          plugins: [ChartDataLabels],
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Evolución del promedio global por cohorte',
+                font: { size: 16, weight: 'bold' }
+              },
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              datalabels: {
+                display: true,
+                anchor: 'end',
+                align: 'top',
+                formatter: (value) => value ? value.toFixed(1) : '',
+                font: { weight: 'bold', size: 11 },
+                color: '#1f2937'
+              },
+              tooltip: {
+                enabled: true,
+                callbacks: {
+                  label: function(context) {
+                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                  }
                 }
               }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                callback: function(value) {
-                  return value.toFixed(0);
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                min: 280,
+                max: 320,
+                ticks: {
+                  callback: function(value) {
+                    return value.toFixed(0);
+                  }
                 }
               }
             }
           }
-        }
+        });
+        
+        // Gráfico de Evolución de la Desviación Estándar
+        chartEvolucionDesviacion = new Chart(document.getElementById('chartEvolucionDesviacion'), {
+          type: 'bar',
+          data: {
+            labels: evolutionData.map(d => d.year),
+            datasets: datasetsDesviacion
+          },
+          plugins: [ChartDataLabels],
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              title: {
+                display: true,
+                text: 'Evolución de la desviación estándar por cohorte',
+                font: { size: 16, weight: 'bold' }
+              },
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              datalabels: {
+                display: true,
+                anchor: 'end',
+                align: 'top',
+                formatter: (value) => value ? value.toFixed(1) : '',
+                font: { weight: 'bold', size: 11 },
+                color: '#1f2937'
+              },
+              tooltip: {
+                enabled: true,
+                callbacks: {
+                  label: function(context) {
+                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: function(value) {
+                    return value.toFixed(0);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+      
+      // Inicializar gráficos al cargar
+      window.addEventListener('DOMContentLoaded', () => {
+        updateGlobalCharts();
       });
     </script>
     
@@ -1724,16 +1834,14 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
               <th class="px-4 py-3 text-center text-sm font-semibold">Cohorte</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Estudiantes</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Promedio</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold">Desv. Est.</th>
+              <th class="px-4 py-3 text-center text-sm font-semibold">Desv. est.</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Mínimo</th>
               <th class="px-4 py-3 text-center text-sm font-semibold">Máximo</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold">Sin Outliers</th>
             </tr>
           </thead>
           <tbody>
             ${sortedAnalyses.map((analysis, index) => {
               const metrics = analysis.getGlobalMetrics(true, false); // excludePIAR = true, excludeOutliers = false
-              const metricsNoOutliers = analysis.getGlobalMetrics(true, true); // excludePIAR = true, excludeOutliers = true
               
               const formatValue = (val) => typeof val === 'number' ? val.toFixed(2) : (val || 'N/A');
               
@@ -1745,7 +1853,6 @@ export const generateGlobalComparisonSection = (analyses, sectionNumber) => {
                   <td class="px-4 py-3 text-center">${formatValue(metrics.desviacion)}</td>
                   <td class="px-4 py-3 text-center">${formatValue(metrics.minimo)}</td>
                   <td class="px-4 py-3 text-center">${formatValue(metrics.maximo)}</td>
-                  <td class="px-4 py-3 text-center text-blue-600 font-semibold">${formatValue(metricsNoOutliers.promedio)}</td>
                 </tr>
               `;
             }).join('')}
@@ -1813,8 +1920,10 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
           year: analysis.year,
           sinPIAR: areaData ? areaData.sinPIAR : null,
           conPIAR: areaData ? areaData.conPIAR : null,
+          lote: areaData ? areaData.sinOutliers : null,
           desvSinPIAR: areaDesv ? areaDesv.sinPIAR : null,
-          desvConPIAR: areaDesv ? areaDesv.conPIAR : null
+          desvConPIAR: areaDesv ? areaDesv.conPIAR : null,
+          desvLote: areaDesv ? areaDesv.sinOutliers : null
         };
       })
     };
@@ -1825,9 +1934,58 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
       <h2 class="text-2xl font-bold">${sectionNumber}. Comparación por áreas académicas</h2>
     </div>
     
+    <!-- Controles Interactivos para Áreas -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div class="flex items-center gap-4 flex-wrap">
+        <span class="text-sm font-bold text-gray-700">Mostrar:</span>
+        <div class="flex gap-2 flex-wrap">
+          <button 
+            onclick="toggleAreaDataset('sinPIAR')" 
+            id="btnAreaDatasetSinPIAR"
+            class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
+          >
+            Sin PIAR
+          </button>
+          <button 
+            onclick="toggleAreaDataset('conPIAR')" 
+            id="btnAreaDatasetConPIAR"
+            class="px-3 py-1 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors"
+          >
+            Con PIAR
+          </button>
+          <button 
+            onclick="toggleAreaDataset('lote')" 
+            id="btnAreaDatasetLote"
+            class="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
+          >
+            Rendimiento típico (lote)
+          </button>
+        </div>
+      </div>
+      <p class="text-xs text-gray-600 italic mt-2">
+        Haz clic en los botones para mostrar/ocultar cada conjunto de datos en todos los gráficos de áreas.
+      </p>
+    </div>
+    
     ${ACADEMIC_AREAS.map((area, areaIndex) => `
       <div class="mb-8">
         <h3 class="text-lg font-bold mb-3 uppercase" style="color: ${area.color}">${area.name}</h3>
+        
+        <!-- Gráfico de evolución del área -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+          <h4 class="text-md font-semibold text-gray-700 mb-2">Gráfico de evolución - ${area.name}</h4>
+          <div style="height: 300px; position: relative;">
+            <canvas id="chartAreaEvolution${areaIndex}"></canvas>
+          </div>
+        </div>
+        
+        <!-- Gráfico de evolución de desviación estándar del área -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+          <h4 class="text-md font-semibold text-gray-700 mb-2">Evolución de desviación estándar - ${area.name}</h4>
+          <div style="height: 300px; position: relative;">
+            <canvas id="chartAreaStdDevEvolution${areaIndex}"></canvas>
+          </div>
+        </div>
         
         <!-- Tabla del área -->
         <div class="overflow-x-auto shadow-md rounded-lg mb-6">
@@ -1835,10 +1993,10 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
             <thead class="bg-blue-600 text-white">
               <tr>
                 <th class="px-4 py-3 text-center text-sm font-semibold">Cohorte</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold">Promedio Sin PIAR</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold">Desv. Est.</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold">Sin Outliers</th>
-                <th class="px-4 py-3 text-center text-sm font-semibold">Promedio Con PIAR</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold">Promedio sin PIAR</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold">Desv. est.</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold">Rendimiento típico (lote)</th>
+                <th class="px-4 py-3 text-center text-sm font-semibold">Promedio con PIAR</th>
               </tr>
             </thead>
             <tbody>
@@ -1872,22 +2030,6 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
             </tbody>
           </table>
         </div>
-        
-        <!-- Gráfico de evolución del área -->
-        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-          <h4 class="text-md font-semibold text-gray-700 mb-2">Gráfico de Evolución - ${area.name}</h4>
-          <div style="height: 300px; position: relative;">
-            <canvas id="chartAreaEvolution${areaIndex}"></canvas>
-          </div>
-        </div>
-        
-        <!-- Gráfico de evolución de desviación estándar del área -->
-        <div class="bg-white rounded-lg shadow-md p-4">
-          <h4 class="text-md font-semibold text-gray-700 mb-2">Evolución de Desviación Estándar - ${area.name}</h4>
-          <div style="height: 300px; position: relative;">
-            <canvas id="chartAreaStdDevEvolution${areaIndex}"></canvas>
-          </div>
-        </div>
       </div>
     `).join('')}
     
@@ -1895,143 +2037,230 @@ export const generateAreaComparisonSection = (analyses, sectionNumber) => {
       // Datos de evolución por área
       const areasEvolutionData = ${JSON.stringify(areasEvolutionData)};
       
-      // Crear gráficos de evolución por área
-      areasEvolutionData.forEach((areaEvolution, index) => {
-        // Gráfico de promedio
-        new Chart(document.getElementById('chartAreaEvolution' + index), {
-          type: 'bar',
-          data: {
-            labels: areaEvolution.data.map(d => d.year),
-            datasets: [
-              {
-                label: 'Sin PIAR',
-                data: areaEvolution.data.map(d => d.sinPIAR),
-                backgroundColor: areaEvolution.color + 'CC',
-                borderColor: areaEvolution.color,
-                borderWidth: 1
-              },
-              {
-                label: 'Con PIAR',
-                data: areaEvolution.data.map(d => d.conPIAR),
-                backgroundColor: 'rgba(107, 114, 128, 0.8)',
-                borderColor: 'rgba(107, 114, 128, 1)',
-                borderWidth: 1
-              }
-            ]
-          },
-          plugins: [ChartDataLabels],
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              title: {
-                display: false
-              },
-              legend: {
-                display: true,
-                position: 'top'
-              },
-              datalabels: {
-                display: true,
-                anchor: 'end',
-                align: 'top',
-                formatter: (value) => value ? value.toFixed(1) : '',
-                font: { weight: 'bold', size: 10 },
-                color: '#1f2937'
-              },
-              tooltip: {
-                enabled: true,
-                callbacks: {
-                  label: function(context) {
-                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: false,
-                ticks: {
-                  callback: function(value) {
-                    return value.toFixed(0);
-                  }
-                }
-              }
-            }
-          }
-        });
+      // Estado de visibilidad de datasets para áreas
+      let areaDatasetVisibility = {
+        sinPIAR: true,
+        conPIAR: true,
+        lote: true
+      };
+      
+      // Variables para almacenar los gráficos
+      let areaCharts = [];
+      let areaStdDevCharts = [];
+      
+      // Función para toggle de datasets de áreas
+      function toggleAreaDataset(dataset) {
+        areaDatasetVisibility[dataset] = !areaDatasetVisibility[dataset];
         
-        // Gráfico de desviación estándar
-        new Chart(document.getElementById('chartAreaStdDevEvolution' + index), {
-          type: 'bar',
-          data: {
-            labels: areaEvolution.data.map(d => d.year),
-            datasets: [
-              {
-                label: 'Sin PIAR',
-                data: areaEvolution.data.map(d => d.desvSinPIAR),
-                backgroundColor: areaEvolution.color + 'CC',
-                borderColor: areaEvolution.color,
-                borderWidth: 1
-              },
-              {
-                label: 'Con PIAR',
-                data: areaEvolution.data.map(d => d.desvConPIAR),
-                backgroundColor: 'rgba(107, 114, 128, 0.8)',
-                borderColor: 'rgba(107, 114, 128, 1)',
-                borderWidth: 1
-              }
-            ]
-          },
-          plugins: [ChartDataLabels],
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              title: {
-                display: false
-              },
-              legend: {
-                display: true,
-                position: 'top'
-              },
-              datalabels: {
-                display: true,
-                anchor: 'end',
-                align: 'top',
-                formatter: (value) => value ? value.toFixed(1) : '',
-                font: { weight: 'bold', size: 10 },
-                color: '#1f2937'
-              },
-              tooltip: {
-                enabled: true,
-                callbacks: {
-                  label: function(context) {
-                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+        // Actualizar botones
+        const btnSinPIAR = document.getElementById('btnAreaDatasetSinPIAR');
+        const btnConPIAR = document.getElementById('btnAreaDatasetConPIAR');
+        const btnLote = document.getElementById('btnAreaDatasetLote');
+        
+        btnSinPIAR.className = areaDatasetVisibility.sinPIAR
+          ? 'px-3 py-1 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        btnConPIAR.className = areaDatasetVisibility.conPIAR
+          ? 'px-3 py-1 bg-gray-600 text-white rounded-lg text-sm font-semibold hover:bg-gray-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        btnLote.className = areaDatasetVisibility.lote
+          ? 'px-3 py-1 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors'
+          : 'px-3 py-1 bg-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-400 transition-colors';
+        
+        // Actualizar todos los gráficos de áreas
+        updateAreaCharts();
+      }
+      
+      // Función para actualizar gráficos de áreas
+      function updateAreaCharts() {
+        // Destruir gráficos anteriores
+        areaCharts.forEach(chart => { if (chart) chart.destroy(); });
+        areaStdDevCharts.forEach(chart => { if (chart) chart.destroy(); });
+        areaCharts = [];
+        areaStdDevCharts = [];
+        
+        // Crear gráficos de evolución por área
+        areasEvolutionData.forEach((areaEvolution, index) => {
+          // Crear datasets para PROMEDIO según visibilidad
+          const datasetsPromedio = [];
+          
+          if (areaDatasetVisibility.sinPIAR) {
+            datasetsPromedio.push({
+              label: 'Sin PIAR',
+              data: areaEvolution.data.map(d => d.sinPIAR),
+              backgroundColor: areaEvolution.color + 'CC',
+              borderColor: areaEvolution.color,
+              borderWidth: 1
+            });
+          }
+          
+          if (areaDatasetVisibility.conPIAR) {
+            datasetsPromedio.push({
+              label: 'Con PIAR',
+              data: areaEvolution.data.map(d => d.conPIAR),
+              backgroundColor: 'rgba(107, 114, 128, 0.8)',
+              borderColor: 'rgba(107, 114, 128, 1)',
+              borderWidth: 1
+            });
+          }
+          
+          if (areaDatasetVisibility.lote) {
+            // Convertir color hex a rgba con opacidad reducida
+            const hexColor = areaEvolution.color;
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            
+            datasetsPromedio.push({
+              label: 'Rendimiento típico (lote)',
+              data: areaEvolution.data.map(d => d.lote),
+              backgroundColor: 'rgba(' + r + ', ' + g + ', ' + b + ', 0.4)',
+              borderColor: 'rgba(' + r + ', ' + g + ', ' + b + ', 0.7)',
+              borderWidth: 2,
+              borderDash: [5, 3]
+            });
+          }
+          
+          // Crear datasets para DESVIACIÓN (solo Sin PIAR y Con PIAR, NO lote)
+          const datasetsDesviacion = [];
+          
+          if (areaDatasetVisibility.sinPIAR) {
+            datasetsDesviacion.push({
+              label: 'Sin PIAR',
+              data: areaEvolution.data.map(d => d.desvSinPIAR),
+              backgroundColor: areaEvolution.color + 'CC',
+              borderColor: areaEvolution.color,
+              borderWidth: 1
+            });
+          }
+          
+          if (areaDatasetVisibility.conPIAR) {
+            datasetsDesviacion.push({
+              label: 'Con PIAR',
+              data: areaEvolution.data.map(d => d.desvConPIAR),
+              backgroundColor: 'rgba(107, 114, 128, 0.8)',
+              borderColor: 'rgba(107, 114, 128, 1)',
+              borderWidth: 1
+            });
+          }
+          
+          // Gráfico de promedio
+          const chartPromedio = new Chart(document.getElementById('chartAreaEvolution' + index), {
+            type: 'bar',
+            data: {
+              labels: areaEvolution.data.map(d => d.year),
+              datasets: datasetsPromedio
+            },
+            plugins: [ChartDataLabels],
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: false
+                },
+                legend: {
+                  display: true,
+                  position: 'top'
+                },
+                datalabels: {
+                  display: true,
+                  anchor: 'end',
+                  align: 'top',
+                  formatter: (value) => value ? value.toFixed(1) : '',
+                  font: { weight: 'bold', size: 10 },
+                  color: '#1f2937'
+                },
+                tooltip: {
+                  enabled: true,
+                  callbacks: {
+                    label: function(context) {
+                      return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                    }
                   }
                 }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: {
-                  display: true,
-                  text: 'Desviación Estándar',
-                  font: {
-                    size: 12,
-                    weight: 'bold'
-                  }
-                },
-                ticks: {
-                  callback: function(value) {
-                    return value.toFixed(0);
+              },
+              scales: {
+                y: {
+                  beginAtZero: false,
+                  ticks: {
+                    callback: function(value) {
+                      return value.toFixed(0);
+                    }
                   }
                 }
               }
             }
-          }
+          });
+          
+          areaCharts.push(chartPromedio);
+          
+          // Gráfico de desviación estándar
+          const chartDesviacion = new Chart(document.getElementById('chartAreaStdDevEvolution' + index), {
+            type: 'bar',
+            data: {
+              labels: areaEvolution.data.map(d => d.year),
+              datasets: datasetsDesviacion
+            },
+            plugins: [ChartDataLabels],
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: false
+                },
+                legend: {
+                  display: true,
+                  position: 'top'
+                },
+                datalabels: {
+                  display: true,
+                  anchor: 'end',
+                  align: 'top',
+                  formatter: (value) => value ? value.toFixed(1) : '',
+                  font: { weight: 'bold', size: 10 },
+                  color: '#1f2937'
+                },
+                tooltip: {
+                  enabled: true,
+                  callbacks: {
+                    label: function(context) {
+                      return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                    }
+                  }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Desviación Estándar',
+                    font: {
+                      size: 12,
+                      weight: 'bold'
+                    }
+                  },
+                  ticks: {
+                    callback: function(value) {
+                      return value.toFixed(0);
+                    }
+                  }
+                }
+              }
+            }
+          });
+          
+          areaStdDevCharts.push(chartDesviacion);
         });
+      }
+      
+      // Inicializar gráficos al cargar
+      window.addEventListener('DOMContentLoaded', () => {
+        updateAreaCharts();
       });
     </script>
   `;
@@ -2562,13 +2791,13 @@ export const generateTrendChartSection = (analyses, sectionNumber) => {
   
   return `
     <div class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-t-lg p-6 mb-6 shadow-2xl">
-      <h2 class="text-3xl font-extrabold mb-2">🚀 ${sectionNumber}. Tendencia de Promedios Globales</h2>
+      <h2 class="text-3xl font-extrabold mb-2">🚀 ${sectionNumber}. Tendencia de promedios globales</h2>
       <p class="text-purple-100 text-lg">Evolución del rendimiento académico entre cohortes</p>
     </div>
     
     <div class="bg-white rounded-lg shadow-2xl p-8 mb-8">
       <div class="mb-6">
-        <h3 class="text-2xl font-bold text-gray-800 mb-2">📈 Evolución del Promedio Global</h3>
+        <h3 class="text-2xl font-bold text-gray-800 mb-2">📈 Evolución del promedio global</h3>
         <p class="text-gray-600">Visualiza la tendencia del rendimiento académico a través de las cohortes</p>
       </div>
       
@@ -2713,7 +2942,7 @@ export const generateTrendChartSection = (analyses, sectionNumber) => {
             plugins: {
               title: {
                 display: true,
-                text: 'Evolución del Promedio Global por Cohorte (' + label + ')',
+                text: 'Evolución del promedio global por cohorte (' + label + ')',
                 font: { 
                   size: 22, 
                   weight: 'bold',

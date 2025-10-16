@@ -452,11 +452,8 @@ export const generateHTMLTemplate = (title, year) => {
               ediprofe.com
             </a>
           </div>
-          <p class="text-blue-100 text-lg font-semibold mb-3">
-            Herramienta de Análisis de Resultados ICFES
-          </p>
-          <p class="text-blue-200 leading-relaxed">
-            Este material puede ser utilizado internamente por colegios y profesores que deseen analizar resultados de pruebas ICFES y encontrar insights que guíen la toma de decisiones pedagógicas. La plataforma facilita la identificación de fortalezas, áreas de mejora y tendencias en el rendimiento académico.
+          <p class="text-blue-200 leading-relaxed mt-4">
+            Este material puede ser utilizado internamente por docentes e instituciones educativas que deseen analizar resultados de pruebas ICFES y encontrar insights que guíen la toma de decisiones pedagógicas. La plataforma facilita la identificación de fortalezas, áreas de mejora y tendencias en el rendimiento académico.
           </p>
         </div>
         
@@ -524,7 +521,7 @@ export const generateHTMLTemplate = (title, year) => {
       <div class="border-t border-white/20 pt-6">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
           <p class="text-blue-100 text-sm">
-            © ${new Date().getFullYear()} ${BRANDING.name} - Herramienta de Análisis Académico ICFES
+            © ${new Date().getFullYear()} ${BRANDING.name}
           </p>
           <p class="text-blue-200 text-xs">
             Reporte generado el ${new Date().toLocaleDateString('es-ES', { 

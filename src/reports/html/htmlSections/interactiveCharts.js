@@ -9,20 +9,20 @@ export const generateInteractiveChartsSection = (sectionNumber) => {
     ${generateSectionHeader('Gráficos estadísticos', sectionNumber, '📈')}
     
     <div class="mb-6 flex gap-4 no-print">
-      ${generateToggleButton('togglePIAR', 'Ocultar Comparación PIAR', '🔄')}
+      ${generateToggleButton('togglePIAR', 'Ocultar comparación PIAR', '🔄')}
       ${generateToggleButton('printBtn', 'Imprimir Informe', '🖨️')}
     </div>
     
     <!-- Gráficos por Área (uno debajo del otro) -->
     <div class="space-y-6 mb-8">
-      ${generateChartContainer('chartAreaPromedios', 'Promedios por Área Académica')}
-      ${generateChartContainer('chartAreaDesviacion', 'Desviación Estándar por Área')}
+      ${generateChartContainer('chartAreaPromedios', 'Promedios por área académica')}
+      ${generateChartContainer('chartAreaDesviacion', 'Desviación estándar por área')}
     </div>
     
     <!-- Gráficos por Grado (uno debajo del otro) -->
     <div class="space-y-6">
-      ${generateChartContainer('chartGradePromedios', 'Promedios Globales por Grado')}
-      ${generateChartContainer('chartGradeDesviacion', 'Desviación Estándar por Grado')}
+      ${generateChartContainer('chartGradePromedios', 'Promedios globales por grado')}
+      ${generateChartContainer('chartGradeDesviacion', 'Desviación estándar por grado')}
     </div>
   `;
 };

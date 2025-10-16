@@ -20,7 +20,7 @@ export const generateInteractivityScript = () => {
       // Actualizar texto del botón
       const btn = document.getElementById('togglePIAR');
       if (btn) {
-        btn.textContent = showPIAR ? '🔄 Ocultar Comparación PIAR' : '🔄 Mostrar Comparación PIAR';
+        btn.textContent = showPIAR ? '🔄 Ocultar comparación PIAR' : '🔄 Mostrar comparación PIAR';
       }
     }
     
@@ -199,7 +199,7 @@ export const generateInteractivityScript = () => {
         charts.areaPromedios = createBarChart(
           'chartAreaPromedios',
           areaChartData.promedios,
-          'Promedios por Área Académica',
+          'Promedios por área académica',
           { showComparison: true, useDynamicScale: true }
         );
       }
@@ -209,7 +209,7 @@ export const generateInteractivityScript = () => {
         charts.areaDesviacion = createBarChart(
           'chartAreaDesviacion',
           areaChartData.desviacion,
-          'Desviación Estándar por Área',
+          'Desviación estándar por área',
           { showComparison: true, useDynamicScale: true }
         );
       }
@@ -219,7 +219,7 @@ export const generateInteractivityScript = () => {
         charts.gradePromedios = createBarChart(
           'chartGradePromedios',
           gradeChartData.promedios,
-          'Promedios Globales por Grado',
+          'Promedios globales por grado',
           { showComparison: true, useDynamicScale: true }
         );
       }
@@ -229,7 +229,7 @@ export const generateInteractivityScript = () => {
         charts.gradeDesviacion = createBarChart(
           'chartGradeDesviacion',
           gradeChartData.desviacion,
-          'Desviación Estándar por Grado',
+          'Desviación estándar por grado',
           { showComparison: true, useDynamicScale: true }
         );
       }
