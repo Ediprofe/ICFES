@@ -9,6 +9,7 @@ import { generateCoverSection } from './htmlSections/coverSection.js';
 import { generateInteractiveChartsSection } from './htmlSections/interactiveCharts.js';
 import { generateStudentsTableSection } from './htmlSections/studentsTable.js';
 import { generateGlobalStatisticsSection } from './htmlSections/globalStatistics.js';
+import { generatePercentileAnalysisSection } from './htmlSections/percentileAnalysis.js';
 import { generateTopPerformersSection } from './htmlSections/topPerformers.js';
 import { generateOutliersSection } from './htmlSections/outliers.js';
 import { 
@@ -84,6 +85,7 @@ export const generateHTML = (analysis, options = {}) => {
     sections.push(generateGlobalStatisticsSection(analysis, sectionNumber++));
     sections.push(generateTopPerformersSection(analysis, sectionNumber++));
     sections.push(generateInteractiveChartsSection(sectionNumber++));
+    sections.push(generatePercentileAnalysisSection(analysis, sectionNumber++));
     sections.push(generateOutliersSection(analysis, sectionNumber++));
   }
   

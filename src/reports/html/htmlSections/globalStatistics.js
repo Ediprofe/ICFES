@@ -19,7 +19,7 @@ export const generateGlobalStatisticsSection = (analysis, sectionNumber) => {
   return `
     <div class="mt-8 mb-8">
       <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg p-4 mb-6">
-        <h2 class="text-2xl font-bold">${sectionNumber}. 📊 Estadísticas Globales</h2>
+        <h2 class="text-2xl font-bold">${sectionNumber}. 📊 Estadísticas globales</h2>
         <p class="text-blue-100 text-sm mt-1">Promedio y desviación estándar con interactividad PIAR</p>
       </div>
       
