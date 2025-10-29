@@ -120,6 +120,89 @@ export const prepareGradeChartData = (analysis, includePIAR = true) => {
 };
 
 /**
+ * Prepara datos para gráficos por grado y asignatura
+ */
+export const prepareGradeSubjectChartData = (analysis) => {
+  const dataConPIAR = analysis.processedData;
+  const dataSinPIAR = analysis.processedData.filter(s => s['¿PIAR?'] !== 'Sí');
+  
+  const gradeMetricsConPIAR = getMetricsByGrade(dataConPIAR);
+  const gradeMetricsSinPIAR = getMetricsByGrade(dataSinPIAR);
+  
+  // Obtener lista única de grados
+  const grados = [...new Set(analysis.processedData.map(s => s.Grupo))].sort();
+  
+  // Preparar datos de promedios por asignatura
+  const promedios = ACADEMIC_AREAS.map(area => {
+    const data = grados.map(grado => {
+      const gradeConPIAR = gradeMetricsConPIAR.find(g => g.grado === grado);
+      const gradeSinPIAR = gradeMetricsSinPIAR.find(g => g.grado === grado);
+      
+      // Buscar por subject (columnName) en lugar de area
+      const metricConPIAR = gradeConPIAR?.metricsConPIAR.find(m => m.subject === area.columnName);
+      const metricSinPIAR = gradeSinPIAR?.metricsSinPIAR.find(m => m.subject === area.columnName);
+      
+      const conPIAR = metricConPIAR && metricConPIAR.promedio !== 'N/A'
+        ? parseFloat(metricConPIAR.promedio)
+        : 0;
+      
+      const sinPIAR = metricSinPIAR && metricSinPIAR.promedio !== 'N/A'
+        ? parseFloat(metricSinPIAR.promedio)
+        : 0;
+      
+      return { grado, conPIAR, sinPIAR };
+    });
+    
+    return {
+      area: area.shortName,
+      areaCompleta: area.name,
+      areaId: area.id,
+      color: area.color,
+      lightColor: area.lightColor,
+      darkColor: area.darkColor,
+      data
+    };
+  });
+  
+  // Preparar datos de desviación estándar por asignatura
+  const desviacion = ACADEMIC_AREAS.map(area => {
+    const data = grados.map(grado => {
+      const gradeConPIAR = gradeMetricsConPIAR.find(g => g.grado === grado);
+      const gradeSinPIAR = gradeMetricsSinPIAR.find(g => g.grado === grado);
+      
+      // Buscar por subject (columnName) en lugar de area
+      const metricConPIAR = gradeConPIAR?.metricsConPIAR.find(m => m.subject === area.columnName);
+      const metricSinPIAR = gradeSinPIAR?.metricsSinPIAR.find(m => m.subject === area.columnName);
+      
+      const conPIAR = metricConPIAR && metricConPIAR.desviacion !== 'N/A'
+        ? parseFloat(metricConPIAR.desviacion)
+        : 0;
+      
+      const sinPIAR = metricSinPIAR && metricSinPIAR.desviacion !== 'N/A'
+        ? parseFloat(metricSinPIAR.desviacion)
+        : 0;
+      
+      return { grado, conPIAR, sinPIAR };
+    });
+    
+    return {
+      area: area.shortName,
+      areaCompleta: area.name,
+      areaId: area.id,
+      color: area.color,
+      lightColor: area.lightColor,
+      darkColor: area.darkColor,
+      data
+    };
+  });
+  
+  return {
+    promedios,
+    desviacion
+  };
+};
+
+/**
  * Prepara datos integrados de grado x área
  * Para gráficos que muestran todas las áreas por cada grado
  */

@@ -20,7 +20,8 @@ import {
   generateAllStudentsTableSection,
   generateTrendChartSection
 } from './htmlSections/multiYearComparison.js';
-import { prepareAreaChartData, prepareGradeChartData, prepareComparisonChartData } from '../charts/chartDataPreparation.js';
+import { generateClasificacionPlantelSection } from './htmlSections/clasificacionPlantel.js';
+import { prepareAreaChartData, prepareGradeChartData, prepareGradeSubjectChartData, prepareComparisonChartData } from '../charts/chartDataPreparation.js';
 
 /**
  * Genera un HTML completo con todas las secciones
@@ -42,6 +43,7 @@ export const generateHTML = (analysis, options = {}) => {
   // 2. Preparar datos para gráficos
   const areaChartData = prepareAreaChartData(analysis, true);
   const gradeChartData = prepareGradeChartData(analysis, true);
+  const gradeSubjectChartData = prepareGradeSubjectChartData(analysis);
   
   let comparisonChartData = null;
   if (isMultiYear && comparisonAnalyses.length > 0) {
@@ -78,6 +80,7 @@ export const generateHTML = (analysis, options = {}) => {
     sections.push(generateGaussianCurvesSection(allAnalyses, sectionNumber++));
     sections.push(generateGlobalComparisonSection(allAnalyses, sectionNumber++));
     sections.push(generateAreaComparisonSection(allAnalyses, sectionNumber++));
+    sections.push(generateClasificacionPlantelSection(allAnalyses, sectionNumber++));
     
   } else {
     // Modo de un solo año
@@ -97,7 +100,8 @@ export const generateHTML = (analysis, options = {}) => {
   // 5. Inyectar datos JSON
   const dataJSON = JSON.stringify({
     areaChartData,
-    gradeChartData
+    gradeChartData,
+    gradeSubjectChartData
   }, null, 2);
   
   const comparisonJSON = comparisonChartData 
@@ -155,6 +159,7 @@ export const generateHTMLString = (analysis, options = {}) => {
   
   const areaChartData = prepareAreaChartData(analysis, true);
   const gradeChartData = prepareGradeChartData(analysis, true);
+  const gradeSubjectChartData = prepareGradeSubjectChartData(analysis);
   
   let comparisonChartData = null;
   if (isMultiYear && comparisonAnalyses.length > 0) {
@@ -174,7 +179,7 @@ export const generateHTMLString = (analysis, options = {}) => {
   const content = sections.join('\n');
   html = html.replace('<!-- CONTENIDO SE INYECTA AQUÍ -->', content);
   
-  const dataJSON = JSON.stringify({ areaChartData, gradeChartData }, null, 2);
+  const dataJSON = JSON.stringify({ areaChartData, gradeChartData, gradeSubjectChartData }, null, 2);
   const comparisonJSON = comparisonChartData ? JSON.stringify(comparisonChartData, null, 2) : 'null';
   
   html = html.replace('{DATA_PLACEHOLDER}', dataJSON);

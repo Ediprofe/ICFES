@@ -188,11 +188,116 @@ export const generateInteractivityScript = () => {
       });
     }
     
+    // Función para crear gráfico de barras para una sola asignatura
+    function createSingleSubjectBarChart(canvasId, areaData, metricType) {
+      const ctx = document.getElementById(canvasId);
+      if (!ctx) return null;
+      
+      // Obtener grados
+      const grados = areaData.data.map(d => d.grado);
+      
+      // Crear datasets
+      const datasets = [];
+      
+      // Dataset Sin PIAR
+      datasets.push({
+        label: 'Sin PIAR',
+        data: areaData.data.map(d => d.sinPIAR),
+        backgroundColor: areaData.color + 'CC', // Opacidad CC para Sin PIAR
+        borderColor: areaData.color,
+        borderWidth: 2,
+        borderRadius: 8,
+        hidden: false
+      });
+      
+      // Dataset Con PIAR (solo si showPIAR está activo)
+      if (showPIAR) {
+        datasets.push({
+          label: 'Con PIAR',
+          data: areaData.data.map(d => d.conPIAR),
+          backgroundColor: areaData.color + '80', // Opacidad 80 para Con PIAR
+          borderColor: areaData.color + 'AA',
+          borderWidth: 2,
+          borderRadius: 8,
+          hidden: false
+        });
+      }
+      
+      return new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: grados,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: false
+            },
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                font: { size: 13, weight: 'bold' },
+                padding: 15,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              padding: 12,
+              callbacks: {
+                label: function(context) {
+                  return context.dataset.label + ': ' + context.parsed.y.toFixed(2);
+                }
+              }
+            },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              offset: 4,
+              font: { size: 12, weight: 'bold' },
+              color: '#374151',
+              formatter: function(value, context) {
+                return value > 0 ? value.toFixed(1) : '';
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(0, 0, 0, 0.05)' },
+              ticks: {
+                font: { size: 12 },
+                color: '#6B7280',
+                callback: function(value) {
+                  return value.toFixed(0);
+                }
+              }
+            },
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: { size: 13, weight: 'bold' },
+                color: '#374151'
+              }
+            }
+          },
+          layout: {
+            padding: { top: 30, right: 10, bottom: 10, left: 10 }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+    
     // Función para inicializar todos los gráficos
     function initCharts() {
       if (!analysisData || !analysisData.areaChartData) return;
       
-      const { areaChartData, gradeChartData } = analysisData;
+      const { areaChartData, gradeChartData, gradeSubjectChartData } = analysisData;
       
       // Gráfico de promedios por área
       if (areaChartData && areaChartData.promedios) {
@@ -232,6 +337,33 @@ export const generateInteractivityScript = () => {
           'Desviación estándar por grado',
           { showComparison: true, useDynamicScale: true }
         );
+      }
+      
+      // Gráficos por grado y asignatura (uno por cada asignatura)
+      if (gradeSubjectChartData) {
+        // Promedios por asignatura
+        if (gradeSubjectChartData.promedios) {
+          gradeSubjectChartData.promedios.forEach(areaData => {
+            const canvasId = \`chartGradeSubjectPromedios\${areaData.areaId.toUpperCase()}\`;
+            charts[\`gradeSubjectPromedios\${areaData.areaId}\`] = createSingleSubjectBarChart(
+              canvasId,
+              areaData,
+              'promedios'
+            );
+          });
+        }
+        
+        // Desviación estándar por asignatura
+        if (gradeSubjectChartData.desviacion) {
+          gradeSubjectChartData.desviacion.forEach(areaData => {
+            const canvasId = \`chartGradeSubjectDesviacion\${areaData.areaId.toUpperCase()}\`;
+            charts[\`gradeSubjectDesviacion\${areaData.areaId}\`] = createSingleSubjectBarChart(
+              canvasId,
+              areaData,
+              'desviacion'
+            );
+          });
+        }
       }
       
       // Gráfico comparativo multi-año (si existe)

@@ -123,7 +123,7 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
   return `
     <div class="mt-8 mb-8">
       <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-lg p-4 mb-6">
-        <h2 class="text-2xl font-bold">${sectionNumber}. 📊 Análisis de percentiles y niveles de desempeño</h2>
+        <h2 class="text-2xl font-bold">${sectionNumber}. 📊 Percentiles y niveles de desempeño</h2>
         <p class="text-purple-100 text-sm mt-1">Promedios de percentiles y distribución de niveles por área académica</p>
       </div>
       
@@ -166,6 +166,31 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
         <h4 class="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-purple-500">
           Niveles de desempeño por área académica
         </h4>
+        
+        <!-- Toggle para niveles de desempeño -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6 border-2 border-purple-200">
+          <div class="flex items-center gap-4 flex-wrap">
+            <span class="text-sm font-semibold text-gray-700">Mostrar datos:</span>
+            <button 
+              id="btnLevelSinPIAR" 
+              onclick="toggleLevelDataset('sinPIAR')"
+              class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-green-700"
+            >
+              Sin PIAR
+            </button>
+            <button 
+              id="btnLevelConPIAR" 
+              onclick="toggleLevelDataset('conPIAR')"
+              class="px-4 py-2 bg-gray-300 text-gray-600 font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-gray-400"
+            >
+              Con PIAR
+            </button>
+          </div>
+          <p class="text-xs text-gray-500 mt-2 italic">
+            Selecciona qué conjunto de datos visualizar en los gráficos circulares.
+          </p>
+        </div>
+        
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           ${availableAreas.map((area, index) => `
             <div class="bg-gray-50 rounded-lg p-4">
@@ -216,6 +241,11 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
         conPIAR: false
       };
 
+      let levelVisibility = {
+        sinPIAR: true,
+        conPIAR: false
+      };
+
       let percentileChart = null;
       let levelCharts = [];
 
@@ -223,6 +253,13 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
         percentileVisibility[dataset] = !percentileVisibility[dataset];
         updatePercentileButtonStyles();
         updatePercentileChart();
+      }
+
+      function toggleLevelDataset(dataset) {
+        // Solo permitir uno activo a la vez
+        levelVisibility.sinPIAR = dataset === 'sinPIAR';
+        levelVisibility.conPIAR = dataset === 'conPIAR';
+        updateLevelButtonStyles();
         updateLevelCharts();
       }
 
@@ -240,6 +277,23 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
           btnConPIAR.className = 'px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-gray-700';
         } else {
           btnConPIAR.className = 'px-4 py-2 bg-gray-300 text-gray-600 font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-gray-400';
+        }
+      }
+
+      function updateLevelButtonStyles() {
+        const btnLevelSinPIAR = document.getElementById('btnLevelSinPIAR');
+        const btnLevelConPIAR = document.getElementById('btnLevelConPIAR');
+        
+        if (levelVisibility.sinPIAR) {
+          btnLevelSinPIAR.className = 'px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-green-700';
+        } else {
+          btnLevelSinPIAR.className = 'px-4 py-2 bg-gray-300 text-gray-600 font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-gray-400';
+        }
+        
+        if (levelVisibility.conPIAR) {
+          btnLevelConPIAR.className = 'px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-gray-700';
+        } else {
+          btnLevelConPIAR.className = 'px-4 py-2 bg-gray-300 text-gray-600 font-semibold rounded-lg shadow-md transition-all transform hover:scale-105 hover:bg-gray-400';
         }
       }
 
@@ -262,17 +316,44 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
           if (!chart) return;
           
           const area = areas[index];
-          const dataToShow = percentileVisibility.sinPIAR && !percentileVisibility.conPIAR 
+          const dataToShow = levelVisibility.sinPIAR 
             ? levelData.sinPIAR[area.name]
-            : percentileVisibility.conPIAR && !percentileVisibility.sinPIAR
-            ? levelData.conPIAR[area.name]
-            : levelData.sinPIAR[area.name]; // Default to sinPIAR if both or none
+            : levelData.conPIAR[area.name];
 
-          const levels = Object.keys(dataToShow.percentages).sort();
+          // Ordenar niveles correctamente
+          const levels = Object.keys(dataToShow.percentages).sort((a, b) => {
+            const numA = parseFloat(a);
+            const numB = parseFloat(b);
+            if (!isNaN(numA) && !isNaN(numB)) {
+              return numA - numB;
+            }
+            return a.localeCompare(b);
+          });
+          
           const percentages = levels.map(level => dataToShow.percentages[level]);
+          
+          // Recalcular colores para los niveles actuales
+          const getColorForLevel = (level, areaId) => {
+            const levelStr = String(level);
+            if (areaId === 'ingles') {
+              const englishLevelColors = {
+                'A-': '#ef4444', 'A+': '#ef4444', 'A1': '#f97316', 'A2': '#eab308',
+                'B+': '#84cc16', 'B1': '#22c55e', 'B2': '#10b981'
+              };
+              return englishLevelColors[levelStr] || '#6b7280';
+            } else {
+              const standardLevelColors = {
+                '1': '#ef4444', '2': '#f97316', '3': '#eab308', '4': '#22c55e'
+              };
+              return standardLevelColors[levelStr] || '#6b7280';
+            }
+          };
+          
+          const colors = levels.map(level => getColorForLevel(level, area.id));
 
           chart.data.labels = levels.map(l => \`Nivel \${l}\`);
           chart.data.datasets[0].data = percentages;
+          chart.data.datasets[0].backgroundColor = colors;
           chart.update('active');
         });
       }
@@ -381,17 +462,53 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
           const ctx = document.getElementById(\`levelChart\${index}\`);
           if (ctx) {
             const dataToShow = levelData.sinPIAR[area.name];
-            const levels = Object.keys(dataToShow.percentages).sort();
+            
+            // Ordenar niveles correctamente (numérico para 1,2,3,4 o alfabético para A+, A1, etc.)
+            const levels = Object.keys(dataToShow.percentages).sort((a, b) => {
+              // Intentar convertir a número
+              const numA = parseFloat(a);
+              const numB = parseFloat(b);
+              
+              // Si ambos son números, ordenar numéricamente
+              if (!isNaN(numA) && !isNaN(numB)) {
+                return numA - numB;
+              }
+              
+              // Si no son números, ordenar alfabéticamente
+              return a.localeCompare(b);
+            });
+            
+            // Mapear niveles a sus colores correspondientes
+            const getColorForLevel = (level, areaId) => {
+              // Convertir level a string para asegurar coincidencia
+              const levelStr = String(level);
+              
+              if (areaId === 'ingles') {
+                // Para Inglés: mapeo específico por nombre de nivel
+                const englishLevelColors = {
+                  'A-': '#ef4444',  // rojo - Nivel más bajo
+                  'A+': '#ef4444',  // rojo
+                  'A1': '#f97316',  // naranja
+                  'A2': '#eab308',  // amarillo
+                  'B+': '#84cc16',  // lima
+                  'B1': '#22c55e',  // verde
+                  'B2': '#10b981'   // verde esmeralda
+                };
+                return englishLevelColors[levelStr] || '#6b7280'; // gris por defecto
+              } else {
+                // Para otras áreas: mapeo por número de nivel (1, 2, 3, 4)
+                const standardLevelColors = {
+                  '1': '#ef4444',  // rojo - Nivel 1
+                  '2': '#f97316',  // naranja - Nivel 2
+                  '3': '#eab308',  // amarillo - Nivel 3
+                  '4': '#22c55e'   // verde - Nivel 4
+                };
+                return standardLevelColors[levelStr] || '#6b7280'; // gris por defecto
+              }
+            };
+            
             const percentages = levels.map(level => dataToShow.percentages[level]);
-
-            // Colores para los niveles (del más bajo al más alto)
-            const levelColors = [
-              '#ef4444', // rojo - nivel bajo
-              '#f97316', // naranja
-              '#eab308', // amarillo
-              '#22c55e', // verde
-              '#3b82f6'  // azul - nivel alto
-            ];
+            const colors = levels.map(level => getColorForLevel(level, area.id));
 
             const chart = new Chart(ctx, {
               type: 'doughnut',
@@ -399,7 +516,7 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
                 labels: levels.map(l => \`Nivel \${l}\`),
                 datasets: [{
                   data: percentages,
-                  backgroundColor: levelColors.slice(0, levels.length),
+                  backgroundColor: colors,
                   borderColor: '#ffffff',
                   borderWidth: 2
                 }]
@@ -452,6 +569,7 @@ export const generatePercentileAnalysisSection = (analysis, sectionNumber) => {
 
         // Inicializar estilos
         updatePercentileButtonStyles();
+        updateLevelButtonStyles();
       });
     </script>
   `;
