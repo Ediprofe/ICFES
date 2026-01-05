@@ -8,7 +8,7 @@ import { validateExcelComplete } from './validation/schemaValidator.js';
 import { validateDataIntegrity } from './validation/dataIntegrity.js';
 import { ParseError } from './errors/customErrors.js';
 import { ErrorHandler } from './errors/ErrorHandler.js';
-import { ACADEMIC_AREAS } from '../config/columnConfig.js';
+import { ACADEMIC_AREAS, CODIGO_COLUMN } from '../config/columnConfig.js';
 
 /**
  * Parsea un archivo Excel y retorna datos validados
@@ -18,37 +18,37 @@ import { ACADEMIC_AREAS } from '../config/columnConfig.js';
 export const parseExcel = (file, yearLabel = null) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       try {
         // Leer archivo Excel
         const workbook = XLSX.read(e.target.result, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-        
+
         if (!rawData || rawData.length === 0) {
           throw new ParseError('El archivo está vacío o no contiene datos');
         }
-        
+
         // Validar estructura
         const structureValidation = validateExcelComplete(rawData);
-        
+
         if (!structureValidation.valid) {
           const error = ErrorHandler.fromValidationResult(structureValidation, 'ParseError');
           throw error;
         }
-        
+
         // Limpiar y normalizar datos
         const cleanedData = cleanData(rawData);
-        
+
         // Validar integridad de datos
         const integrityValidation = validateDataIntegrity(cleanedData);
-        
+
         if (!integrityValidation.valid) {
           const error = ErrorHandler.fromValidationResult(integrityValidation, 'DataIntegrityError');
           throw error;
         }
-        
+
         // Extraer cohorte: prioridad a yearLabel, luego integrityValidation, luego año actual
         let year;
         if (yearLabel !== null) {
@@ -62,16 +62,16 @@ export const parseExcel = (file, yearLabel = null) => {
         } else {
           year = integrityValidation.year || new Date().getFullYear();
         }
-        
+
         // Filtrar filas completamente vacías
-        const validData = cleanedData.filter(row => 
+        const validData = cleanedData.filter(row =>
           row.Nombre && row.Apellido && row.Grupo
         );
-        
+
         if (validData.length === 0) {
           throw new ParseError('No se encontraron datos válidos en el archivo');
         }
-        
+
         // Retornar datos con información adicional
         resolve({
           year,
@@ -87,7 +87,7 @@ export const parseExcel = (file, yearLabel = null) => {
             parsedAt: new Date().toISOString()
           }
         });
-        
+
       } catch (error) {
         // Si no es un error personalizado, convertirlo
         if (!(error instanceof ParseError)) {
@@ -97,11 +97,11 @@ export const parseExcel = (file, yearLabel = null) => {
         }
       }
     };
-    
+
     reader.onerror = () => {
       reject(new ParseError('Error al leer el archivo'));
     };
-    
+
     reader.readAsArrayBuffer(file);
   });
 };
@@ -112,7 +112,7 @@ export const parseExcel = (file, yearLabel = null) => {
 function cleanData(rawData) {
   return rawData.map(row => {
     const cleanRow = { ...row };
-    
+
     // Limpiar áreas académicas
     ACADEMIC_AREAS.forEach(area => {
       const value = row[area.columnName];
@@ -121,14 +121,14 @@ function cleanData(rawData) {
       } else {
         cleanRow[area.columnName] = Number(value);
       }
-      
+
       // Limpiar percentiles si existen
       const percentileValue = row[area.percentileColumn];
       if (percentileValue !== undefined && percentileValue !== null && percentileValue !== '') {
         cleanRow[area.percentileColumn] = Number(percentileValue);
       }
     });
-    
+
     // Limpiar Global
     const globalValue = row['Global'];
     if (globalValue === undefined || globalValue === null || globalValue === '' || isNaN(Number(globalValue))) {
@@ -136,18 +136,18 @@ function cleanData(rawData) {
     } else {
       cleanRow['Global'] = Number(globalValue);
     }
-    
+
     // Limpiar Año
     const yearValue = row['Año'];
     if (yearValue !== undefined && yearValue !== null && yearValue !== '') {
       cleanRow['Año'] = Number(yearValue);
     }
-    
+
     // Asegurar que campos de texto sean strings
     cleanRow['Nombre'] = String(row['Nombre'] || '').trim();
     cleanRow['Apellido'] = String(row['Apellido'] || '').trim();
     cleanRow['Grupo'] = String(row['Grupo'] || '').trim();
-    
+
     // Normalizar PIAR
     const piarValue = String(row['¿PIAR?'] || '').trim();
     if (['SI', 'Si', 'si', 'Sí'].includes(piarValue)) {
@@ -157,8 +157,23 @@ function cleanData(rawData) {
     } else {
       cleanRow['¿PIAR?'] = piarValue;
     }
-    
+
     return cleanRow;
+  });
+}
+
+/**
+ * Limpia datos para análisis longitudinal (incluye Código)
+ */
+function cleanDataLongitudinal(rawData) {
+  return cleanData(rawData).map(row => {
+    // Limpiar Código
+    const codigoValue = rawData.find(r =>
+      r['Nombre'] === row['Nombre'] && r['Apellido'] === row['Apellido']
+    )?.['Código'];
+
+    row['Código'] = String(codigoValue || '').trim();
+    return row;
   });
 }
 
@@ -168,24 +183,26 @@ function cleanData(rawData) {
 export const getExcelInfo = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    
+
     reader.onload = (e) => {
       try {
         const workbook = XLSX.read(e.target.result, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        
+
         // Obtener rango de celdas
         const range = XLSX.utils.decode_range(sheet['!ref']);
         const rowCount = range.e.r - range.s.r; // Excluye header
-        
+
         // Leer solo la primera fila para obtener columnas
         const headers = XLSX.utils.sheet_to_json(sheet, { header: 1 })[0];
-        
+
         resolve({
           fileName: file.name,
           fileSize: file.size,
           sheetName,
+          sheetNames: workbook.SheetNames,
+          sheetCount: workbook.SheetNames.length,
           rowCount,
           columns: headers,
           estimatedStudents: rowCount
@@ -194,11 +211,142 @@ export const getExcelInfo = (file) => {
         reject(new ParseError('Error al obtener información del archivo', { originalError: error }));
       }
     };
-    
+
     reader.onerror = () => {
       reject(new ParseError('Error al leer el archivo'));
     };
-    
+
+    reader.readAsArrayBuffer(file);
+  });
+};
+
+/**
+ * Parsea un archivo Excel con múltiples hojas para análisis longitudinal
+ * Cada hoja representa una prueba diferente
+ * @param {File} file - Archivo Excel a parsear
+ * @param {string} gradoLabel - Nombre del grado (ej: "11°", "10°")
+ * @returns {Promise<Object>} Datos estructurados por prueba
+ */
+export const parseExcelMultiSheet = (file, gradoLabel = null) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const workbook = XLSX.read(e.target.result, { type: 'array' });
+        const sheetNames = workbook.SheetNames;
+
+        if (sheetNames.length === 0) {
+          throw new ParseError('El archivo no contiene hojas');
+        }
+
+        const pruebas = [];
+        const allWarnings = [];
+        const estudiantesMap = new Map(); // Código -> datos del estudiante
+        const gruposSet = new Set();
+
+        // Procesar cada hoja como una prueba
+        for (const sheetName of sheetNames) {
+          const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+          if (!rawData || rawData.length === 0) {
+            allWarnings.push(`La hoja "${sheetName}" está vacía`);
+            continue;
+          }
+
+          // Verificar que existe la columna Código
+          const firstRow = rawData[0];
+          if (!('Código' in firstRow)) {
+            throw new ParseError(
+              `La hoja "${sheetName}" no tiene la columna "Código" (obligatoria para análisis longitudinal)`
+            );
+          }
+
+          // Limpiar datos
+          const cleanedData = cleanData(rawData).map(row => {
+            // Añadir Código limpio
+            const rawRow = rawData.find(r =>
+              String(r['Nombre'] || '').trim() === row['Nombre'] &&
+              String(r['Apellido'] || '').trim() === row['Apellido']
+            );
+            row['Código'] = String(rawRow?.['Código'] || '').trim();
+            return row;
+          });
+
+          // Validar que todos tengan Código
+          const sinCodigo = cleanedData.filter(row => !row['Código']);
+          if (sinCodigo.length > 0) {
+            throw new ParseError(
+              `La hoja "${sheetName}" tiene ${sinCodigo.length} estudiante(s) sin Código`
+            );
+          }
+
+          // Verificar códigos duplicados en la misma hoja
+          const codigosEnHoja = cleanedData.map(r => r['Código']);
+          const duplicados = codigosEnHoja.filter((c, i) => codigosEnHoja.indexOf(c) !== i);
+          if (duplicados.length > 0) {
+            throw new ParseError(
+              `La hoja "${sheetName}" tiene códigos duplicados: ${[...new Set(duplicados)].join(', ')}`
+            );
+          }
+
+          // Registrar estudiantes y grupos
+          cleanedData.forEach(row => {
+            if (!estudiantesMap.has(row['Código'])) {
+              estudiantesMap.set(row['Código'], {
+                codigo: row['Código'],
+                nombre: row['Nombre'],
+                apellido: row['Apellido'],
+                grupo: row['Grupo'],
+                piar: row['¿PIAR?']
+              });
+            }
+            gruposSet.add(row['Grupo']);
+          });
+
+          // Agregar prueba
+          pruebas.push({
+            id: sheetName.toLowerCase().replace(/\s+/g, '-'),
+            nombre: sheetName,
+            data: cleanedData,
+            totalEstudiantes: cleanedData.length
+          });
+        }
+
+        if (pruebas.length === 0) {
+          throw new ParseError('No se encontraron hojas con datos válidos');
+        }
+
+        // Resultado estructurado
+        resolve({
+          grado: gradoLabel || file.name.replace(/\.[^/.]+$/, ''),
+          pruebas,
+          estudiantes: estudiantesMap,
+          grupos: Array.from(gruposSet).sort(),
+          warnings: allWarnings,
+          metadata: {
+            fileName: file.name,
+            fileSize: file.size,
+            totalPruebas: pruebas.length,
+            totalEstudiantes: estudiantesMap.size,
+            totalGrupos: gruposSet.size,
+            parsedAt: new Date().toISOString()
+          }
+        });
+
+      } catch (error) {
+        if (!(error instanceof ParseError)) {
+          reject(new ParseError(error.message || 'Error al leer el archivo', { originalError: error }));
+        } else {
+          reject(error);
+        }
+      }
+    };
+
+    reader.onerror = () => {
+      reject(new ParseError('Error al leer el archivo'));
+    };
+
     reader.readAsArrayBuffer(file);
   });
 };

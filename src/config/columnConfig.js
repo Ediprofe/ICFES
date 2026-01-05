@@ -67,6 +67,25 @@ export const REQUIRED_COLUMNS = [
   }
 ];
 
+/**
+ * Columna adicional REQUERIDA para análisis longitudinal
+ * Identifica de forma única a cada estudiante entre pruebas
+ */
+export const CODIGO_COLUMN = {
+  name: 'Código',
+  type: COLUMN_TYPES.TEXT,
+  validation: (val) => val && String(val).trim().length > 0,
+  errorMessage: 'Código es obligatorio para análisis longitudinal'
+};
+
+/**
+ * Columnas requeridas para análisis longitudinal (incluye Código)
+ */
+export const LONGITUDINAL_REQUIRED_COLUMNS = [
+  CODIGO_COLUMN,
+  ...REQUIRED_COLUMNS
+];
+
 export const OPTIONAL_COLUMNS = [
   {
     name: 'Año',
