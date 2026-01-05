@@ -101,16 +101,18 @@ export function generateLongitudinalHTML(analysis) {
     <title>Análisis Longitudinal - ${data.grado}</title>
     
     <!-- CDN: Librerías públicas (sin datos de estudiantes) -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin><\/script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin><\/script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"><\/script>
-    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; }
         .chart-container { position: relative; height: 350px; }
         .chart-container-small { position: relative; height: 280px; }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-indigo-100 min-h-screen">
@@ -125,6 +127,50 @@ export function generateLongitudinalHTML(analysis) {
 
 <script>
 const { useState, useEffect, useRef, useMemo } = React;
+
+// ============================================
+// ICONOS
+// ============================================
+const Icons = {
+    Sort: () => React.createElement('svg', { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, React.createElement('path', { d: "M7 15l5 5 5-5" }), React.createElement('path', { d: "M7 9l5-5 5 5" })),
+    SortAsc: () => React.createElement('svg', { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, React.createElement('path', { d: "M12 19V5" }), React.createElement('path', { d: "M5 12l7 7 7-7" })),
+    SortDesc: () => React.createElement('svg', { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" }, React.createElement('path', { d: "M12 5v14" }), React.createElement('path', { d: "M19 12l-7-7-7 7" }))
+};
+
+// ============================================
+// COMPONENTES AUXILIARES
+// ============================================
+
+function SortableHeader({ label, field, sortConfig, onSort }) {
+    const isActive = sortConfig.key === field;
+    return React.createElement('th', { 
+        className: 'px-2 py-2 font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors select-none',
+        onClick: () => onSort(field)
+    }, 
+        React.createElement('div', { className: 'flex items-center justify-between gap-1' },
+            label,
+            isActive 
+                ? (sortConfig.direction === 'asc' ? React.createElement(Icons.SortAsc) : React.createElement(Icons.SortDesc))
+                : React.createElement(Icons.Sort, { className: 'text-gray-300' })
+        )
+    );
+}
+
+function ChartCard({ title, children, showPIAR, onTogglePIAR }) {
+    return React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+        React.createElement('div', { className: 'flex items-center justify-between mb-6' },
+            React.createElement('h3', { className: 'text-lg font-bold text-gray-800' }, title),
+            onTogglePIAR && React.createElement('button', {
+                onClick: onTogglePIAR,
+                className: 'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ' +
+                    (showPIAR ? 'bg-indigo-100 text-indigo-700 ring-2 ring-indigo-500' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+            },
+                showPIAR ? '📊 Ver impacto PIAR' : '👁️ Ver impacto PIAR'
+            )
+        ),
+        React.createElement('div', { className: 'chart-container' }, children)
+    );
+}
 
 // ============================================
 // COMPONENTES DE GRÁFICOS
@@ -178,6 +224,29 @@ const baseOptions = {
     }
 };
 
+// Opciones específicas para grupos (filtrar leyenda PIAR)
+const groupOptions = {
+    ...baseOptions,
+    plugins: {
+        ...baseOptions.plugins,
+        legend: {
+            ...baseOptions.plugins.legend,
+            labels: {
+                ...baseOptions.plugins.legend.labels,
+                filter: (legendItem, chartData) => {
+                     // Solo mostrar el PRIMER label 'Con PIAR' en la leyenda
+                     if (legendItem.text.includes('Con PIAR')) {
+                        const datasets = chartData.datasets;
+                        const firstIndex = datasets.findIndex(d => d.label.includes('Con PIAR'));
+                        return legendItem.datasetIndex === firstIndex;
+                     }
+                     return true;
+                }
+            }
+        }
+    }
+};
+
 // ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
@@ -190,6 +259,13 @@ function App() {
     const [includePIAR, setIncludePIAR] = useState(true);
     const [filterCompleto, setFilterCompleto] = useState('all');
     const [selectedPrueba, setSelectedPrueba] = useState(DATA.pruebas.length > 0 ? DATA.pruebas[DATA.pruebas.length - 1].id : 'promedio');
+    const [showPIAR, setShowPIAR] = useState({});
+    const [sortConfig, setSortConfig] = useState({ key: 'global', direction: 'desc' });
+
+    // Alternar vista PIAR para un gráfico específico
+    const togglePIAR = (chartId) => {
+        setShowPIAR(prev => ({ ...prev, [chartId]: !prev[chartId] }));
+    };
 
     // Función para obtener valor según prueba seleccionada
     const getValorActual = (student, campo) => {
@@ -208,21 +284,21 @@ function App() {
     const last = DATA.gradeMetricsSinPIAR[DATA.gradeMetricsSinPIAR.length - 1];
     const cambio = DATA.gradeMetricsSinPIAR.length >= 2 ? last.promedioGlobal - first.promedioGlobal : 0;
 
-    // Filtrar estudiantes
+    // Manejar ordenamiento
+    const handleSort = (key) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
+
+    // Filtrar y ordenar estudiantes
     const filteredStudents = useMemo(() => {
         let data = [...DATA.students];
         
-        // Filtro PIAR
-        if (!includePIAR) {
-            data = data.filter(s => s.piar !== 'Sí');
-        }
-        
-        // Filtro grupo
-        if (groupFilter) {
-            data = data.filter(s => s.grupo === groupFilter);
-        }
-        
-        // Filtro búsqueda
+        // Filtros
+        if (!includePIAR) data = data.filter(s => s.piar !== 'Sí');
+        if (groupFilter) data = data.filter(s => s.grupo === groupFilter);
         if (searchTerm) {
             const search = searchTerm.toLowerCase();
             data = data.filter(s =>
@@ -231,23 +307,38 @@ function App() {
                 s.codigo.toLowerCase().includes(search)
             );
         }
+        if (filterCompleto === 'completo') data = data.filter(s => s.todasLasPruebas);
+        else if (filterCompleto === 'incompleto') data = data.filter(s => !s.todasLasPruebas);
         
-        // Filtro asistencia
-        if (filterCompleto === 'completo') {
-            data = data.filter(s => s.todasLasPruebas);
-        } else if (filterCompleto === 'incompleto') {
-            data = data.filter(s => !s.todasLasPruebas);
-        }
-        
-        // Ordenar por global de la prueba seleccionada
+        // Ordenamiento dinámico
         data.sort((a, b) => {
-            const valA = getValorActual(a, 'global') ?? -Infinity;
-            const valB = getValorActual(b, 'global') ?? -Infinity;
-            return valB - valA;
+            let valA, valB;
+
+            switch (sortConfig.key) {
+                case 'codigo': valA = a.codigo; valB = b.codigo; break;
+                case 'apellido': valA = a.apellido; valB = b.apellido; break;
+                case 'nombre': valA = a.nombre; valB = b.nombre; break;
+                case 'grupo': valA = a.grupo; valB = b.grupo; break;
+                case 'piar': valA = a.piar; valB = b.piar; break;
+                case 'pruebas': valA = a.pruebasPresentes; valB = b.pruebasPresentes; break;
+                case 'completo': valA = a.todasLasPruebas; valB = b.todasLasPruebas; break;
+                case 'global': 
+                    valA = getValorActual(a, 'global') ?? -Infinity; 
+                    valB = getValorActual(b, 'global') ?? -Infinity; 
+                    break;
+                default:
+                    // Es un área
+                    valA = getValorActual(a, sortConfig.key) ?? -Infinity;
+                    valB = getValorActual(b, sortConfig.key) ?? -Infinity;
+            }
+
+            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+            return 0;
         });
         
         return data;
-    }, [searchTerm, groupFilter, includePIAR, filterCompleto, selectedPrueba]);
+    }, [searchTerm, groupFilter, includePIAR, filterCompleto, selectedPrueba, sortConfig]);
 
     // Título del ranking
     const rankingTitle = selectedPrueba === 'promedio' 
@@ -259,6 +350,106 @@ function App() {
         if (!selectedStudent) return null;
         return DATA.students.find(s => s.codigo === selectedStudent);
     }, [selectedStudent]);
+
+    // Helpers para datasets comparativos
+    const getComparisonDataset = (isGlobal, areaKey = null, metricKey = 'promedio') => {
+        const datasets = [];
+        
+        // Principal (Sin PIAR)
+        datasets.push({
+            label: isGlobal ? 'Promedio (Sin PIAR)' : DATA.areaNames[areaKey] + ' (Sin PIAR)',
+            data: DATA.gradeMetricsSinPIAR.map(m => isGlobal ? m.promedioGlobal : (m.areas[areaKey]?.[metricKey] || 0)),
+            backgroundColor: DATA.gradeMetricsSinPIAR.map((_, i) => {
+                const isLast = i === DATA.gradeMetricsSinPIAR.length - 1;
+                const baseColor = isGlobal 
+                    ? DATA.colors.pruebas[i % DATA.colors.pruebas.length]
+                    : DATA.colors.areas[areaKey];
+                // Último: Color sólido. Anteriores: Opacidad reducida ('66' ~40%)
+                return baseColor + (isLast ? '' : '66');
+            }),
+            borderColor: isGlobal
+                ? DATA.gradeMetricsSinPIAR.map((_, i) => DATA.colors.pruebas[i % DATA.colors.pruebas.length])
+                : DATA.colors.areas[areaKey],
+            borderWidth: 2,
+            borderRadius: 6,
+            order: 2
+        });
+
+        // Comparativo (Con PIAR) - Solo si se activa toggle
+        const chartId = isGlobal ? 'global' : 'area_' + areaKey;
+        if (showPIAR[chartId]) {
+            datasets.push({
+                label: isGlobal ? 'Promedio (Con PIAR)' : 'Con PIAR',
+                data: DATA.gradeMetricsConPIAR.map(m => isGlobal ? m.promedioGlobal : (m.areas[areaKey]?.[metricKey] || 0)),
+                backgroundColor: '#cbd5e1', // Slate-300
+                borderColor: '#94a3b8', // Slate-400
+                borderWidth: 1,
+                borderRadius: 4,
+                barPercentage: 0.5,
+                categoryPercentage: 0.8,
+                order: 1,
+                datalabels: {
+                    color: '#64748b', // Slate-500
+                    font: { size: 9 },
+                    anchor: 'end',
+                    align: 'top'
+                }
+            });
+        }
+
+        return datasets;
+    };
+
+    // Helper para comparativa grupos
+    const getGroupDataset = (isGlobal, areaKey = null) => {
+        const datasets = [];
+        
+        DATA.grupos.forEach((g, i) => {
+            const baseGroupColor = DATA.colors.groups[i % DATA.colors.groups.length];
+
+            // Grupo principal
+            datasets.push({
+                label: g, // Solo el nombre del grupo
+                data: DATA.pruebas.map(p => {
+                    const match = DATA.groupMetrics[g].sinPIAR.find(m => m.pruebaId === p.id);
+                    return isGlobal ? (match?.promedioGlobal || 0) : (match?.areas?.[areaKey]?.promedio || 0);
+                }),
+                // Color dinámico: Última prueba sólida, anteriores transparentes
+                backgroundColor: DATA.pruebas.map((_, idx) => {
+                    const isLast = idx === DATA.pruebas.length - 1;
+                    return baseGroupColor + (isLast ? '' : '55'); // '55' ~33% opacity
+                }),
+                borderColor: baseGroupColor,
+                borderWidth: 2,
+                borderRadius: 4,
+                // Agrupamiento visual: Para que queden juntos G1 y su PIAR, pero separados de G2
+                stack: 'grupo_' + g 
+            });
+
+            // Grupo comparativo (PIAR)
+            const chartId = isGlobal ? 'group_global' : 'group_area_' + areaKey;
+            if (showPIAR[chartId]) {
+                datasets.push({
+                    label: 'Con PIAR', // Nombre genérico para la leyenda
+                    data: DATA.pruebas.map(p => {
+                        const match = DATA.groupMetrics[g].conPIAR.find(m => m.pruebaId === p.id);
+                        return isGlobal ? (match?.promedioGlobal || 0) : (match?.areas?.[areaKey]?.promedio || 0);
+                    }),
+                    backgroundColor: '#9ca3af', // Gray-400
+                    borderColor: '#6b7280', // Gray-500
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    stack: 'grupo_' + g, // Stack compartido para agrupación lógica si se usara, pero lo borramos abajo
+                });
+            }
+        });
+
+        // Re-organización para Chart.js:
+        // Borramos stack para evitar apilamiento vertical. Borramos order para respetar intercalado.
+        datasets.forEach(d => { delete d.stack; delete d.order; });
+
+        return datasets;
+    };
 
     // ============================================
     // RENDER
@@ -328,25 +519,19 @@ function App() {
             ),
 
             // Chart Global
-            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
-                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📊 Promedio Global'),
-                React.createElement('div', { className: 'chart-container' },
-                    React.createElement(BarChart, {
-                        id: 'chartGlobal',
-                        data: {
-                            labels: DATA.gradeMetricsSinPIAR.map(m => m.pruebaNombre),
-                            datasets: [{
-                                label: 'Promedio',
-                                data: DATA.gradeMetricsSinPIAR.map(m => m.promedioGlobal),
-                                backgroundColor: DATA.gradeMetricsSinPIAR.map((_, i) => DATA.colors.pruebas[i % DATA.colors.pruebas.length] + 'cc'),
-                                borderColor: DATA.gradeMetricsSinPIAR.map((_, i) => DATA.colors.pruebas[i % DATA.colors.pruebas.length]),
-                                borderWidth: 2,
-                                borderRadius: 8
-                            }]
-                        },
-                        options: { ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }
-                    })
-                )
+            React.createElement(ChartCard, { 
+                title: '📊 Promedio Global',
+                showPIAR: showPIAR['global'],
+                onTogglePIAR: () => togglePIAR('global')
+            },
+                React.createElement(BarChart, {
+                    id: 'chartGlobal',
+                    data: {
+                        labels: DATA.gradeMetricsSinPIAR.map(m => m.pruebaNombre),
+                        datasets: getComparisonDataset(true)
+                    },
+                    options: { ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }
+                })
             ),
 
             // Charts por Área
@@ -354,27 +539,23 @@ function App() {
                 React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📚 Desglose por Asignatura'),
                 React.createElement('div', { className: 'grid grid-cols-1 gap-6' },
                     Object.entries(DATA.areaNames).map(([key, name]) =>
-                        React.createElement('div', { key: key, className: 'bg-gray-50 rounded-xl p-4' },
-                            React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
-                                React.createElement('span', { 
-                                    className: 'w-4 h-4 rounded-full',
-                                    style: { backgroundColor: DATA.colors.areas[key] }
-                                }),
-                                React.createElement('h4', { className: 'font-bold text-gray-700' }, name)
-                            ),
-                            React.createElement('div', { className: 'chart-container-small' },
+                        React.createElement('div', { key: key },
+                            React.createElement(ChartCard, { 
+                                title: name,
+                                showPIAR: showPIAR['area_' + key],
+                                onTogglePIAR: () => togglePIAR('area_' + key)
+                            },
+                                React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
+                                    React.createElement('span', { 
+                                        className: 'w-4 h-4 rounded-full',
+                                        style: { backgroundColor: DATA.colors.areas[key] }
+                                    })
+                                ),
                                 React.createElement(BarChart, {
                                     id: 'chartArea_' + key,
                                     data: {
                                         labels: DATA.gradeMetricsSinPIAR.map(m => m.pruebaNombre),
-                                        datasets: [{
-                                            label: name,
-                                            data: DATA.gradeMetricsSinPIAR.map(m => m.areas[key]?.promedio || 0),
-                                            backgroundColor: DATA.colors.areas[key] + 'aa',
-                                            borderColor: DATA.colors.areas[key],
-                                            borderWidth: 2,
-                                            borderRadius: 6
-                                        }]
+                                        datasets: getComparisonDataset(false, key)
                                     },
                                     options: { 
                                         ...baseOptions, 
@@ -389,30 +570,21 @@ function App() {
             )
         ),
 
-        // TAB: Comparativa de Grupos
+        // TAB: Comparativa de Grupos (CON OPCIONES NUEVAS PARA LEYENDA)
         activeTab === 'groups' && React.createElement('div', { className: 'space-y-6' },
-            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
-                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📊 Promedio Global por Grupo'),
-                React.createElement('div', { className: 'chart-container' },
-                    React.createElement(BarChart, {
-                        id: 'chartGroupGlobal',
-                        data: {
-                            labels: DATA.pruebas.map(p => p.nombre),
-                            datasets: DATA.grupos.map((g, i) => ({
-                                label: g,
-                                data: DATA.pruebas.map(p => {
-                                    const match = DATA.groupMetrics[g].sinPIAR.find(m => m.pruebaId === p.id);
-                                    return match?.promedioGlobal || 0;
-                                }),
-                                backgroundColor: DATA.colors.groups[i % DATA.colors.groups.length] + 'aa',
-                                borderColor: DATA.colors.groups[i % DATA.colors.groups.length],
-                                borderWidth: 2,
-                                borderRadius: 5
-                            }))
-                        },
-                        options: baseOptions
-                    })
-                )
+            React.createElement(ChartCard, { 
+                title: '📊 Promedio Global por Grupo',
+                showPIAR: showPIAR['group_global'],
+                onTogglePIAR: () => togglePIAR('group_global')
+            },
+                React.createElement(BarChart, {
+                    id: 'chartGroupGlobal',
+                    data: {
+                        labels: DATA.pruebas.map(p => p.nombre),
+                        datasets: getGroupDataset(true)
+                    },
+                    options: groupOptions // USANDO OPTION FILTRADA
+                })
             ),
             
             // Áreas por grupo
@@ -420,30 +592,23 @@ function App() {
                 React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📚 Desglose por Asignatura (Grupos)'),
                 React.createElement('div', { className: 'grid grid-cols-1 gap-6' },
                     Object.entries(DATA.areaNames).map(([key, name]) =>
-                        React.createElement('div', { key: key, className: 'bg-gray-50 rounded-xl p-4' },
-                            React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
-                                React.createElement('span', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: DATA.colors.areas[key] } }),
-                                React.createElement('h4', { className: 'font-bold text-gray-700' }, name)
-                            ),
-                            React.createElement('div', { className: 'chart-container-small' },
+                        React.createElement('div', { key: key },
+                            React.createElement(ChartCard, { 
+                                title: name,
+                                showPIAR: showPIAR['group_area_' + key],
+                                onTogglePIAR: () => togglePIAR('group_area_' + key)
+                            },
+                                React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
+                                    React.createElement('span', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: DATA.colors.areas[key] } }),
+                                ),
                                 React.createElement(BarChart, {
                                     id: 'chartGroupArea_' + key,
                                     data: {
                                         labels: DATA.pruebas.map(p => p.nombre),
-                                        datasets: DATA.grupos.map((g, i) => ({
-                                            label: g,
-                                            data: DATA.pruebas.map(p => {
-                                                const match = DATA.groupMetrics[g].sinPIAR.find(m => m.pruebaId === p.id);
-                                                return match?.areas?.[key]?.promedio || 0;
-                                            }),
-                                            backgroundColor: DATA.colors.groups[i % DATA.colors.groups.length] + 'aa',
-                                            borderColor: DATA.colors.groups[i % DATA.colors.groups.length],
-                                            borderWidth: 1,
-                                            borderRadius: 4
-                                        }))
+                                        datasets: getGroupDataset(false, key)
                                     },
                                     options: { 
-                                        ...baseOptions, 
+                                        ...groupOptions, // USANDO OPTION FILTRADA
                                         scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } }
                                     }
                                 })
@@ -454,13 +619,12 @@ function App() {
             )
         ),
 
-        // TAB: Por Estudiante
+        // TAB: Por Estudiante (REORDENADO)
         activeTab === 'students' && React.createElement('div', { className: 'space-y-6' },
-            // Filtros completos
+            // Filtros 
             React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
                 React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '👤 Filtros y Búsqueda'),
                 React.createElement('div', { className: 'grid grid-cols-2 md:grid-cols-6 gap-4 mb-4' },
-                    // Selector de Vista (Prueba)
                     React.createElement('div', null,
                         React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, '📅 Vista'),
                         React.createElement('select', {
@@ -472,7 +636,6 @@ function App() {
                             DATA.pruebas.map(p => React.createElement('option', { key: p.id, value: p.id }, '📝 ' + p.nombre))
                         )
                     ),
-                    // Buscar
                     React.createElement('div', null,
                         React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, '🔍 Buscar'),
                         React.createElement('input', {
@@ -483,7 +646,6 @@ function App() {
                             className: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm'
                         })
                     ),
-                    // Grupo
                     React.createElement('div', null,
                         React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, '👥 Grupo'),
                         React.createElement('select', {
@@ -495,7 +657,6 @@ function App() {
                             DATA.grupos.map(g => React.createElement('option', { key: g, value: g }, g))
                         )
                     ),
-                    // PIAR
                     React.createElement('div', null,
                         React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, 'PIAR'),
                         React.createElement('select', {
@@ -507,7 +668,6 @@ function App() {
                             React.createElement('option', { value: 'sinPiar' }, 'Excluir PIAR')
                         )
                     ),
-                    // Asistencia
                     React.createElement('div', null,
                         React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, 'Asistencia'),
                         React.createElement('select', {
@@ -520,7 +680,6 @@ function App() {
                             React.createElement('option', { value: 'incompleto' }, 'Incompletas')
                         )
                     ),
-                    // Selector estudiante
                     React.createElement('div', null,
                         React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, 'Estudiante'),
                         React.createElement('select', {
@@ -539,8 +698,83 @@ function App() {
                 )
             ),
 
-            // Detalle del estudiante seleccionado
-            studentData && React.createElement('div', { className: 'space-y-6' },
+            // Tabla de ranking (MOVIDO AQUI)
+            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, rankingTitle),
+                React.createElement('div', { className: 'overflow-x-auto max-h-[500px] overflow-y-auto' },
+                    React.createElement('table', { className: 'w-full text-sm' },
+                        React.createElement('thead', { className: 'sticky top-0 bg-white z-10' },
+                            React.createElement('tr', { className: 'bg-gray-50 text-left' },
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, '#'),
+                                React.createElement(SortableHeader, { label: 'Código', field: 'codigo', sortConfig: sortConfig, onSort: handleSort }),
+                                React.createElement(SortableHeader, { label: 'Apellido', field: 'apellido', sortConfig: sortConfig, onSort: handleSort }),
+                                React.createElement(SortableHeader, { label: 'Nombre', field: 'nombre', sortConfig: sortConfig, onSort: handleSort }),
+                                React.createElement(SortableHeader, { label: 'Grupo', field: 'grupo', sortConfig: sortConfig, onSort: handleSort }),
+                                React.createElement(SortableHeader, { label: 'PIAR', field: 'piar', sortConfig: sortConfig, onSort: handleSort }),
+                                React.createElement(SortableHeader, { label: 'Global', field: 'global', sortConfig: sortConfig, onSort: handleSort }),
+                                Object.values(DATA.areaNames).map(name => {
+                                     const areaKey = Object.keys(DATA.areaNames).find(k => DATA.areaNames[k] === name);
+                                     return React.createElement(SortableHeader, { key: name, label: name, field: areaKey, sortConfig: sortConfig, onSort: handleSort });
+                                }),
+                                React.createElement(SortableHeader, { label: 'Pruebas', field: 'pruebas', sortConfig: sortConfig, onSort: handleSort }),
+                                React.createElement(SortableHeader, { label: 'Completo', field: 'completo', sortConfig: sortConfig, onSort: handleSort }),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Ver')
+                            )
+                        ),
+                        React.createElement('tbody', null,
+                            filteredStudents.map((s, idx) => {
+                                const globalVal = getValorActual(s, 'global');
+                                return React.createElement('tr', { 
+                                    key: s.codigo, 
+                                    className: 'border-t border-gray-100 hover:bg-gray-50 cursor-pointer ' + (selectedStudent === s.codigo ? 'bg-indigo-50 ring-2 ring-indigo-200' : ''),
+                                    onClick: () => setSelectedStudent(s.codigo),
+                                    id: 'row-' + s.codigo
+                                },
+                                    React.createElement('td', { className: 'px-2 py-2 font-bold text-gray-400' }, idx + 1),
+                                    React.createElement('td', { className: 'px-2 py-2 font-mono text-xs text-gray-600' }, s.codigo),
+                                    React.createElement('td', { className: 'px-2 py-2 font-medium text-gray-800' }, s.apellido),
+                                    React.createElement('td', { className: 'px-2 py-2 text-gray-700' }, s.nombre),
+                                    React.createElement('td', { className: 'px-2 py-2' },
+                                        React.createElement('span', { className: 'px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs' }, s.grupo)
+                                    ),
+                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
+                                        s.piar === 'Sí' 
+                                            ? React.createElement('span', { className: 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium' }, 'PIAR')
+                                            : ''
+                                    ),
+                                    React.createElement('td', { className: 'px-2 py-2 text-center font-bold ' + (globalVal !== null && globalVal >= 60 ? 'text-green-600' : globalVal !== null ? 'text-red-600' : 'text-gray-400') },
+                                        globalVal !== null ? globalVal.toFixed(1) : '-'
+                                    ),
+                                    Object.keys(DATA.areaNames).map(area => {
+                                        const val = getValorActual(s, area);
+                                        return React.createElement('td', { 
+                                            key: area, 
+                                            className: 'px-2 py-2 text-center ' + (val !== null && val >= 60 ? 'text-green-600' : val !== null && val < 40 ? 'text-red-600' : 'text-gray-600')
+                                        }, val !== null ? val.toFixed(1) : '-');
+                                    }),
+                                    React.createElement('td', { className: 'px-2 py-2 text-center text-gray-600' },
+                                        s.pruebasPresentes + '/' + s.pruebasTotales
+                                    ),
+                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
+                                        s.todasLasPruebas 
+                                            ? React.createElement('span', { className: 'px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium' }, 'Sí')
+                                            : React.createElement('span', { className: 'px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium' }, 'No')
+                                    ),
+                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
+                                        React.createElement('button', { 
+                                            className: 'p-1 text-indigo-600 hover:bg-indigo-50 rounded',
+                                            onClick: (e) => { e.stopPropagation(); setSelectedStudent(s.codigo); }
+                                        }, '👁️')
+                                    )
+                                );
+                            })
+                        )
+                    )
+                )
+            ),
+
+            // Detalle del estudiante seleccionado (MOVIDO AQUI)
+            studentData && React.createElement('div', { className: 'space-y-6 animate-fade-in' },
                 // Header del estudiante
                 React.createElement('div', { className: 'bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl shadow-lg p-6 text-white' },
                     React.createElement('div', { className: 'flex justify-between items-start' },
@@ -654,85 +888,6 @@ function App() {
                         )
                     )
                 )
-            ),
-
-            // Mensaje si no hay estudiante seleccionado
-            !studentData && React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-12 text-center text-gray-500' },
-                React.createElement('p', { className: 'text-5xl mb-4' }, '👤'),
-                React.createElement('p', { className: 'text-lg' }, 'Selecciona un estudiante para ver su evolución')
-            ),
-
-            // Tabla de ranking
-            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
-                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, rankingTitle),
-                React.createElement('div', { className: 'overflow-x-auto max-h-[500px] overflow-y-auto' },
-                    React.createElement('table', { className: 'w-full text-sm' },
-                        React.createElement('thead', { className: 'sticky top-0 bg-white z-10' },
-                            React.createElement('tr', { className: 'bg-gray-50 text-left' },
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, '#'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Código'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Apellido'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Nombre'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Grupo'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'PIAR'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Global'),
-                                Object.values(DATA.areaNames).map(name =>
-                                    React.createElement('th', { key: name, className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, name)
-                                ),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Pruebas'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Completo'),
-                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Ver')
-                            )
-                        ),
-                        React.createElement('tbody', null,
-                            filteredStudents.map((s, idx) => {
-                                const globalVal = getValorActual(s, 'global');
-                                return React.createElement('tr', { 
-                                    key: s.codigo, 
-                                    className: 'border-t border-gray-100 hover:bg-gray-50 cursor-pointer ' + (selectedStudent === s.codigo ? 'bg-indigo-50' : ''),
-                                    onClick: () => setSelectedStudent(s.codigo)
-                                },
-                                    React.createElement('td', { className: 'px-2 py-2 font-bold text-gray-400' }, idx + 1),
-                                    React.createElement('td', { className: 'px-2 py-2 font-mono text-xs text-gray-600' }, s.codigo),
-                                    React.createElement('td', { className: 'px-2 py-2 font-medium text-gray-800' }, s.apellido),
-                                    React.createElement('td', { className: 'px-2 py-2 text-gray-700' }, s.nombre),
-                                    React.createElement('td', { className: 'px-2 py-2' },
-                                        React.createElement('span', { className: 'px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs' }, s.grupo)
-                                    ),
-                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
-                                        s.piar === 'Sí' 
-                                            ? React.createElement('span', { className: 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium' }, 'PIAR')
-                                            : ''
-                                    ),
-                                    React.createElement('td', { className: 'px-2 py-2 text-center font-bold ' + (globalVal !== null && globalVal >= 60 ? 'text-green-600' : globalVal !== null ? 'text-red-600' : 'text-gray-400') },
-                                        globalVal !== null ? globalVal.toFixed(1) : '-'
-                                    ),
-                                    Object.keys(DATA.areaNames).map(area => {
-                                        const val = getValorActual(s, area);
-                                        return React.createElement('td', { 
-                                            key: area, 
-                                            className: 'px-2 py-2 text-center ' + (val !== null && val >= 60 ? 'text-green-600' : val !== null && val < 40 ? 'text-red-600' : 'text-gray-600')
-                                        }, val !== null ? val.toFixed(1) : '-');
-                                    }),
-                                    React.createElement('td', { className: 'px-2 py-2 text-center text-gray-600' },
-                                        s.pruebasPresentes + '/' + s.pruebasTotales
-                                    ),
-                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
-                                        s.todasLasPruebas 
-                                            ? React.createElement('span', { className: 'px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium' }, 'Sí')
-                                            : React.createElement('span', { className: 'px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium' }, 'No')
-                                    ),
-                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
-                                        React.createElement('button', { 
-                                            className: 'p-1 text-indigo-600 hover:bg-indigo-50 rounded',
-                                            onClick: (e) => { e.stopPropagation(); setSelectedStudent(s.codigo); }
-                                        }, '👁️')
-                                    )
-                                );
-                            })
-                        )
-                    )
-                )
             )
         ),
 
@@ -745,7 +900,7 @@ function App() {
 
 // Render
 ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
-<\/script>
+</script>
 
 </body>
 </html>`;
