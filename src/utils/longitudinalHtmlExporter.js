@@ -1,572 +1,622 @@
 /**
  * Generador de HTML para Análisis Longitudinal
  * 
- * USA LA MISMA CONFIGURACIÓN que los componentes React (chartConfig.js)
- * para garantizar fidelidad visual 100%
+ * OPCIÓN B: Single Page App Exportable
+ * - React + Chart.js desde CDN (librerías públicas)
+ * - Datos de estudiantes embebidos (privados, locales)
+ * - Totalmente interactivo
  */
 
-import { COLORS, AREA_NAMES, baseOptions } from './chartConfig';
+import { COLORS, AREA_NAMES } from './chartConfig';
 
 /**
- * Prepara los datos de ranking de estudiantes
+ * Prepara todos los datos para el export
  */
-function prepareStudentRankingData(analysis) {
-  const allStudents = Array.from(analysis.estudiantes.values());
+function prepareExportData(analysis) {
+  // Métricas del grado
+  const gradeMetricsSinPIAR = analysis.getGradeMetrics(true);
+  const gradeMetricsConPIAR = analysis.getGradeMetrics(false);
 
-  return allStudents.map(student => {
+  // Métricas por grupo
+  const groupMetrics = {};
+  analysis.grupos.forEach(g => {
+    groupMetrics[g] = {
+      sinPIAR: analysis.getGroupMetrics(g, true),
+      conPIAR: analysis.getGroupMetrics(g, false)
+    };
+  });
+
+  // Datos de estudiantes
+  const students = Array.from(analysis.estudiantes.values()).map(student => {
     const metrics = analysis.getStudentMetrics(student.codigo);
     const resultados = metrics?.resultados || [];
 
+    // Promedios
     const globales = resultados.filter(r => r.presente).map(r => r.global);
     const promedioGlobal = globales.length > 0 ? globales.reduce((a, b) => a + b, 0) / globales.length : null;
 
-    const areas = {};
+    const areasPromedio = {};
     Object.keys(AREA_NAMES).forEach(area => {
       const valores = resultados.filter(r => r.presente && r.areas[area] !== null).map(r => r.areas[area]);
-      areas[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
+      areasPromedio[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
     });
 
-    const pruebasPresentes = resultados.filter(r => r.presente).length;
-    const todasLasPruebas = pruebasPresentes === analysis.pruebas.length;
-
     return {
-      ...student,
+      codigo: student.codigo,
+      nombre: student.nombre,
+      apellido: student.apellido,
+      grupo: student.grupo,
+      piar: student.piar,
       promedioGlobal,
-      ...areas,
-      pruebasPresentes,
-      pruebasTotales: analysis.pruebas.length,
-      todasLasPruebas
+      areasPromedio,
+      resultados: resultados.map(r => ({
+        pruebaId: r.pruebaId,
+        pruebaNombre: r.pruebaNombre,
+        presente: r.presente,
+        global: r.global,
+        areas: r.areas
+      })),
+      pruebasPresentes: resultados.filter(r => r.presente).length,
+      pruebasTotales: analysis.pruebas.length
     };
   }).filter(s => s.promedioGlobal !== null)
     .sort((a, b) => (b.promedioGlobal || 0) - (a.promedioGlobal || 0));
+
+  return {
+    grado: analysis.grado,
+    pruebas: analysis.pruebas.map(p => ({ id: p.id, nombre: p.nombre })),
+    grupos: analysis.grupos,
+    gradeMetricsSinPIAR,
+    gradeMetricsConPIAR,
+    groupMetrics,
+    students,
+    colors: COLORS,
+    areaNames: AREA_NAMES
+  };
 }
 
 /**
- * Genera el HTML completo del reporte longitudinal
- * @param {import('../models/LongitudinalAnalysis.js').LongitudinalAnalysis} analysis
- * @returns {string} HTML completo
+ * Genera el HTML completo
  */
 export function generateLongitudinalHTML(analysis) {
-  const gradeMetrics = analysis.getGradeMetrics(true);
-  const groups = analysis.grupos;
-  const studentRankingData = prepareStudentRankingData(analysis);
-  const pruebas = analysis.pruebas;
+  const data = prepareExportData(analysis);
+  const dataJSON = JSON.stringify(data);
 
-  // Datos para gráficos (misma estructura que React)
-  const dataGlobal = gradeMetrics.map(m => ({ prueba: m.pruebaNombre, valor: parseFloat(m.promedioGlobal.toFixed(2)) }));
-  const dataDesviacion = gradeMetrics.map(m => ({ prueba: m.pruebaNombre, valor: parseFloat(m.desviacionGlobal.toFixed(2)) }));
-
-  const dataAreas = {};
-  Object.keys(AREA_NAMES).forEach(key => {
-    dataAreas[key] = gradeMetrics.map(m => ({
-      prueba: m.pruebaNombre,
-      valor: parseFloat(m.areas[key]?.promedio?.toFixed(2) || 0)
-    }));
-  });
-
-  const dataGrupos = {};
-  groups.forEach(g => {
-    const gm = analysis.getGroupMetrics(g, true);
-    dataGrupos[g] = pruebas.map(p => {
-      const match = gm?.find(m => m.pruebaId === p.id);
-      return {
-        prueba: p.nombre,
-        global: parseFloat(match?.promedioGlobal?.toFixed(2) || 0),
-        desviacion: parseFloat(match?.desviacionGlobal?.toFixed(2) || 0)
-      };
-    });
-  });
-
-  // Datos de áreas por grupo
-  const dataAreasPorGrupo = {};
-  Object.keys(AREA_NAMES).forEach(areaKey => {
-    dataAreasPorGrupo[areaKey] = {};
-    groups.forEach(g => {
-      const gm = analysis.getGroupMetrics(g, true);
-      dataAreasPorGrupo[areaKey][g] = pruebas.map(p => {
-        const match = gm?.find(m => m.pruebaId === p.id);
-        return parseFloat(match?.areas?.[areaKey]?.promedio?.toFixed(2) || 0);
-      });
-    });
-  });
-
-  // KPIs
-  const first = gradeMetrics[0];
-  const last = gradeMetrics[gradeMetrics.length - 1];
-  const cambio = gradeMetrics.length >= 2 ? last.promedioGlobal - first.promedioGlobal : 0;
-
-  // Serializar configuración base (la misma que usa React)
-  const baseOptionsJSON = JSON.stringify(baseOptions);
-
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Análisis Longitudinal - ${analysis.grado}</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"><\/script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #333;
-      padding: 20px;
-      line-height: 1.6;
-    }
-    .container { max-width: 1400px; margin: 0 auto; }
-    .header {
-      background: linear-gradient(135deg, #1e3a8a 0%, #7c3aed 100%);
-      color: white;
-      padding: 30px;
-      border-radius: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    }
-    .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
-    .header-stats { display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
-    .header-stat { background: rgba(255,255,255,0.15); padding: 15px 25px; border-radius: 12px; }
-    .header-stat .value { font-size: 2rem; font-weight: bold; }
-    .header-stat .label { font-size: 0.875rem; opacity: 0.9; }
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 25px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-    .card-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-    .chart-container { position: relative; height: 350px; }
-    .chart-container-small { position: relative; height: 280px; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-    .kpi-card { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; text-align: center; }
-    .kpi-value { font-size: 2.5rem; font-weight: 800; color: #1e40af; }
-    .kpi-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
-    .kpi-sub { font-size: 0.875rem; color: #94a3b8; }
-    .tabs { display: flex; background: #f1f5f9; border-radius: 12px; padding: 5px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; padding: 12px 20px; border: none; background: transparent; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.2s; color: #64748b; }
-    .tab-btn.active { background: white; color: #3b82f6; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.5); }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    .areas-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-    .area-card { background: #f8fafc; border-radius: 12px; padding: 15px; }
-    .area-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .area-dot { width: 16px; height: 16px; border-radius: 50%; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: #f8fafc; font-weight: 600; position: sticky; top: 0; cursor: pointer; user-select: none; }
-    th:hover { background: #f1f5f9; }
-    tr:hover { background: #fafbfc; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .badge-green { background: #dcfce7; color: #166534; }
-    .badge-red { background: #fee2e2; color: #991b1b; }
-    .badge-yellow { background: #fef3c7; color: #92400e; }
-    .badge-blue { background: #dbeafe; color: #1e40af; }
-    .text-green { color: #16a34a; }
-    .text-red { color: #dc2626; }
-    .filters { display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; background: #f8fafc; border-radius: 12px; margin-bottom: 15px; }
-    .filter-group { display: flex; align-items: center; gap: 8px; }
-    .filter-group label { font-size: 0.875rem; font-weight: 500; color: #64748b; }
-    .filter-group input, .filter-group select { padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.875rem; }
-    .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-    .table-container { max-height: 600px; overflow-y: auto; border-radius: 12px; border: 1px solid #e2e8f0; }
-    .footer { text-align: center; padding: 20px; color: rgba(255,255,255,0.7); font-size: 0.875rem; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Longitudinal - ${data.grado}</title>
+    
+    <!-- CDN: Librerías públicas (sin datos de estudiantes) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin><\/script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"><\/script>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .chart-container { position: relative; height: 350px; }
+        .chart-container-small { position: relative; height: 280px; }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <!-- Header -->
-    <div class="header">
-      <h1>📊 Análisis Longitudinal</h1>
-      <p style="font-size: 1.25rem; opacity: 0.9;">${analysis.grado}</p>
-      <div class="header-stats">
-        <div class="header-stat">
-          <div class="value">${pruebas.length}</div>
-          <div class="label">Pruebas</div>
-        </div>
-        <div class="header-stat">
-          <div class="value">${analysis.estudiantes.size}</div>
-          <div class="label">Estudiantes</div>
-        </div>
-        <div class="header-stat">
-          <div class="value">${groups.length}</div>
-          <div class="label">Grupos</div>
-        </div>
-      </div>
-      <p style="margin-top: 15px; font-size: 0.875rem; opacity: 0.8;">📅 ${pruebas.map(p => p.nombre).join(' → ')}</p>
-    </div>
+<body class="bg-gradient-to-br from-slate-100 to-indigo-100 min-h-screen">
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab-btn active" onclick="showTab('grade')">📈 Evolución del Grado</button>
-      <button class="tab-btn" onclick="showTab('groups')">👥 Comparativa de Grupos</button>
-      <button class="tab-btn" onclick="showTab('students')">👤 Por Estudiante</button>
-    </div>
-
-    <!-- Tab 1: Evolución del Grado -->
-    <div id="tab-grade" class="tab-content active">
-      <!-- KPIs -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Punto de Partida</div>
-          <div class="kpi-value">${first?.promedioGlobal.toFixed(1) || '-'}</div>
-          <div class="kpi-sub">${first?.pruebaNombre || ''}</div>
-        </div>
-        <div class="kpi-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
-          <div class="kpi-label">Estado Actual</div>
-          <div class="kpi-value" style="color: #166534;">${last?.promedioGlobal.toFixed(1) || '-'}</div>
-          <div class="kpi-sub">${last?.pruebaNombre || ''}</div>
-        </div>
-        <div class="kpi-card" style="background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);">
-          <div class="kpi-label">Evolución Neta</div>
-          <div class="kpi-value" style="color: ${cambio >= 0 ? '#166534' : '#dc2626'};">${cambio >= 0 ? '+' : ''}${cambio.toFixed(1)}</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📊 Promedio Global</div>
-        <div class="chart-container"><canvas id="chartGlobal"></canvas></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📉 Variabilidad (Desviación Estándar)</div>
-        <div class="chart-container"><canvas id="chartDesviacion"></canvas></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📚 Desglose por Asignatura</div>
-        <div class="areas-grid">
-          ${Object.entries(AREA_NAMES).map(([key, name]) => `
-            <div class="area-card">
-              <div class="area-header">
-                <span class="area-dot" style="background: ${COLORS.areas[key]};"></span>
-                <h4 style="font-weight: 700; color: #374151;">${name}</h4>
-              </div>
-              <div class="chart-container-small"><canvas id="chartArea_${key}"></canvas></div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 2: Comparativa de Grupos -->
-    <div id="tab-groups" class="tab-content">
-      <div class="card">
-        <div class="card-title">📊 Promedio Global por Grupo</div>
-        <div class="chart-container"><canvas id="chartGroupsGlobal"></canvas></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📉 Variabilidad por Grupo</div>
-        <div class="chart-container"><canvas id="chartGroupsDesviacion"></canvas></div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">📚 Desglose por Asignatura (Grupos)</div>
-        <div class="areas-grid">
-          ${Object.entries(AREA_NAMES).map(([key, name]) => `
-            <div class="area-card">
-              <div class="area-header">
-                <span class="area-dot" style="background: ${COLORS.areas[key]};"></span>
-                <h4 style="font-weight: 700; color: #374151;">${name}</h4>
-              </div>
-              <div class="chart-container-small"><canvas id="chartGroupArea_${key}"></canvas></div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 3: Por Estudiante -->
-    <div id="tab-students" class="tab-content">
-      <div class="card">
-        <div class="card-title">🏆 Ranking Promedio</div>
-        
-        <div class="filters">
-          <div class="filter-group">
-            <label>🔍 Buscar:</label>
-            <input type="text" id="searchInput" placeholder="Nombre o código..." oninput="filterTable()">
-          </div>
-          <div class="filter-group">
-            <label>Grupo:</label>
-            <select id="groupFilter" onchange="filterTable()">
-              <option value="">Todos</option>
-              ${groups.map(g => `<option value="${g}">${g}</option>`).join('')}
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>PIAR:</label>
-            <select id="piarFilter" onchange="filterTable()">
-              <option value="">Todos</option>
-              <option value="Sí">Con PIAR</option>
-              <option value="No">Sin PIAR</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Asistencia:</label>
-            <select id="asistenciaFilter" onchange="filterTable()">
-              <option value="">Todos</option>
-              <option value="todas">Presentó todas</option>
-              <option value="incompletas">Incompletas</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="table-container">
-          <table id="rankingTable">
-            <thead>
-              <tr>
-                <th onclick="sortTable(0)"># ↕</th>
-                <th onclick="sortTable(1)">Código ↕</th>
-                <th onclick="sortTable(2)">Apellido ↕</th>
-                <th onclick="sortTable(3)">Nombre ↕</th>
-                <th onclick="sortTable(4)">Grupo ↕</th>
-                <th>PIAR</th>
-                <th onclick="sortTable(6, true)">Global ↕</th>
-                ${Object.values(AREA_NAMES).map((name, i) => `<th onclick="sortTable(${7 + i}, true)">${name} ↕</th>`).join('')}
-                <th onclick="sortTable(12, true)">Pruebas ↕</th>
-                <th>Completo</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${studentRankingData.map((s, idx) => `
-                <tr data-grupo="${s.grupo}" data-piar="${s.piar || 'No'}" data-completo="${s.todasLasPruebas}">
-                  <td style="font-weight: bold; color: #94a3b8;">${idx + 1}</td>
-                  <td style="font-family: monospace;">${s.codigo}</td>
-                  <td style="font-weight: 600;">${s.apellido}</td>
-                  <td>${s.nombre}</td>
-                  <td><span class="badge badge-blue">${s.grupo}</span></td>
-                  <td>${s.piar === 'Sí' ? '<span class="badge badge-yellow">PIAR</span>' : ''}</td>
-                  <td class="${s.promedioGlobal >= 60 ? 'text-green' : 'text-red'}" style="font-weight: bold;">${s.promedioGlobal?.toFixed(1) || '-'}</td>
-                  ${Object.keys(AREA_NAMES).map(area =>
-    `<td class="${s[area] !== null && s[area] >= 60 ? 'text-green' : s[area] !== null && s[area] < 40 ? 'text-red' : ''}">${s[area]?.toFixed(1) || '-'}</td>`
-  ).join('')}
-                  <td style="text-align: center;">${s.pruebasPresentes}/${s.pruebasTotales}</td>
-                  <td style="text-align: center;">${s.todasLasPruebas ? '<span class="badge badge-green">✓</span>' : '<span class="badge badge-red">✗</span>'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        <p style="margin-top: 15px; color: #64748b; font-size: 0.875rem;">Total: <strong id="visibleCount">${studentRankingData.length}</strong> estudiantes</p>
-      </div>
-    </div>
-
-    <div class="footer">
-      📊 Generado el ${new Date().toLocaleString('es-CO')}
-    </div>
-  </div>
-
-  <script>
-    // Registrar plugin
+<!-- DATOS EMBEBIDOS (privados, nunca salen de tu PC) -->
+<script>
+    const DATA = ${dataJSON};
     Chart.register(ChartDataLabels);
+</script>
 
-    // Datos (exactamente igual que en React)
-    const dataGlobal = ${JSON.stringify(dataGlobal)};
-    const dataDesviacion = ${JSON.stringify(dataDesviacion)};
-    const dataAreas = ${JSON.stringify(dataAreas)};
-    const dataGrupos = ${JSON.stringify(dataGrupos)};
-    const dataAreasPorGrupo = ${JSON.stringify(dataAreasPorGrupo)};
-    const groups = ${JSON.stringify(groups)};
-    const COLORS = ${JSON.stringify(COLORS)};
-    const AREA_NAMES = ${JSON.stringify(AREA_NAMES)};
+<div id="root"></div>
 
-    // Opciones base (EXACTAMENTE igual que chartConfig.js)
-    const baseOptions = ${baseOptionsJSON};
+<script>
+const { useState, useEffect, useRef, useMemo } = React;
 
-    // Opciones sin leyenda
-    const noLegendOptions = {
-      ...baseOptions,
-      plugins: { ...baseOptions.plugins, legend: { display: false } }
-    };
+// ============================================
+// COMPONENTES DE GRÁFICOS
+// ============================================
 
-    // Opciones para áreas (0-100)
-    const areaOptions = {
-      ...noLegendOptions,
-      scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } }
-    };
+function BarChart({ data, options, id }) {
+    const canvasRef = useRef(null);
+    const chartRef = useRef(null);
 
-    // Opciones agrupadas
-    const groupedOptions = {
-      ...baseOptions,
-      plugins: { ...baseOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, font: { size: 9, weight: 'bold' } } }
-    };
-
-    // Inicializar gráficos
-    function initCharts() {
-      // Gráfico Global
-      new Chart(document.getElementById('chartGlobal'), {
-        type: 'bar',
-        data: {
-          labels: dataGlobal.map(d => d.prueba),
-          datasets: [{
-            label: 'Promedio Global',
-            data: dataGlobal.map(d => d.valor),
-            backgroundColor: dataGlobal.map((_, i) => COLORS.pruebas[i % COLORS.pruebas.length] + 'cc'),
-            borderColor: dataGlobal.map((_, i) => COLORS.pruebas[i % COLORS.pruebas.length]),
-            borderWidth: 2,
-            borderRadius: 8
-          }]
-        },
-        options: noLegendOptions
-      });
-
-      // Gráfico Desviación
-      new Chart(document.getElementById('chartDesviacion'), {
-        type: 'bar',
-        data: {
-          labels: dataDesviacion.map(d => d.prueba),
-          datasets: [{
-            label: 'Desviación Estándar',
-            data: dataDesviacion.map(d => d.valor),
-            backgroundColor: '#f97316cc',
-            borderColor: '#f97316',
-            borderWidth: 2,
-            borderRadius: 8
-          }]
-        },
-        options: { ...noLegendOptions, plugins: { ...noLegendOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, formatter: (v) => parseFloat(v).toFixed(2) } } }
-      });
-
-      // Gráficos por Área
-      Object.entries(dataAreas).forEach(([key, data]) => {
-        const color = COLORS.areas[key];
-        new Chart(document.getElementById('chartArea_' + key), {
-          type: 'bar',
-          data: {
-            labels: data.map(d => d.prueba),
-            datasets: [{
-              label: AREA_NAMES[key],
-              data: data.map(d => d.valor),
-              backgroundColor: color + 'aa',
-              borderColor: color,
-              borderWidth: 2,
-              borderRadius: 6
-            }]
-          },
-          options: { ...areaOptions, plugins: { ...areaOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, color: color } } }
-        });
-      });
-
-      // Gráfico Grupos Global
-      new Chart(document.getElementById('chartGroupsGlobal'), {
-        type: 'bar',
-        data: {
-          labels: dataGlobal.map(d => d.prueba),
-          datasets: groups.map((g, i) => ({
-            label: g,
-            data: dataGrupos[g].map(d => d.global),
-            backgroundColor: COLORS.groups[i % COLORS.groups.length] + 'aa',
-            borderColor: COLORS.groups[i % COLORS.groups.length],
-            borderWidth: 2,
-            borderRadius: 5
-          }))
-        },
-        options: groupedOptions
-      });
-
-      // Gráfico Grupos Desviación
-      new Chart(document.getElementById('chartGroupsDesviacion'), {
-        type: 'bar',
-        data: {
-          labels: dataGlobal.map(d => d.prueba),
-          datasets: groups.map((g, i) => ({
-            label: g,
-            data: dataGrupos[g].map(d => d.desviacion),
-            backgroundColor: COLORS.groups[i % COLORS.groups.length] + 'aa',
-            borderColor: COLORS.groups[i % COLORS.groups.length],
-            borderWidth: 2,
-            borderRadius: 5
-          }))
-        },
-        options: { ...groupedOptions, plugins: { ...groupedOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, formatter: (v) => parseFloat(v).toFixed(2), font: { size: 9, weight: 'bold' } } } }
-      });
-
-      // Gráficos de Área por Grupo
-      Object.keys(dataAreas).forEach(areaKey => {
-        new Chart(document.getElementById('chartGroupArea_' + areaKey), {
-          type: 'bar',
-          data: {
-            labels: dataGlobal.map(d => d.prueba),
-            datasets: groups.map((g, i) => ({
-              label: g,
-              data: dataAreasPorGrupo[areaKey][g],
-              backgroundColor: COLORS.groups[i % COLORS.groups.length] + 'aa',
-              borderColor: COLORS.groups[i % COLORS.groups.length],
-              borderWidth: 1,
-              borderRadius: 4
-            }))
-          },
-          options: { ...groupedOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } } }
-        });
-      });
-    }
-
-    // Tab switching
-    function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
-      event.target.classList.add('active');
-    }
-
-    // Table filtering
-    function filterTable() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const group = document.getElementById('groupFilter').value;
-      const piar = document.getElementById('piarFilter').value;
-      const asistencia = document.getElementById('asistenciaFilter').value;
-      
-      const rows = document.querySelectorAll('#rankingTable tbody tr');
-      let visible = 0;
-
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        let show = true;
-        if (search && !text.includes(search)) show = false;
-        if (group && row.dataset.grupo !== group) show = false;
-        if (piar && row.dataset.piar !== piar) show = false;
-        if (asistencia === 'todas' && row.dataset.completo !== 'true') show = false;
-        if (asistencia === 'incompletas' && row.dataset.completo === 'true') show = false;
-
-        row.style.display = show ? '' : 'none';
-        if (show) visible++;
-      });
-
-      document.getElementById('visibleCount').textContent = visible;
-    }
-
-    // Table sorting
-    let sortDirection = {};
-    function sortTable(colIndex, isNumeric = false) {
-      const tbody = document.querySelector('#rankingTable tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      
-      sortDirection[colIndex] = !sortDirection[colIndex];
-      const dir = sortDirection[colIndex] ? 1 : -1;
-
-      rows.sort((a, b) => {
-        let aVal = a.cells[colIndex].textContent.trim();
-        let bVal = b.cells[colIndex].textContent.trim();
-        
-        if (isNumeric) {
-          aVal = parseFloat(aVal) || 0;
-          bVal = parseFloat(bVal) || 0;
-          return (aVal - bVal) * dir;
+    useEffect(() => {
+        if (chartRef.current) {
+            chartRef.current.destroy();
         }
-        return aVal.localeCompare(bVal) * dir;
-      });
+        
+        const ctx = canvasRef.current.getContext('2d');
+        chartRef.current = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: options
+        });
 
-      rows.forEach(row => tbody.appendChild(row));
+        return () => {
+            if (chartRef.current) {
+                chartRef.current.destroy();
+            }
+        };
+    }, [data, options]);
+
+    return React.createElement('canvas', { ref: canvasRef, id: id });
+}
+
+// Opciones base
+const baseOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } },
+        datalabels: {
+            display: true,
+            anchor: 'end',
+            align: 'end',
+            offset: 4,
+            font: { size: 10, weight: 'bold' },
+            formatter: (v) => v ? parseFloat(v).toFixed(1) : '',
+            color: '#1e293b'
+        }
+    },
+    scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } }
     }
+};
 
-    // Inicializar al cargar
-    document.addEventListener('DOMContentLoaded', initCharts);
-  <\/script>
+// ============================================
+// COMPONENTE PRINCIPAL
+// ============================================
+
+function App() {
+    const [activeTab, setActiveTab] = useState('grade');
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [groupFilter, setGroupFilter] = useState('');
+    const [showPIAR, setShowPIAR] = useState({});
+
+    // KPIs
+    const first = DATA.gradeMetricsSinPIAR[0];
+    const last = DATA.gradeMetricsSinPIAR[DATA.gradeMetricsSinPIAR.length - 1];
+    const cambio = DATA.gradeMetricsSinPIAR.length >= 2 ? last.promedioGlobal - first.promedioGlobal : 0;
+
+    // Filtrar estudiantes
+    const filteredStudents = useMemo(() => {
+        return DATA.students.filter(s => {
+            const matchSearch = !searchTerm || 
+                s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                s.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                s.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchGroup = !groupFilter || s.grupo === groupFilter;
+            return matchSearch && matchGroup;
+        });
+    }, [searchTerm, groupFilter]);
+
+    // Estudiante seleccionado
+    const studentData = useMemo(() => {
+        if (!selectedStudent) return null;
+        return DATA.students.find(s => s.codigo === selectedStudent);
+    }, [selectedStudent]);
+
+    // ============================================
+    // RENDER
+    // ============================================
+
+    return React.createElement('div', { className: 'max-w-7xl mx-auto p-4 md:p-6' },
+        // Header
+        React.createElement('div', { className: 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl shadow-2xl p-8 mb-6 text-white' },
+            React.createElement('div', { className: 'flex items-center gap-4' },
+                React.createElement('span', { className: 'text-5xl' }, '📊'),
+                React.createElement('div', null,
+                    React.createElement('h1', { className: 'text-3xl font-bold' }, 'Análisis Longitudinal'),
+                    React.createElement('p', { className: 'text-purple-100 text-lg' }, DATA.grado)
+                )
+            ),
+            React.createElement('div', { className: 'flex flex-wrap gap-4 mt-6' },
+                React.createElement('div', { className: 'bg-white/15 backdrop-blur px-5 py-3 rounded-xl' },
+                    React.createElement('p', { className: 'text-3xl font-bold' }, DATA.pruebas.length),
+                    React.createElement('p', { className: 'text-sm text-purple-100' }, 'Pruebas')
+                ),
+                React.createElement('div', { className: 'bg-white/15 backdrop-blur px-5 py-3 rounded-xl' },
+                    React.createElement('p', { className: 'text-3xl font-bold' }, DATA.students.length),
+                    React.createElement('p', { className: 'text-sm text-purple-100' }, 'Estudiantes')
+                ),
+                React.createElement('div', { className: 'bg-white/15 backdrop-blur px-5 py-3 rounded-xl' },
+                    React.createElement('p', { className: 'text-3xl font-bold' }, DATA.grupos.length),
+                    React.createElement('p', { className: 'text-sm text-purple-100' }, 'Grupos')
+                )
+            ),
+            React.createElement('p', { className: 'mt-4 text-sm text-purple-200' }, 
+                '📅 ' + DATA.pruebas.map(p => p.nombre).join(' → ')
+            )
+        ),
+
+        // Tabs
+        React.createElement('div', { className: 'flex bg-white rounded-xl shadow-lg mb-6 overflow-hidden' },
+            ['grade', 'groups', 'students'].map(tab => 
+                React.createElement('button', {
+                    key: tab,
+                    onClick: () => setActiveTab(tab),
+                    className: 'flex-1 py-4 px-6 font-semibold transition-all ' + 
+                        (activeTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-50')
+                }, tab === 'grade' ? '📈 Evolución del Grado' : tab === 'groups' ? '👥 Comparativa de Grupos' : '👤 Por Estudiante')
+            )
+        ),
+
+        // TAB: Evolución del Grado
+        activeTab === 'grade' && React.createElement('div', { className: 'space-y-6' },
+            // KPIs
+            React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-4' },
+                React.createElement('div', { className: 'bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 shadow-md' },
+                    React.createElement('p', { className: 'text-xs uppercase tracking-wider text-blue-600 font-semibold' }, 'Punto de Partida'),
+                    React.createElement('p', { className: 'text-3xl font-extrabold text-blue-800' }, first?.promedioGlobal.toFixed(1) || '-'),
+                    React.createElement('p', { className: 'text-sm text-blue-500' }, first?.pruebaNombre)
+                ),
+                React.createElement('div', { className: 'bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-5 shadow-md' },
+                    React.createElement('p', { className: 'text-xs uppercase tracking-wider text-green-600 font-semibold' }, 'Estado Actual'),
+                    React.createElement('p', { className: 'text-3xl font-extrabold text-green-800' }, last?.promedioGlobal.toFixed(1) || '-'),
+                    React.createElement('p', { className: 'text-sm text-green-500' }, last?.pruebaNombre)
+                ),
+                React.createElement('div', { className: 'bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-5 shadow-md' },
+                    React.createElement('p', { className: 'text-xs uppercase tracking-wider text-purple-600 font-semibold' }, 'Evolución Neta'),
+                    React.createElement('p', { className: 'text-3xl font-extrabold ' + (cambio >= 0 ? 'text-green-700' : 'text-red-700') }, 
+                        (cambio >= 0 ? '+' : '') + cambio.toFixed(1)
+                    )
+                )
+            ),
+
+            // Chart Global
+            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📊 Promedio Global'),
+                React.createElement('div', { className: 'chart-container' },
+                    React.createElement(BarChart, {
+                        id: 'chartGlobal',
+                        data: {
+                            labels: DATA.gradeMetricsSinPIAR.map(m => m.pruebaNombre),
+                            datasets: [{
+                                label: 'Promedio',
+                                data: DATA.gradeMetricsSinPIAR.map(m => m.promedioGlobal),
+                                backgroundColor: DATA.gradeMetricsSinPIAR.map((_, i) => DATA.colors.pruebas[i % DATA.colors.pruebas.length] + 'cc'),
+                                borderColor: DATA.gradeMetricsSinPIAR.map((_, i) => DATA.colors.pruebas[i % DATA.colors.pruebas.length]),
+                                borderWidth: 2,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: { ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }
+                    })
+                )
+            ),
+
+            // Charts por Área
+            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📚 Desglose por Asignatura'),
+                React.createElement('div', { className: 'grid grid-cols-1 gap-6' },
+                    Object.entries(DATA.areaNames).map(([key, name]) =>
+                        React.createElement('div', { key: key, className: 'bg-gray-50 rounded-xl p-4' },
+                            React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
+                                React.createElement('span', { 
+                                    className: 'w-4 h-4 rounded-full',
+                                    style: { backgroundColor: DATA.colors.areas[key] }
+                                }),
+                                React.createElement('h4', { className: 'font-bold text-gray-700' }, name)
+                            ),
+                            React.createElement('div', { className: 'chart-container-small' },
+                                React.createElement(BarChart, {
+                                    id: 'chartArea_' + key,
+                                    data: {
+                                        labels: DATA.gradeMetricsSinPIAR.map(m => m.pruebaNombre),
+                                        datasets: [{
+                                            label: name,
+                                            data: DATA.gradeMetricsSinPIAR.map(m => m.areas[key]?.promedio || 0),
+                                            backgroundColor: DATA.colors.areas[key] + 'aa',
+                                            borderColor: DATA.colors.areas[key],
+                                            borderWidth: 2,
+                                            borderRadius: 6
+                                        }]
+                                    },
+                                    options: { 
+                                        ...baseOptions, 
+                                        plugins: { ...baseOptions.plugins, legend: { display: false }, datalabels: { ...baseOptions.plugins.datalabels, color: DATA.colors.areas[key] } },
+                                        scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } }
+                                    }
+                                })
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+
+        // TAB: Comparativa de Grupos
+        activeTab === 'groups' && React.createElement('div', { className: 'space-y-6' },
+            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📊 Promedio Global por Grupo'),
+                React.createElement('div', { className: 'chart-container' },
+                    React.createElement(BarChart, {
+                        id: 'chartGroupGlobal',
+                        data: {
+                            labels: DATA.pruebas.map(p => p.nombre),
+                            datasets: DATA.grupos.map((g, i) => ({
+                                label: g,
+                                data: DATA.pruebas.map(p => {
+                                    const match = DATA.groupMetrics[g].sinPIAR.find(m => m.pruebaId === p.id);
+                                    return match?.promedioGlobal || 0;
+                                }),
+                                backgroundColor: DATA.colors.groups[i % DATA.colors.groups.length] + 'aa',
+                                borderColor: DATA.colors.groups[i % DATA.colors.groups.length],
+                                borderWidth: 2,
+                                borderRadius: 5
+                            }))
+                        },
+                        options: baseOptions
+                    })
+                )
+            ),
+            
+            // Áreas por grupo
+            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📚 Desglose por Asignatura (Grupos)'),
+                React.createElement('div', { className: 'grid grid-cols-1 gap-6' },
+                    Object.entries(DATA.areaNames).map(([key, name]) =>
+                        React.createElement('div', { key: key, className: 'bg-gray-50 rounded-xl p-4' },
+                            React.createElement('div', { className: 'flex items-center gap-2 mb-3' },
+                                React.createElement('span', { className: 'w-4 h-4 rounded-full', style: { backgroundColor: DATA.colors.areas[key] } }),
+                                React.createElement('h4', { className: 'font-bold text-gray-700' }, name)
+                            ),
+                            React.createElement('div', { className: 'chart-container-small' },
+                                React.createElement(BarChart, {
+                                    id: 'chartGroupArea_' + key,
+                                    data: {
+                                        labels: DATA.pruebas.map(p => p.nombre),
+                                        datasets: DATA.grupos.map((g, i) => ({
+                                            label: g,
+                                            data: DATA.pruebas.map(p => {
+                                                const match = DATA.groupMetrics[g].sinPIAR.find(m => m.pruebaId === p.id);
+                                                return match?.areas?.[key]?.promedio || 0;
+                                            }),
+                                            backgroundColor: DATA.colors.groups[i % DATA.colors.groups.length] + 'aa',
+                                            borderColor: DATA.colors.groups[i % DATA.colors.groups.length],
+                                            borderWidth: 1,
+                                            borderRadius: 4
+                                        }))
+                                    },
+                                    options: { 
+                                        ...baseOptions, 
+                                        scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } }
+                                    }
+                                })
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+
+        // TAB: Por Estudiante
+        activeTab === 'students' && React.createElement('div', { className: 'space-y-6' },
+            // Filtros y selector
+            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '👤 Seleccionar Estudiante'),
+                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-4 gap-4 mb-4' },
+                    React.createElement('input', {
+                        type: 'text',
+                        placeholder: '🔍 Buscar por nombre o código...',
+                        value: searchTerm,
+                        onChange: (e) => setSearchTerm(e.target.value),
+                        className: 'px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
+                    }),
+                    React.createElement('select', {
+                        value: groupFilter,
+                        onChange: (e) => setGroupFilter(e.target.value),
+                        className: 'px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500'
+                    },
+                        React.createElement('option', { value: '' }, 'Todos los grupos'),
+                        DATA.grupos.map(g => React.createElement('option', { key: g, value: g }, g))
+                    ),
+                    React.createElement('select', {
+                        value: selectedStudent || '',
+                        onChange: (e) => setSelectedStudent(e.target.value || null),
+                        className: 'px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 md:col-span-2'
+                    },
+                        React.createElement('option', { value: '' }, 'Seleccionar estudiante...'),
+                        filteredStudents.map(s => 
+                            React.createElement('option', { key: s.codigo, value: s.codigo }, 
+                                s.apellido + ' ' + s.nombre + ' (' + s.grupo + ') - ' + s.promedioGlobal?.toFixed(1)
+                            )
+                        )
+                    )
+                ),
+                React.createElement('p', { className: 'text-sm text-gray-500' }, 
+                    filteredStudents.length + ' estudiantes encontrados'
+                )
+            ),
+
+            // Detalle del estudiante seleccionado
+            studentData && React.createElement('div', { className: 'space-y-6' },
+                // Header del estudiante
+                React.createElement('div', { className: 'bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl shadow-lg p-6 text-white' },
+                    React.createElement('div', { className: 'flex justify-between items-start' },
+                        React.createElement('div', null,
+                            React.createElement('h2', { className: 'text-2xl font-bold' }, 
+                                studentData.nombre + ' ' + studentData.apellido
+                            ),
+                            React.createElement('div', { className: 'flex items-center gap-4 mt-2 text-indigo-100' },
+                                React.createElement('span', null, 'Código: ' + studentData.codigo),
+                                React.createElement('span', null, 'Grupo: ' + studentData.grupo),
+                                studentData.piar === 'Sí' && React.createElement('span', { 
+                                    className: 'px-2 py-1 bg-amber-500/30 rounded text-amber-100 text-sm'
+                                }, 'PIAR')
+                            )
+                        ),
+                        React.createElement('div', { className: 'text-right' },
+                            React.createElement('p', { className: 'text-sm text-indigo-200' }, 'Promedio General'),
+                            React.createElement('p', { className: 'text-4xl font-bold' }, 
+                                studentData.promedioGlobal?.toFixed(1) || '-'
+                            ),
+                            React.createElement('p', { className: 'text-sm text-indigo-200 mt-2' }, 
+                                'Pruebas: ' + studentData.pruebasPresentes + '/' + studentData.pruebasTotales
+                            )
+                        )
+                    )
+                ),
+
+                // Gráfico del estudiante: Global
+                React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                    React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📊 Puntaje Global por Prueba'),
+                    React.createElement('div', { className: 'chart-container' },
+                        React.createElement(BarChart, {
+                            id: 'chartStudentGlobal',
+                            data: {
+                                labels: studentData.resultados.map(r => r.pruebaNombre),
+                                datasets: [{
+                                    label: 'Puntaje',
+                                    data: studentData.resultados.map(r => r.presente ? r.global : null),
+                                    backgroundColor: studentData.resultados.map((_, i) => DATA.colors.pruebas[i % DATA.colors.pruebas.length] + 'cc'),
+                                    borderColor: studentData.resultados.map((_, i) => DATA.colors.pruebas[i % DATA.colors.pruebas.length]),
+                                    borderWidth: 2,
+                                    borderRadius: 8
+                                }]
+                            },
+                            options: { ...baseOptions, plugins: { ...baseOptions.plugins, legend: { display: false } } }
+                        })
+                    )
+                ),
+
+                // Gráfico del estudiante: Por Áreas
+                React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                    React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📚 Resultados por Asignatura'),
+                    React.createElement('div', { className: 'chart-container' },
+                        React.createElement(BarChart, {
+                            id: 'chartStudentAreas',
+                            data: {
+                                labels: Object.values(DATA.areaNames),
+                                datasets: studentData.resultados.filter(r => r.presente).map((r, i) => ({
+                                    label: r.pruebaNombre,
+                                    data: Object.keys(DATA.areaNames).map(area => r.areas[area]),
+                                    backgroundColor: DATA.colors.pruebas[i % DATA.colors.pruebas.length] + 'aa',
+                                    borderColor: DATA.colors.pruebas[i % DATA.colors.pruebas.length],
+                                    borderWidth: 2,
+                                    borderRadius: 5
+                                }))
+                            },
+                            options: { 
+                                ...baseOptions, 
+                                scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } }
+                            }
+                        })
+                    )
+                ),
+
+                // Tabla de resultados detallados
+                React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                    React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '📋 Resultados Detallados'),
+                    React.createElement('div', { className: 'overflow-x-auto' },
+                        React.createElement('table', { className: 'w-full text-sm' },
+                            React.createElement('thead', null,
+                                React.createElement('tr', { className: 'bg-gray-50 text-left' },
+                                    React.createElement('th', { className: 'px-4 py-3 font-semibold' }, 'Prueba'),
+                                    React.createElement('th', { className: 'px-4 py-3 font-semibold text-center' }, 'Estado'),
+                                    React.createElement('th', { className: 'px-4 py-3 font-semibold text-center' }, 'Global'),
+                                    Object.values(DATA.areaNames).map(name =>
+                                        React.createElement('th', { key: name, className: 'px-4 py-3 font-semibold text-center' }, name)
+                                    )
+                                )
+                            ),
+                            React.createElement('tbody', null,
+                                studentData.resultados.map(r =>
+                                    React.createElement('tr', { key: r.pruebaId, className: 'border-t border-gray-100' },
+                                        React.createElement('td', { className: 'px-4 py-3 font-medium' }, r.pruebaNombre),
+                                        React.createElement('td', { className: 'px-4 py-3 text-center' },
+                                            r.presente 
+                                                ? React.createElement('span', { className: 'px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs' }, '✓ Presentó')
+                                                : React.createElement('span', { className: 'px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs' }, '✗ Ausente')
+                                        ),
+                                        React.createElement('td', { className: 'px-4 py-3 text-center font-bold ' + (r.presente && r.global >= 60 ? 'text-green-600' : r.presente ? 'text-red-600' : 'text-gray-400') },
+                                            r.presente ? r.global?.toFixed(1) : '-'
+                                        ),
+                                        Object.keys(DATA.areaNames).map(area =>
+                                            React.createElement('td', { 
+                                                key: area, 
+                                                className: 'px-4 py-3 text-center ' + (r.presente && r.areas[area] >= 60 ? 'text-green-600' : r.presente && r.areas[area] < 40 ? 'text-red-600' : '')
+                                            }, r.presente ? r.areas[area]?.toFixed(1) : '-')
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+
+            // Mensaje si no hay estudiante seleccionado
+            !studentData && React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-12 text-center text-gray-500' },
+                React.createElement('p', { className: 'text-5xl mb-4' }, '👤'),
+                React.createElement('p', { className: 'text-lg' }, 'Selecciona un estudiante para ver su evolución')
+            ),
+
+            // Tabla de ranking
+            React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '🏆 Ranking General'),
+                React.createElement('div', { className: 'overflow-x-auto max-h-96 overflow-y-auto' },
+                    React.createElement('table', { className: 'w-full text-sm' },
+                        React.createElement('thead', { className: 'sticky top-0 bg-white' },
+                            React.createElement('tr', { className: 'bg-gray-50 text-left' },
+                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, '#'),
+                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, 'Código'),
+                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, 'Nombre'),
+                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, 'Grupo'),
+                                React.createElement('th', { className: 'px-3 py-2 font-semibold text-center' }, 'Global'),
+                                React.createElement('th', { className: 'px-3 py-2 font-semibold text-center' }, 'Pruebas'),
+                                React.createElement('th', { className: 'px-3 py-2 font-semibold text-center' }, 'Ver')
+                            )
+                        ),
+                        React.createElement('tbody', null,
+                            filteredStudents.map((s, idx) =>
+                                React.createElement('tr', { 
+                                    key: s.codigo, 
+                                    className: 'border-t border-gray-100 hover:bg-gray-50 cursor-pointer ' + (selectedStudent === s.codigo ? 'bg-indigo-50' : ''),
+                                    onClick: () => setSelectedStudent(s.codigo)
+                                },
+                                    React.createElement('td', { className: 'px-3 py-2 font-bold text-gray-400' }, idx + 1),
+                                    React.createElement('td', { className: 'px-3 py-2 font-mono text-sm' }, s.codigo),
+                                    React.createElement('td', { className: 'px-3 py-2' }, s.apellido + ' ' + s.nombre),
+                                    React.createElement('td', { className: 'px-3 py-2' },
+                                        React.createElement('span', { className: 'px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs' }, s.grupo)
+                                    ),
+                                    React.createElement('td', { className: 'px-3 py-2 text-center font-bold ' + (s.promedioGlobal >= 60 ? 'text-green-600' : 'text-red-600') },
+                                        s.promedioGlobal?.toFixed(1)
+                                    ),
+                                    React.createElement('td', { className: 'px-3 py-2 text-center' },
+                                        s.pruebasPresentes + '/' + s.pruebasTotales
+                                    ),
+                                    React.createElement('td', { className: 'px-3 py-2 text-center' },
+                                        React.createElement('button', { 
+                                            className: 'text-indigo-600 hover:text-indigo-800',
+                                            onClick: (e) => { e.stopPropagation(); setSelectedStudent(s.codigo); }
+                                        }, '👁️')
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+
+        // Footer
+        React.createElement('div', { className: 'text-center text-gray-400 text-sm mt-8 pb-8' },
+            '📊 Generado el ' + new Date().toLocaleString('es-CO')
+        )
+    );
+}
+
+// Render
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+<\/script>
+
 </body>
 </html>`;
-
-  return html;
 }
