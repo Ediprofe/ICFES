@@ -5,14 +5,14 @@
  * - Gráfico de evolución del promedio global
  * - Gráfico de evolución por área 
  * - Tabla de métricas por prueba
- * - Toggle PIAR como en ChartsPanel
+ * - Toggle PIAR siguiendo el patrón de ChartsPanel
  */
 
 import { useState, useMemo } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
 
-// Colores por área (consistentes con ChartsPanel)
+// Colores por área y prueba (consistentes con ChartsPanel)
 const AREA_COLORS = {
     lectura: '#3b82f6', // Azul
     matematicas: '#ef4444', // Rojo
@@ -20,6 +20,16 @@ const AREA_COLORS = {
     naturales: '#22c55e', // Verde
     ingles: '#a855f7' // Morado
 };
+
+// Colores para las pruebas en el gráfico global (secuenciales)
+const PRUEBA_COLORS = [
+    '#3b82f6', // Azul
+    '#22c55e', // Verde
+    '#a855f7', // Morado
+    '#f97316', // Naranja
+    '#ec4899', // Rosa
+    '#14b8a6', // Teal
+];
 
 const AREA_NAMES = {
     lectura: 'Lectura',
@@ -67,12 +77,15 @@ export function GradeEvolution({ analysis }) {
                 area: AREA_NAMES[areaId] || areaId,
                 areaId,
             };
+
+            // Añadir datos para cada prueba (Con y Sin PIAR)
             metricsConPIAR.forEach((m, idx) => {
-                data[m.pruebaNombre] = parseFloat(m.areas[areaId]?.promedio?.toFixed(2) || 0);
+                data[`${m.pruebaNombre} (Con PIAR)`] = parseFloat(m.areas[areaId]?.promedio?.toFixed(2) || 0);
+                data[`${m.pruebaNombre} (Sin PIAR)`] = parseFloat(metricsSinPIAR[idx]?.areas[areaId]?.promedio?.toFixed(2) || 0);
             });
             return data;
         });
-    }, [metricsConPIAR]);
+    }, [metricsConPIAR, metricsSinPIAR]);
 
     // Calcular cambio entre primera y última prueba
     const cambioGlobal = useMemo(() => {
@@ -88,6 +101,8 @@ export function GradeEvolution({ analysis }) {
         if (value < -2) return <TrendingDown className="text-red-500" size={20} />;
         return <Minus className="text-gray-400" size={20} />;
     };
+
+    const getPruebaColor = (index) => PRUEBA_COLORS[index % PRUEBA_COLORS.length];
 
     if (!metricsConPIAR || metricsConPIAR.length === 0) {
         return (
@@ -113,8 +128,8 @@ export function GradeEvolution({ analysis }) {
                         <button
                             onClick={() => setShowPIAR(!showPIAR)}
                             className={`px-4 py-2 rounded-lg transition-all ${showPIAR
-                                ? 'bg-white text-blue-600 font-medium'
-                                : 'bg-blue-500/30 text-white'
+                                    ? 'bg-white text-blue-600 font-medium'
+                                    : 'bg-blue-500/30 text-white'
                                 }`}
                         >
                             {showPIAR ? 'Comparación activa' : 'Comparación desactivada'}
@@ -162,12 +177,18 @@ export function GradeEvolution({ analysis }) {
                                 <Bar dataKey="Con PIAR" fill="#9ca3af">
                                     <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '11px', fontWeight: 'bold', fill: '#6b7280' }} formatter={(v) => v.toFixed(1)} />
                                 </Bar>
-                                <Bar dataKey="Sin PIAR" fill="#6366f1">
+                                <Bar dataKey="Sin PIAR">
+                                    {chartDataGlobal.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={getPruebaColor(index)} />
+                                    ))}
                                     <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '11px', fontWeight: 'bold' }} formatter={(v) => v.toFixed(1)} />
                                 </Bar>
                             </>
                         ) : (
-                            <Bar dataKey="Sin PIAR" fill="#6366f1">
+                            <Bar dataKey="Sin PIAR">
+                                {chartDataGlobal.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={getPruebaColor(index)} />
+                                ))}
                                 <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '11px', fontWeight: 'bold' }} formatter={(v) => v.toFixed(1)} />
                             </Bar>
                         )}
@@ -175,66 +196,64 @@ export function GradeEvolution({ analysis }) {
                 </ResponsiveContainer>
             </div>
 
-            {/* Gráfico de desviación estándar */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Desviación Estándar por Prueba</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={chartDataDesviacion}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="prueba" />
-                        <YAxis domain={[0, 'auto']} />
-                        <Tooltip formatter={(value) => value.toFixed(2)} />
-                        <Legend />
-                        {showPIAR ? (
-                            <>
-                                <Bar dataKey="Con PIAR" fill="#9ca3af">
-                                    <LabelList dataKey="Con PIAR" position="top" style={{ fontSize: '11px', fill: '#6b7280' }} formatter={(v) => v.toFixed(2)} />
-                                </Bar>
-                                <Bar dataKey="Sin PIAR" fill="#f97316">
-                                    <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '11px' }} formatter={(v) => v.toFixed(2)} />
-                                </Bar>
-                            </>
-                        ) : (
-                            <Bar dataKey="Sin PIAR" fill="#f97316">
-                                <LabelList dataKey="Sin PIAR" position="top" style={{ fontSize: '11px' }} formatter={(v) => v.toFixed(2)} />
-                            </Bar>
-                        )}
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Gráfico de evolución por área */}
+            {/* Gráfico de evolución por área - COHERENTE CON CHARTSPANEL */}
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-800 mb-4">Evolución por Área</h3>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
+                    {/* Aquí invertimos la lógica: Agrupamos por prueba en lugar de por área, o usamos la lógica de ChartsPanel */}
+                    {/* La lógica de ChartsPanel es: XAxis=Area, Barras=Con/Sin PIAR. Aquí tenemos MULTIPLES pruebas */}
+                    {/* Solución: Iteramos sobre las áreas en XAxis, y mostramos una barra por cada PRUEBA (sin PIAR) o par de barras (con/sin) */}
                     <BarChart data={chartDataAreas}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="area" />
                         <YAxis domain={[0, 100]} />
                         <Tooltip formatter={(value) => value.toFixed(2)} />
                         <Legend />
-                        {metricsConPIAR.map((m, idx) => (
-                            <Bar
-                                key={m.pruebaId}
-                                dataKey={m.pruebaNombre}
-                                fill={idx === 0 ? '#9ca3af' : idx === metricsConPIAR.length - 1 ? '#22c55e' : '#60a5fa'}
-                            >
-                                {chartDataAreas.map((entry, i) => (
-                                    <Cell key={`cell-${i}`} fill={AREA_COLORS[entry.areaId] || '#6366f1'} opacity={idx === 0 ? 0.4 : idx === metricsConPIAR.length - 1 ? 1 : 0.7} />
-                                ))}
-                                <LabelList
-                                    dataKey={m.pruebaNombre}
-                                    position="top"
-                                    style={{ fontSize: '10px', fontWeight: 'bold' }}
-                                    formatter={(v) => v.toFixed(1)}
-                                />
-                            </Bar>
-                        ))}
+
+                        {/* Renderizar barras para cada prueba */}
+                        {metricsConPIAR.map((m, idx) => {
+                            const pruebaColor = getPruebaColor(idx);
+
+                            return showPIAR ? (
+                                // Si hay PIAR, mostramos par de barras por prueba: Con PIAR (gris/transparente) y Sin PIAR (color solido)
+                                // Nota: esto puede saturar el gráfico si hay muchas pruebas.
+                                // Alternativa: Solo mostrar Sin PIAR por defecto y un toggle global. Pero el usuario pidió toggle.
+                                <>
+                                    {/* Barra Con PIAR (grisácea, un poco transparente) */}
+                                    <Bar
+                                        key={`${m.pruebaNombre}-con`}
+                                        dataKey={`${m.pruebaNombre} (Con PIAR)`}
+                                        name={`${m.pruebaNombre} (Con PIAR)`}
+                                        fill="#9ca3af"
+                                        opacity={0.6}
+                                    >
+                                        <LabelList position="top" style={{ fontSize: '9px', fill: '#6b7280' }} formatter={v => v.toFixed(1)} />
+                                    </Bar>
+
+                                    {/* Barra Sin PIAR (color sólido) */}
+                                    <Bar
+                                        key={`${m.pruebaNombre}-sin`}
+                                        dataKey={`${m.pruebaNombre} (Sin PIAR)`}
+                                        name={`${m.pruebaNombre} (Sin PIAR)`}
+                                        fill={pruebaColor}
+                                    >
+                                        <LabelList position="top" style={{ fontSize: '10px', fontWeight: 'bold' }} formatter={v => v.toFixed(1)} />
+                                    </Bar>
+                                </>
+                            ) : (
+                                // Solo Sin PIAR
+                                <Bar
+                                    key={`${m.pruebaNombre}-sin`}
+                                    dataKey={`${m.pruebaNombre} (Sin PIAR)`}
+                                    name={m.pruebaNombre}
+                                    fill={pruebaColor}
+                                >
+                                    <LabelList position="top" style={{ fontSize: '10px', fontWeight: 'bold' }} formatter={v => v.toFixed(1)} />
+                                </Bar>
+                            );
+                        })}
                     </BarChart>
                 </ResponsiveContainer>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                    Barras más claras = pruebas anteriores | Barras más sólidas = prueba más reciente
-                </p>
             </div>
 
             {/* Tabla resumen */}
@@ -257,20 +276,26 @@ export function GradeEvolution({ analysis }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {metricsSinPIAR.map((m, idx) => (
-                                <tr key={m.pruebaId} className="border-t border-gray-100 hover:bg-gray-50">
-                                    <td className="px-4 py-3 font-medium text-gray-800">{m.pruebaNombre}</td>
-                                    <td className="px-4 py-3 text-center text-gray-600">{m.totalEstudiantes}</td>
-                                    <td className="px-4 py-3 text-center font-semibold text-blue-600">{m.promedioGlobal.toFixed(2)}</td>
-                                    <td className="px-4 py-3 text-center text-gray-600">{m.desviacionGlobal.toFixed(2)}</td>
-                                    {showPIAR && (
-                                        <>
-                                            <td className="px-4 py-3 text-center text-gray-400">{metricsConPIAR[idx].promedioGlobal.toFixed(2)}</td>
-                                            <td className="px-4 py-3 text-center text-gray-400">{metricsConPIAR[idx].desviacionGlobal.toFixed(2)}</td>
-                                        </>
-                                    )}
-                                </tr>
-                            ))}
+                            {metricsSinPIAR.map((m, idx) => {
+                                const color = getPruebaColor(idx);
+                                return (
+                                    <tr key={m.pruebaId} className="border-t border-gray-100 hover:bg-gray-50">
+                                        <td className="px-4 py-3 font-medium text-gray-800 flex items-center gap-2">
+                                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
+                                            {m.pruebaNombre}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-gray-600">{m.totalEstudiantes}</td>
+                                        <td className="px-4 py-3 text-center font-semibold text-blue-600">{m.promedioGlobal.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-center text-gray-600">{m.desviacionGlobal.toFixed(2)}</td>
+                                        {showPIAR && (
+                                            <>
+                                                <td className="px-4 py-3 text-center text-gray-400">{metricsConPIAR[idx].promedioGlobal.toFixed(2)}</td>
+                                                <td className="px-4 py-3 text-center text-gray-400">{metricsConPIAR[idx].desviacionGlobal.toFixed(2)}</td>
+                                            </>
+                                        )}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

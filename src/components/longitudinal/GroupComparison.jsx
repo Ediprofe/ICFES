@@ -45,33 +45,37 @@ export function GroupComparison({ analysis }) {
     const groupMetricsConPIAR = useMemo(() => analysis.getGroupMetrics(null, false), [analysis]);
     const groupMetricsSinPIAR = useMemo(() => analysis.getGroupMetrics(null, true), [analysis]);
 
-    // Ranking de la prueba seleccionada
-    const rankingConPIAR = useMemo(() => {
-        if (!selectedPrueba) return [];
-        return analysis.getGroupRanking(selectedPrueba, false);
-    }, [analysis, selectedPrueba]);
+    // Métricas del grado para referencia (promedio)
+    const gradeMetricsSinPIAR = useMemo(() => analysis.getGradeMetrics(true), [analysis]);
 
-    const rankingSinPIAR = useMemo(() => {
+    // Ranking de la prueba seleccionada (usando siempre Sin PIAR para ranking oficial)
+    const ranking = useMemo(() => {
         if (!selectedPrueba) return [];
         return analysis.getGroupRanking(selectedPrueba, true);
     }, [analysis, selectedPrueba]);
 
-    const ranking = showPIAR ? rankingConPIAR : rankingSinPIAR;
-
-    // Preparar datos para gráfico comparativo por prueba
+    // Preparar datos para gráfico
     const chartDataByPrueba = useMemo(() => {
         return analysis.pruebas.map(p => {
             const data = { prueba: p.nombre };
             selectedGroups.forEach(grupo => {
-                const metrics = showPIAR ? groupMetricsConPIAR[grupo] : groupMetricsSinPIAR[grupo];
-                const pruebaMetrics = metrics?.find(m => m.pruebaId === p.id);
-                data[grupo] = pruebaMetrics ? parseFloat(pruebaMetrics.promedioGlobal.toFixed(2)) : 0;
+                // Obtener datos Con PIAR
+                const metricsCon = groupMetricsConPIAR[grupo]?.find(m => m.pruebaId === p.id);
+                data[`${grupo} (Con PIAR)`] = metricsCon ? parseFloat(metricsCon.promedioGlobal.toFixed(2)) : 0;
+
+                // Obtener datos Sin PIAR
+                const metricsSin = groupMetricsSinPIAR[grupo]?.find(m => m.pruebaId === p.id);
+                data[`${grupo} (Sin PIAR)`] = metricsSin ? parseFloat(metricsSin.promedioGlobal.toFixed(2)) : 0;
             });
+
+            // Agregar promedio del grado como referencia
+            const gradeMetric = gradeMetricsSinPIAR.find(m => m.pruebaId === p.id);
+            data['Promedio Grado'] = gradeMetric ? parseFloat(gradeMetric.promedioGlobal.toFixed(2)) : 0;
+
             return data;
         });
-    }, [analysis.pruebas, selectedGroups, groupMetricsConPIAR, groupMetricsSinPIAR, showPIAR]);
+    }, [analysis.pruebas, selectedGroups, groupMetricsConPIAR, groupMetricsSinPIAR, gradeMetricsSinPIAR]);
 
-    // Toggle grupo
     const toggleGroup = (grupo) => {
         setSelectedGroups(prev =>
             prev.includes(grupo)
@@ -113,7 +117,7 @@ export function GroupComparison({ analysis }) {
                                 : 'bg-gray-200 text-gray-700'
                                 }`}
                         >
-                            {showPIAR ? 'Incluye PIAR' : 'Excluye PIAR'}
+                            {showPIAR ? 'Comparación activa' : 'Comparación desactivada'}
                         </button>
                     </div>
                 </div>
@@ -140,85 +144,60 @@ export function GroupComparison({ analysis }) {
                         );
                     })}
                 </div>
-
-                {/* Selector de prueba para ranking */}
-                <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600">Ranking para:</span>
-                    <select
-                        value={selectedPrueba || ''}
-                        onChange={(e) => setSelectedPrueba(e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
-                    >
-                        {analysis.pruebas.map(p => (
-                            <option key={p.id} value={p.id}>{p.nombre}</option>
-                        ))}
-                    </select>
-                </div>
             </div>
 
             {/* Gráfico comparativo de evolución */}
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Evolución Comparativa de Grupos</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={chartDataByPrueba}>
+                <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={chartDataByPrueba} barGap={0} barCategoryGap="20%">
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="prueba" />
                         <YAxis domain={['auto', 'auto']} />
                         <Tooltip formatter={(value) => value.toFixed(2)} />
                         <Legend />
-                        {selectedGroups.map((grupo) => (
-                            <Bar key={grupo} dataKey={grupo} fill={getGroupColor(grupo)}>
-                                <LabelList
-                                    dataKey={grupo}
-                                    position="top"
-                                    style={{ fontSize: '10px', fontWeight: 'bold' }}
-                                    formatter={(v) => v.toFixed(1)}
-                                />
-                            </Bar>
-                        ))}
-                    </BarChart>
-                </ResponsiveContainer>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                    {showPIAR ? 'Incluye estudiantes con PIAR' : 'Excluye estudiantes con PIAR'}
-                </p>
-            </div>
 
-            {/* Ranking de grupos */}
-            {ranking.length > 0 && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <Award className="text-amber-500" size={20} />
-                        Ranking: {analysis.pruebas.find(p => p.id === selectedPrueba)?.nombre}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {ranking.map((item, idx) => {
-                            const isTop = idx === 0;
-                            const color = getGroupColor(item.grupo);
+                        {/* Barras por grupo seleccionado */}
+                        {selectedGroups.map((grupo) => {
+                            const color = getGroupColor(grupo);
 
-                            return (
-                                <div
-                                    key={item.grupo}
-                                    className={`flex items-center gap-4 p-4 rounded-lg ${isTop ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : 'bg-gray-50'
-                                        }`}
+                            return showPIAR ? (
+                                // Renderizar par de barras si PIAR activo
+                                [
+                                    <Bar
+                                        key={`${grupo}-con`}
+                                        dataKey={`${grupo} (Con PIAR)`}
+                                        fill="#9ca3af" // Gris neutro
+                                        opacity={0.6}
+                                        radius={[4, 4, 0, 0]}
+                                    >
+                                        <LabelList position="top" style={{ fontSize: '9px', fill: '#6b7280' }} formatter={v => v.toFixed(1)} />
+                                    </Bar>,
+                                    <Bar
+                                        key={`${grupo}-sin`}
+                                        dataKey={`${grupo} (Sin PIAR)`}
+                                        fill={color}
+                                        radius={[4, 4, 0, 0]}
+                                    >
+                                        <LabelList position="top" style={{ fontSize: '10px', fontWeight: 'bold' }} formatter={v => v.toFixed(1)} />
+                                    </Bar>
+                                ]
+                            ) : (
+                                // Solo barra Sin PIAR
+                                <Bar
+                                    key={`${grupo}-sin`}
+                                    dataKey={`${grupo} (Sin PIAR)`}
+                                    name={grupo}
+                                    fill={color}
+                                    radius={[4, 4, 0, 0]}
                                 >
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl ${isTop ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-600'
-                                        }`}>
-                                        {idx + 1}
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="font-semibold" style={{ color }}>{item.grupo}</p>
-                                        <p className="text-xs text-gray-500">{item.totalEstudiantes} estudiantes</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-2xl font-bold text-gray-800">{item.promedio.toFixed(1)}</p>
-                                        <p className="text-xs text-gray-500">promedio</p>
-                                    </div>
-                                </div>
+                                    <LabelList position="top" style={{ fontSize: '10px', fontWeight: 'bold' }} formatter={v => v.toFixed(1)} />
+                                </Bar>
                             );
                         })}
-                    </div>
-                </div>
-            )}
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
 
             {/* Tabla comparativa detallada */}
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -229,38 +208,55 @@ export function GroupComparison({ analysis }) {
                             <tr className="bg-gray-50 text-left">
                                 <th className="px-4 py-3 font-semibold text-gray-700">Grupo</th>
                                 {analysis.pruebas.map(p => (
-                                    <th key={p.id} className="px-4 py-3 font-semibold text-gray-700 text-center">
+                                    <th key={p.id} className="px-4 py-3 font-semibold text-gray-700 text-center" colSpan={showPIAR ? 2 : 1}>
                                         {p.nombre}
                                     </th>
                                 ))}
-                                <th className="px-4 py-3 font-semibold text-gray-700 text-center">Δ Total</th>
                             </tr>
+                            {showPIAR && (
+                                <tr className="bg-gray-50 text-xs text-gray-500">
+                                    <th></th>
+                                    {analysis.pruebas.map(p => (
+                                        <>
+                                            <th key={`${p.id}-sin`} className="pb-2 text-center">Sin PIAR</th>
+                                            <th key={`${p.id}-con`} className="pb-2 text-center text-gray-400">Con PIAR</th>
+                                        </>
+                                    ))}
+                                </tr>
+                            )}
                         </thead>
                         <tbody>
                             {selectedGroups.map((grupo) => {
-                                const metrics = showPIAR ? groupMetricsConPIAR[grupo] : groupMetricsSinPIAR[grupo];
-                                if (!metrics) return null;
-
-                                const primera = metrics[0]?.promedioGlobal || 0;
-                                const ultima = metrics[metrics.length - 1]?.promedioGlobal || 0;
-                                const cambio = ultima - primera;
+                                const metricsCon = groupMetricsConPIAR[grupo];
+                                const metricsSin = groupMetricsSinPIAR[grupo];
                                 const color = getGroupColor(grupo);
 
                                 return (
                                     <tr key={grupo} className="border-t border-gray-100 hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-semibold" style={{ color }}>{grupo}</td>
-                                        {metrics.map(m => (
-                                            <td key={m.pruebaId} className="px-4 py-3 text-center">
-                                                <span className="font-medium text-gray-800">{m.promedioGlobal.toFixed(1)}</span>
-                                                <span className="text-xs text-gray-500 block">σ {m.desviacionGlobal.toFixed(1)}</span>
-                                            </td>
-                                        ))}
-                                        <td className="px-4 py-3 text-center">
-                                            <span className={`font-semibold ${cambio > 0 ? 'text-green-600' : cambio < 0 ? 'text-red-600' : 'text-gray-500'
-                                                }`}>
-                                                {cambio >= 0 ? '+' : ''}{cambio.toFixed(1)}
-                                            </span>
+                                        <td className="px-4 py-3 font-semibold flex items-center gap-2">
+                                            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }}></span>
+                                            {grupo}
                                         </td>
+                                        {analysis.pruebas.map((p, idx) => {
+                                            const mSin = metricsSin?.find(m => m.pruebaId === p.id);
+                                            const mCon = metricsCon?.find(m => m.pruebaId === p.id);
+
+                                            return showPIAR ? (
+                                                <>
+                                                    <td key={`${p.id}-sin`} className="px-2 py-3 text-center border-l border-gray-100">
+                                                        <span className="font-bold text-gray-800">{mSin?.promedioGlobal.toFixed(1) || '-'}</span>
+                                                    </td>
+                                                    <td key={`${p.id}-con`} className="px-2 py-3 text-center text-gray-400 border-r border-gray-100">
+                                                        {mCon?.promedioGlobal.toFixed(1) || '-'}
+                                                    </td>
+                                                </>
+                                            ) : (
+                                                <td key={`${p.id}-sin`} className="px-4 py-3 text-center border-l border-r border-gray-100">
+                                                    <span className="font-bold text-gray-800">{mSin?.promedioGlobal.toFixed(1) || '-'}</span>
+                                                    <div className="text-xs text-gray-500">σ {mSin?.desviacionGlobal.toFixed(1)}</div>
+                                                </td>
+                                            );
+                                        })}
                                     </tr>
                                 );
                             })}

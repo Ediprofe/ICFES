@@ -84,6 +84,8 @@ export function StudentEvolution({ analysis }) {
         if (!studentMetrics) return [];
         return Object.keys(AREA_NAMES).map(areaId => {
             const data = { area: AREA_NAMES[areaId], areaId };
+
+            // Añadir cada prueba como una "serie"
             studentMetrics.resultados.forEach(r => {
                 data[r.pruebaNombre] = r.presente && r.areas[areaId] !== null ? r.areas[areaId] : null;
             });
@@ -116,7 +118,7 @@ export function StudentEvolution({ analysis }) {
 
                     {/* Toggle PIAR */}
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Incluir PIAR:</span>
+                        <span className="text-sm text-gray-600">Incluir PIAR en lista:</span>
                         <button
                             onClick={() => {
                                 setIncludePIAR(!includePIAR);
@@ -127,7 +129,7 @@ export function StudentEvolution({ analysis }) {
                                 : 'bg-gray-200 text-gray-700'
                                 }`}
                         >
-                            {includePIAR ? 'PIAR incluido' : 'PIAR excluido'}
+                            {includePIAR ? 'Listar PIAR' : 'Ocultar PIAR'}
                         </button>
                     </div>
                 </div>
@@ -267,8 +269,8 @@ export function StudentEvolution({ analysis }) {
 
                     {/* Gráfico por Áreas */}
                     <div className="bg-white rounded-xl shadow-lg p-6">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Resultados por Área</h3>
-                        <ResponsiveContainer width="100%" height={300}>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Resultados Completos por Área</h3>
+                        <ResponsiveContainer width="100%" height={350}>
                             <BarChart data={chartDataAreas}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis dataKey="area" />
