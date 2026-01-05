@@ -13,76 +13,87 @@ import { COLORS, AREA_NAMES } from './chartConfig';
  * Prepara todos los datos para el export
  */
 function prepareExportData(analysis) {
-  // Métricas del grado
-  const gradeMetricsSinPIAR = analysis.getGradeMetrics(true);
-  const gradeMetricsConPIAR = analysis.getGradeMetrics(false);
+    // Métricas del grado
+    const gradeMetricsSinPIAR = analysis.getGradeMetrics(true);
+    const gradeMetricsConPIAR = analysis.getGradeMetrics(false);
 
-  // Métricas por grupo
-  const groupMetrics = {};
-  analysis.grupos.forEach(g => {
-    groupMetrics[g] = {
-      sinPIAR: analysis.getGroupMetrics(g, true),
-      conPIAR: analysis.getGroupMetrics(g, false)
-    };
-  });
-
-  // Datos de estudiantes
-  const students = Array.from(analysis.estudiantes.values()).map(student => {
-    const metrics = analysis.getStudentMetrics(student.codigo);
-    const resultados = metrics?.resultados || [];
-
-    // Promedios
-    const globales = resultados.filter(r => r.presente).map(r => r.global);
-    const promedioGlobal = globales.length > 0 ? globales.reduce((a, b) => a + b, 0) / globales.length : null;
-
-    const areasPromedio = {};
-    Object.keys(AREA_NAMES).forEach(area => {
-      const valores = resultados.filter(r => r.presente && r.areas[area] !== null).map(r => r.areas[area]);
-      areasPromedio[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
+    // Métricas por grupo
+    const groupMetrics = {};
+    analysis.grupos.forEach(g => {
+        groupMetrics[g] = {
+            sinPIAR: analysis.getGroupMetrics(g, true),
+            conPIAR: analysis.getGroupMetrics(g, false)
+        };
     });
 
-    return {
-      codigo: student.codigo,
-      nombre: student.nombre,
-      apellido: student.apellido,
-      grupo: student.grupo,
-      piar: student.piar,
-      promedioGlobal,
-      areasPromedio,
-      resultados: resultados.map(r => ({
-        pruebaId: r.pruebaId,
-        pruebaNombre: r.pruebaNombre,
-        presente: r.presente,
-        global: r.global,
-        areas: r.areas
-      })),
-      pruebasPresentes: resultados.filter(r => r.presente).length,
-      pruebasTotales: analysis.pruebas.length
-    };
-  }).filter(s => s.promedioGlobal !== null)
-    .sort((a, b) => (b.promedioGlobal || 0) - (a.promedioGlobal || 0));
+    // Datos de estudiantes
+    const students = Array.from(analysis.estudiantes.values()).map(student => {
+        const metrics = analysis.getStudentMetrics(student.codigo);
+        const resultados = metrics?.resultados || [];
 
-  return {
-    grado: analysis.grado,
-    pruebas: analysis.pruebas.map(p => ({ id: p.id, nombre: p.nombre })),
-    grupos: analysis.grupos,
-    gradeMetricsSinPIAR,
-    gradeMetricsConPIAR,
-    groupMetrics,
-    students,
-    colors: COLORS,
-    areaNames: AREA_NAMES
-  };
+        // Promedios
+        const globales = resultados.filter(r => r.presente).map(r => r.global);
+        const promedioGlobal = globales.length > 0 ? globales.reduce((a, b) => a + b, 0) / globales.length : null;
+
+        const areasPromedio = {};
+        Object.keys(AREA_NAMES).forEach(area => {
+            const valores = resultados.filter(r => r.presente && r.areas[area] !== null).map(r => r.areas[area]);
+            areasPromedio[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
+        });
+
+        // Datos por prueba específica (para ranking por simulacro)
+        const datosPorPrueba = {};
+        resultados.forEach(r => {
+            datosPorPrueba[r.pruebaId] = {
+                global: r.presente ? r.global : null,
+                ...Object.fromEntries(Object.keys(AREA_NAMES).map(area => [area, r.presente ? r.areas[area] : null]))
+            };
+        });
+
+        return {
+            codigo: student.codigo,
+            nombre: student.nombre,
+            apellido: student.apellido,
+            grupo: student.grupo,
+            piar: student.piar,
+            promedioGlobal,
+            areasPromedio,
+            datosPorPrueba,
+            resultados: resultados.map(r => ({
+                pruebaId: r.pruebaId,
+                pruebaNombre: r.pruebaNombre,
+                presente: r.presente,
+                global: r.global,
+                areas: r.areas
+            })),
+            pruebasPresentes: resultados.filter(r => r.presente).length,
+            pruebasTotales: analysis.pruebas.length,
+            todasLasPruebas: resultados.filter(r => r.presente).length === analysis.pruebas.length
+        };
+    }).filter(s => s.promedioGlobal !== null)
+        .sort((a, b) => (b.promedioGlobal || 0) - (a.promedioGlobal || 0));
+
+    return {
+        grado: analysis.grado,
+        pruebas: analysis.pruebas.map(p => ({ id: p.id, nombre: p.nombre })),
+        grupos: analysis.grupos,
+        gradeMetricsSinPIAR,
+        gradeMetricsConPIAR,
+        groupMetrics,
+        students,
+        colors: COLORS,
+        areaNames: AREA_NAMES
+    };
 }
 
 /**
  * Genera el HTML completo
  */
 export function generateLongitudinalHTML(analysis) {
-  const data = prepareExportData(analysis);
-  const dataJSON = JSON.stringify(data);
+    const data = prepareExportData(analysis);
+    const dataJSON = JSON.stringify(data);
 
-  return `<!DOCTYPE html>
+    return `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -176,7 +187,21 @@ function App() {
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [groupFilter, setGroupFilter] = useState('');
-    const [showPIAR, setShowPIAR] = useState({});
+    const [includePIAR, setIncludePIAR] = useState(true);
+    const [filterCompleto, setFilterCompleto] = useState('all');
+    const [selectedPrueba, setSelectedPrueba] = useState(DATA.pruebas.length > 0 ? DATA.pruebas[DATA.pruebas.length - 1].id : 'promedio');
+
+    // Función para obtener valor según prueba seleccionada
+    const getValorActual = (student, campo) => {
+        if (selectedPrueba === 'promedio') {
+            if (campo === 'global') return student.promedioGlobal;
+            return student.areasPromedio[campo];
+        } else {
+            const datosPrueba = student.datosPorPrueba[selectedPrueba];
+            if (!datosPrueba) return null;
+            return datosPrueba[campo];
+        }
+    };
 
     // KPIs
     const first = DATA.gradeMetricsSinPIAR[0];
@@ -185,15 +210,49 @@ function App() {
 
     // Filtrar estudiantes
     const filteredStudents = useMemo(() => {
-        return DATA.students.filter(s => {
-            const matchSearch = !searchTerm || 
-                s.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                s.apellido.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                s.codigo.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchGroup = !groupFilter || s.grupo === groupFilter;
-            return matchSearch && matchGroup;
+        let data = [...DATA.students];
+        
+        // Filtro PIAR
+        if (!includePIAR) {
+            data = data.filter(s => s.piar !== 'Sí');
+        }
+        
+        // Filtro grupo
+        if (groupFilter) {
+            data = data.filter(s => s.grupo === groupFilter);
+        }
+        
+        // Filtro búsqueda
+        if (searchTerm) {
+            const search = searchTerm.toLowerCase();
+            data = data.filter(s =>
+                s.nombre.toLowerCase().includes(search) ||
+                s.apellido.toLowerCase().includes(search) ||
+                s.codigo.toLowerCase().includes(search)
+            );
+        }
+        
+        // Filtro asistencia
+        if (filterCompleto === 'completo') {
+            data = data.filter(s => s.todasLasPruebas);
+        } else if (filterCompleto === 'incompleto') {
+            data = data.filter(s => !s.todasLasPruebas);
+        }
+        
+        // Ordenar por global de la prueba seleccionada
+        data.sort((a, b) => {
+            const valA = getValorActual(a, 'global') ?? -Infinity;
+            const valB = getValorActual(b, 'global') ?? -Infinity;
+            return valB - valA;
         });
-    }, [searchTerm, groupFilter]);
+        
+        return data;
+    }, [searchTerm, groupFilter, includePIAR, filterCompleto, selectedPrueba]);
+
+    // Título del ranking
+    const rankingTitle = selectedPrueba === 'promedio' 
+        ? '🏆 Ranking Promedio General'
+        : '🏆 Ranking: ' + (DATA.pruebas.find(p => p.id === selectedPrueba)?.nombre || selectedPrueba);
 
     // Estudiante seleccionado
     const studentData = useMemo(() => {
@@ -397,40 +456,86 @@ function App() {
 
         // TAB: Por Estudiante
         activeTab === 'students' && React.createElement('div', { className: 'space-y-6' },
-            // Filtros y selector
+            // Filtros completos
             React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
-                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '👤 Seleccionar Estudiante'),
-                React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-4 gap-4 mb-4' },
-                    React.createElement('input', {
-                        type: 'text',
-                        placeholder: '🔍 Buscar por nombre o código...',
-                        value: searchTerm,
-                        onChange: (e) => setSearchTerm(e.target.value),
-                        className: 'px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500'
-                    }),
-                    React.createElement('select', {
-                        value: groupFilter,
-                        onChange: (e) => setGroupFilter(e.target.value),
-                        className: 'px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500'
-                    },
-                        React.createElement('option', { value: '' }, 'Todos los grupos'),
-                        DATA.grupos.map(g => React.createElement('option', { key: g, value: g }, g))
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '👤 Filtros y Búsqueda'),
+                React.createElement('div', { className: 'grid grid-cols-2 md:grid-cols-6 gap-4 mb-4' },
+                    // Selector de Vista (Prueba)
+                    React.createElement('div', null,
+                        React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, '📅 Vista'),
+                        React.createElement('select', {
+                            value: selectedPrueba,
+                            onChange: (e) => setSelectedPrueba(e.target.value),
+                            className: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm'
+                        },
+                            React.createElement('option', { value: 'promedio' }, '📊 Promedio General'),
+                            DATA.pruebas.map(p => React.createElement('option', { key: p.id, value: p.id }, '📝 ' + p.nombre))
+                        )
                     ),
-                    React.createElement('select', {
-                        value: selectedStudent || '',
-                        onChange: (e) => setSelectedStudent(e.target.value || null),
-                        className: 'px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 md:col-span-2'
-                    },
-                        React.createElement('option', { value: '' }, 'Seleccionar estudiante...'),
-                        filteredStudents.map(s => 
-                            React.createElement('option', { key: s.codigo, value: s.codigo }, 
-                                s.apellido + ' ' + s.nombre + ' (' + s.grupo + ') - ' + s.promedioGlobal?.toFixed(1)
-                            )
+                    // Buscar
+                    React.createElement('div', null,
+                        React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, '🔍 Buscar'),
+                        React.createElement('input', {
+                            type: 'text',
+                            placeholder: 'Nombre o código...',
+                            value: searchTerm,
+                            onChange: (e) => setSearchTerm(e.target.value),
+                            className: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm'
+                        })
+                    ),
+                    // Grupo
+                    React.createElement('div', null,
+                        React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, '👥 Grupo'),
+                        React.createElement('select', {
+                            value: groupFilter,
+                            onChange: (e) => setGroupFilter(e.target.value),
+                            className: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm'
+                        },
+                            React.createElement('option', { value: '' }, 'Todos'),
+                            DATA.grupos.map(g => React.createElement('option', { key: g, value: g }, g))
+                        )
+                    ),
+                    // PIAR
+                    React.createElement('div', null,
+                        React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, 'PIAR'),
+                        React.createElement('select', {
+                            value: includePIAR ? 'todos' : 'sinPiar',
+                            onChange: (e) => setIncludePIAR(e.target.value === 'todos'),
+                            className: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm'
+                        },
+                            React.createElement('option', { value: 'todos' }, 'Incluir PIAR'),
+                            React.createElement('option', { value: 'sinPiar' }, 'Excluir PIAR')
+                        )
+                    ),
+                    // Asistencia
+                    React.createElement('div', null,
+                        React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, 'Asistencia'),
+                        React.createElement('select', {
+                            value: filterCompleto,
+                            onChange: (e) => setFilterCompleto(e.target.value),
+                            className: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm'
+                        },
+                            React.createElement('option', { value: 'all' }, 'Todos'),
+                            React.createElement('option', { value: 'completo' }, 'Presentó todas'),
+                            React.createElement('option', { value: 'incompleto' }, 'Incompletas')
+                        )
+                    ),
+                    // Selector estudiante
+                    React.createElement('div', null,
+                        React.createElement('label', { className: 'text-sm font-medium text-gray-700 mb-1 block' }, 'Estudiante'),
+                        React.createElement('select', {
+                            value: selectedStudent || '',
+                            onChange: (e) => setSelectedStudent(e.target.value || null),
+                            className: 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm'
+                        },
+                            React.createElement('option', { value: '' }, 'Ver detalle...'),
+                            filteredStudents.map(s => React.createElement('option', { key: s.codigo, value: s.codigo }, s.apellido + ' ' + s.nombre))
                         )
                     )
                 ),
                 React.createElement('p', { className: 'text-sm text-gray-500' }, 
-                    filteredStudents.length + ' estudiantes encontrados'
+                    filteredStudents.length + ' estudiante' + (filteredStudents.length !== 1 ? 's' : '') + ' encontrado' + (filteredStudents.length !== 1 ? 's' : '') +
+                    (!includePIAR ? ' (sin PIAR)' : '')
                 )
             ),
 
@@ -559,47 +664,72 @@ function App() {
 
             // Tabla de ranking
             React.createElement('div', { className: 'bg-white rounded-xl shadow-lg p-6' },
-                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, '🏆 Ranking General'),
-                React.createElement('div', { className: 'overflow-x-auto max-h-96 overflow-y-auto' },
+                React.createElement('h3', { className: 'text-lg font-bold text-gray-800 mb-4' }, rankingTitle),
+                React.createElement('div', { className: 'overflow-x-auto max-h-[500px] overflow-y-auto' },
                     React.createElement('table', { className: 'w-full text-sm' },
-                        React.createElement('thead', { className: 'sticky top-0 bg-white' },
+                        React.createElement('thead', { className: 'sticky top-0 bg-white z-10' },
                             React.createElement('tr', { className: 'bg-gray-50 text-left' },
-                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, '#'),
-                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, 'Código'),
-                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, 'Nombre'),
-                                React.createElement('th', { className: 'px-3 py-2 font-semibold' }, 'Grupo'),
-                                React.createElement('th', { className: 'px-3 py-2 font-semibold text-center' }, 'Global'),
-                                React.createElement('th', { className: 'px-3 py-2 font-semibold text-center' }, 'Pruebas'),
-                                React.createElement('th', { className: 'px-3 py-2 font-semibold text-center' }, 'Ver')
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, '#'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Código'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Apellido'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Nombre'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700' }, 'Grupo'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'PIAR'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Global'),
+                                Object.values(DATA.areaNames).map(name =>
+                                    React.createElement('th', { key: name, className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, name)
+                                ),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Pruebas'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Completo'),
+                                React.createElement('th', { className: 'px-2 py-2 font-semibold text-gray-700 text-center' }, 'Ver')
                             )
                         ),
                         React.createElement('tbody', null,
-                            filteredStudents.map((s, idx) =>
-                                React.createElement('tr', { 
+                            filteredStudents.map((s, idx) => {
+                                const globalVal = getValorActual(s, 'global');
+                                return React.createElement('tr', { 
                                     key: s.codigo, 
                                     className: 'border-t border-gray-100 hover:bg-gray-50 cursor-pointer ' + (selectedStudent === s.codigo ? 'bg-indigo-50' : ''),
                                     onClick: () => setSelectedStudent(s.codigo)
                                 },
-                                    React.createElement('td', { className: 'px-3 py-2 font-bold text-gray-400' }, idx + 1),
-                                    React.createElement('td', { className: 'px-3 py-2 font-mono text-sm' }, s.codigo),
-                                    React.createElement('td', { className: 'px-3 py-2' }, s.apellido + ' ' + s.nombre),
-                                    React.createElement('td', { className: 'px-3 py-2' },
-                                        React.createElement('span', { className: 'px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs' }, s.grupo)
+                                    React.createElement('td', { className: 'px-2 py-2 font-bold text-gray-400' }, idx + 1),
+                                    React.createElement('td', { className: 'px-2 py-2 font-mono text-xs text-gray-600' }, s.codigo),
+                                    React.createElement('td', { className: 'px-2 py-2 font-medium text-gray-800' }, s.apellido),
+                                    React.createElement('td', { className: 'px-2 py-2 text-gray-700' }, s.nombre),
+                                    React.createElement('td', { className: 'px-2 py-2' },
+                                        React.createElement('span', { className: 'px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs' }, s.grupo)
                                     ),
-                                    React.createElement('td', { className: 'px-3 py-2 text-center font-bold ' + (s.promedioGlobal >= 60 ? 'text-green-600' : 'text-red-600') },
-                                        s.promedioGlobal?.toFixed(1)
+                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
+                                        s.piar === 'Sí' 
+                                            ? React.createElement('span', { className: 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium' }, 'PIAR')
+                                            : ''
                                     ),
-                                    React.createElement('td', { className: 'px-3 py-2 text-center' },
+                                    React.createElement('td', { className: 'px-2 py-2 text-center font-bold ' + (globalVal !== null && globalVal >= 60 ? 'text-green-600' : globalVal !== null ? 'text-red-600' : 'text-gray-400') },
+                                        globalVal !== null ? globalVal.toFixed(1) : '-'
+                                    ),
+                                    Object.keys(DATA.areaNames).map(area => {
+                                        const val = getValorActual(s, area);
+                                        return React.createElement('td', { 
+                                            key: area, 
+                                            className: 'px-2 py-2 text-center ' + (val !== null && val >= 60 ? 'text-green-600' : val !== null && val < 40 ? 'text-red-600' : 'text-gray-600')
+                                        }, val !== null ? val.toFixed(1) : '-');
+                                    }),
+                                    React.createElement('td', { className: 'px-2 py-2 text-center text-gray-600' },
                                         s.pruebasPresentes + '/' + s.pruebasTotales
                                     ),
-                                    React.createElement('td', { className: 'px-3 py-2 text-center' },
+                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
+                                        s.todasLasPruebas 
+                                            ? React.createElement('span', { className: 'px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium' }, 'Sí')
+                                            : React.createElement('span', { className: 'px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium' }, 'No')
+                                    ),
+                                    React.createElement('td', { className: 'px-2 py-2 text-center' },
                                         React.createElement('button', { 
-                                            className: 'text-indigo-600 hover:text-indigo-800',
+                                            className: 'p-1 text-indigo-600 hover:bg-indigo-50 rounded',
                                             onClick: (e) => { e.stopPropagation(); setSelectedStudent(s.codigo); }
                                         }, '👁️')
                                     )
-                                )
-                            )
+                                );
+                            })
                         )
                     )
                 )
