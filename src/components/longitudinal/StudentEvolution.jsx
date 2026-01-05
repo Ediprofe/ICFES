@@ -2,14 +2,14 @@
  * StudentEvolution - Vista de evolución individual por estudiante
  * 
  * INCLUYE:
- * 1. Tabla de ranking con filtros
- * 2. Columna "Presentó todas las pruebas"
- * 3. Vista individual del estudiante seleccionado
+ * 1. Tabla de ranking con TODAS las columnas ordenables
+ * 2. Selector de prueba (Promedio / Por Simulacro)
+ * 3. Columna "Presentó todas las pruebas"
  */
 
 import { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
-import { User, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, EyeOff, Table, ChevronUp, ChevronDown } from 'lucide-react';
+import { User, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, Table, ChevronUp, ChevronDown, Calendar } from 'lucide-react';
 import { getYDomainWithPadding } from './ChartCard';
 
 // Colores por área
@@ -38,14 +38,19 @@ const PRUEBA_COLORS = [
  * @param {import('../../models/LongitudinalAnalysis.js').LongitudinalAnalysis} props.analysis
  */
 export function StudentEvolution({ analysis }) {
-    const [viewMode, setViewMode] = useState('table'); // 'table' or 'individual'
+    const [viewMode, setViewMode] = useState('table');
     const [selectedGroup, setSelectedGroup] = useState('all');
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [includePIAR, setIncludePIAR] = useState(true);
-    const [filterCompleto, setFilterCompleto] = useState('all'); // 'all', 'completo', 'incompleto'
-    const [sortField, setSortField] = useState('promedioGlobal');
+    const [filterCompleto, setFilterCompleto] = useState('all');
+    const [sortField, setSortField] = useState('global');
     const [sortDir, setSortDir] = useState('desc');
+    // Selector de prueba: 'promedio' o ID de prueba específica
+    // Default: última prueba
+    const [selectedPrueba, setSelectedPrueba] = useState(() => {
+        return analysis.pruebas?.length > 0 ? analysis.pruebas[analysis.pruebas.length - 1].id : 'promedio';
+    });
 
     // Calcular datos de ranking para todos los estudiantes
     const rankingData = useMemo(() => {
@@ -55,15 +60,24 @@ export function StudentEvolution({ analysis }) {
             const metrics = analysis.getStudentMetrics(student.codigo);
             const resultados = metrics?.resultados || [];
 
-            // Calcular promedios
+            // Calcular promedios generales
             const globales = resultados.filter(r => r.presente).map(r => r.global);
             const promedioGlobal = globales.length > 0 ? globales.reduce((a, b) => a + b, 0) / globales.length : null;
 
-            // Promedios por área
-            const areas = {};
+            // Promedios por área (promedio de todas las pruebas)
+            const areasPromedio = {};
             Object.keys(AREA_NAMES).forEach(area => {
                 const valores = resultados.filter(r => r.presente && r.areas[area] !== null).map(r => r.areas[area]);
-                areas[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
+                areasPromedio[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
+            });
+
+            // Datos por prueba específica
+            const datosPorPrueba = {};
+            resultados.forEach(r => {
+                datosPorPrueba[r.pruebaId] = {
+                    global: r.presente ? r.global : null,
+                    ...Object.fromEntries(Object.keys(AREA_NAMES).map(area => [area, r.presente ? r.areas[area] : null]))
+                };
             });
 
             const pruebasPresentes = resultados.filter(r => r.presente).length;
@@ -72,7 +86,8 @@ export function StudentEvolution({ analysis }) {
             return {
                 ...student,
                 promedioGlobal,
-                ...areas,
+                areasPromedio,
+                datosPorPrueba,
                 pruebasPresentes,
                 pruebasTotales: analysis.pruebas.length,
                 todasLasPruebas
@@ -80,21 +95,30 @@ export function StudentEvolution({ analysis }) {
         });
     }, [analysis]);
 
+    // Obtener valores para la vista actual (promedio o prueba específica)
+    const getValorActual = (student, campo) => {
+        if (selectedPrueba === 'promedio') {
+            if (campo === 'global') return student.promedioGlobal;
+            return student.areasPromedio[campo];
+        } else {
+            const datosPrueba = student.datosPorPrueba[selectedPrueba];
+            if (!datosPrueba) return null;
+            return datosPrueba[campo];
+        }
+    };
+
     // Filtrar y ordenar
     const filteredRanking = useMemo(() => {
         let data = [...rankingData];
 
-        // Filtrar por PIAR
         if (!includePIAR) {
             data = data.filter(s => s.piar !== 'Sí');
         }
 
-        // Filtrar por grupo
         if (selectedGroup !== 'all') {
             data = data.filter(s => s.grupo === selectedGroup);
         }
 
-        // Filtrar por búsqueda
         if (searchTerm) {
             const search = searchTerm.toLowerCase();
             data = data.filter(s =>
@@ -104,22 +128,35 @@ export function StudentEvolution({ analysis }) {
             );
         }
 
-        // Filtrar por completitud
         if (filterCompleto === 'completo') {
             data = data.filter(s => s.todasLasPruebas);
         } else if (filterCompleto === 'incompleto') {
             data = data.filter(s => !s.todasLasPruebas);
         }
 
-        // Ordenar
+        // Ordenar usando el valor actual según la prueba seleccionada
         data.sort((a, b) => {
-            const valA = a[sortField] ?? -Infinity;
-            const valB = b[sortField] ?? -Infinity;
+            let valA, valB;
+
+            // Campos especiales que no dependen de la prueba
+            if (['codigo', 'apellido', 'nombre', 'grupo'].includes(sortField)) {
+                valA = a[sortField] || '';
+                valB = b[sortField] || '';
+                const cmp = valA.localeCompare(valB);
+                return sortDir === 'desc' ? -cmp : cmp;
+            } else if (sortField === 'pruebasPresentes') {
+                valA = a.pruebasPresentes ?? -Infinity;
+                valB = b.pruebasPresentes ?? -Infinity;
+            } else {
+                valA = getValorActual(a, sortField) ?? -Infinity;
+                valB = getValorActual(b, sortField) ?? -Infinity;
+            }
+
             return sortDir === 'desc' ? valB - valA : valA - valB;
         });
 
         return data;
-    }, [rankingData, includePIAR, selectedGroup, searchTerm, filterCompleto, sortField, sortDir]);
+    }, [rankingData, includePIAR, selectedGroup, searchTerm, filterCompleto, sortField, sortDir, selectedPrueba]);
 
     // Estudiante seleccionado para vista individual
     const studentMetrics = useMemo(() => {
@@ -173,9 +210,25 @@ export function StudentEvolution({ analysis }) {
     };
 
     const SortIcon = ({ field }) => {
-        if (sortField !== field) return null;
-        return sortDir === 'desc' ? <ChevronDown size={14} /> : <ChevronUp size={14} />;
+        if (sortField !== field) return <span className="text-gray-300 ml-1">↕</span>;
+        return sortDir === 'desc' ? <ChevronDown size={14} className="inline" /> : <ChevronUp size={14} className="inline" />;
     };
+
+    const ThSortable = ({ field, children }) => (
+        <th
+            className="px-3 py-3 font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap"
+            onClick={() => handleSort(field)}
+        >
+            <div className="flex items-center gap-1">
+                {children} <SortIcon field={field} />
+            </div>
+        </th>
+    );
+
+    // Título del ranking según la prueba seleccionada
+    const rankingTitle = selectedPrueba === 'promedio'
+        ? 'Ranking Promedio General'
+        : `Ranking: ${analysis.pruebas.find(p => p.id === selectedPrueba)?.nombre || selectedPrueba}`;
 
     return (
         <div className="w-full max-w-full space-y-6">
@@ -209,7 +262,25 @@ export function StudentEvolution({ analysis }) {
                 </div>
 
                 {/* Filtros */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    {/* Selector de Prueba */}
+                    <div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                            <Calendar size={14} />
+                            Vista
+                        </label>
+                        <select
+                            value={selectedPrueba}
+                            onChange={(e) => setSelectedPrueba(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+                        >
+                            <option value="promedio">📊 Promedio General</option>
+                            {analysis.pruebas.map(p => (
+                                <option key={p.id} value={p.id}>📝 {p.nombre}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     {/* Búsqueda */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
@@ -220,7 +291,7 @@ export function StudentEvolution({ analysis }) {
                             type="text"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Nombre, apellido o código..."
+                            placeholder="Nombre o código..."
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
                         />
                     </div>
@@ -266,7 +337,7 @@ export function StudentEvolution({ analysis }) {
                         >
                             <option value="all">Todos</option>
                             <option value="completo">Presentó todas</option>
-                            <option value="incompleto">Pruebas incompletas</option>
+                            <option value="incompleto">Incompletas</option>
                         </select>
                     </div>
 
@@ -282,7 +353,7 @@ export function StudentEvolution({ analysis }) {
                                 <option value="">Seleccionar...</option>
                                 {filteredRanking.map(s => (
                                     <option key={s.codigo} value={s.codigo}>
-                                        {s.apellido} {s.nombre} ({s.codigo})
+                                        {s.apellido} {s.nombre}
                                     </option>
                                 ))}
                             </select>
@@ -298,85 +369,80 @@ export function StudentEvolution({ analysis }) {
 
             {/* VISTA: TABLA DE RANKING */}
             {viewMode === 'table' && (
-                <div className="bg-white rounded-xl shadow-lg p-6 overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-gray-50 text-left">
-                                <th className="px-3 py-3 font-semibold text-gray-700">#</th>
-                                <th className="px-3 py-3 font-semibold text-gray-700">Código</th>
-                                <th className="px-3 py-3 font-semibold text-gray-700">Apellido</th>
-                                <th className="px-3 py-3 font-semibold text-gray-700">Nombre</th>
-                                <th className="px-3 py-3 font-semibold text-gray-700">Grupo</th>
-                                <th className="px-3 py-3 font-semibold text-gray-700">PIAR</th>
-                                <th
-                                    className="px-3 py-3 font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                                    onClick={() => handleSort('promedioGlobal')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        Global <SortIcon field="promedioGlobal" />
-                                    </div>
-                                </th>
-                                {Object.entries(AREA_NAMES).map(([key, name]) => (
-                                    <th
-                                        key={key}
-                                        className="px-3 py-3 font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                                        onClick={() => handleSort(key)}
-                                    >
-                                        <div className="flex items-center gap-1">
-                                            {name} <SortIcon field={key} />
-                                        </div>
-                                    </th>
-                                ))}
-                                <th className="px-3 py-3 font-semibold text-gray-700 text-center">Pruebas</th>
-                                <th className="px-3 py-3 font-semibold text-gray-700 text-center">Completo</th>
-                                <th className="px-3 py-3 font-semibold text-gray-700 text-center">Ver</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRanking.map((s, idx) => (
-                                <tr key={s.codigo} className="border-t border-gray-100 hover:bg-gray-50">
-                                    <td className="px-3 py-3 font-bold text-gray-400">{idx + 1}</td>
-                                    <td className="px-3 py-3 text-gray-600">{s.codigo}</td>
-                                    <td className="px-3 py-3 font-medium text-gray-800">{s.apellido}</td>
-                                    <td className="px-3 py-3 text-gray-700">{s.nombre}</td>
-                                    <td className="px-3 py-3 text-gray-600">{s.grupo}</td>
-                                    <td className="px-3 py-3">
-                                        {s.piar === 'Sí' && (
-                                            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">PIAR</span>
-                                        )}
-                                    </td>
-                                    <td className={`px-3 py-3 font-bold ${s.promedioGlobal >= 60 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {s.promedioGlobal?.toFixed(1) || '-'}
-                                    </td>
-                                    {Object.keys(AREA_NAMES).map(area => (
-                                        <td key={area} className={`px-3 py-3 ${s[area] >= 60 ? 'text-green-600' : s[area] < 40 ? 'text-red-600' : 'text-gray-600'}`}>
-                                            {s[area]?.toFixed(1) || '-'}
-                                        </td>
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">{rankingTitle}</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-gray-50 text-left">
+                                    <th className="px-3 py-3 font-semibold text-gray-700">#</th>
+                                    <ThSortable field="codigo">Código</ThSortable>
+                                    <ThSortable field="apellido">Apellido</ThSortable>
+                                    <ThSortable field="nombre">Nombre</ThSortable>
+                                    <ThSortable field="grupo">Grupo</ThSortable>
+                                    <th className="px-3 py-3 font-semibold text-gray-700">PIAR</th>
+                                    <ThSortable field="global">Global</ThSortable>
+                                    {Object.entries(AREA_NAMES).map(([key, name]) => (
+                                        <ThSortable key={key} field={key}>{name}</ThSortable>
                                     ))}
-                                    <td className="px-3 py-3 text-center text-gray-600">{s.pruebasPresentes}/{s.pruebasTotales}</td>
-                                    <td className="px-3 py-3 text-center">
-                                        {s.todasLasPruebas ? (
-                                            <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">Sí</span>
-                                        ) : (
-                                            <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">No</span>
-                                        )}
-                                    </td>
-                                    <td className="px-3 py-3 text-center">
-                                        <button
-                                            onClick={() => {
-                                                setSelectedStudent(s.codigo);
-                                                setViewMode('individual');
-                                            }}
-                                            className="p-1 text-indigo-600 hover:bg-indigo-50 rounded"
-                                            title="Ver detalle"
-                                        >
-                                            <Eye size={16} />
-                                        </button>
-                                    </td>
+                                    <ThSortable field="pruebasPresentes">Pruebas</ThSortable>
+                                    <th className="px-3 py-3 font-semibold text-gray-700 text-center">Completo</th>
+                                    <th className="px-3 py-3 font-semibold text-gray-700 text-center">Ver</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {filteredRanking.map((s, idx) => {
+                                    const globalVal = getValorActual(s, 'global');
+
+                                    return (
+                                        <tr key={s.codigo} className="border-t border-gray-100 hover:bg-gray-50">
+                                            <td className="px-3 py-3 font-bold text-gray-400">{idx + 1}</td>
+                                            <td className="px-3 py-3 text-gray-600">{s.codigo}</td>
+                                            <td className="px-3 py-3 font-medium text-gray-800">{s.apellido}</td>
+                                            <td className="px-3 py-3 text-gray-700">{s.nombre}</td>
+                                            <td className="px-3 py-3 text-gray-600">{s.grupo}</td>
+                                            <td className="px-3 py-3">
+                                                {s.piar === 'Sí' && (
+                                                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">PIAR</span>
+                                                )}
+                                            </td>
+                                            <td className={`px-3 py-3 font-bold ${globalVal >= 60 ? 'text-green-600' : globalVal !== null ? 'text-red-600' : 'text-gray-400'}`}>
+                                                {globalVal?.toFixed(1) || '-'}
+                                            </td>
+                                            {Object.keys(AREA_NAMES).map(area => {
+                                                const val = getValorActual(s, area);
+                                                return (
+                                                    <td key={area} className={`px-3 py-3 ${val >= 60 ? 'text-green-600' : val !== null && val < 40 ? 'text-red-600' : 'text-gray-600'}`}>
+                                                        {val?.toFixed(1) || '-'}
+                                                    </td>
+                                                );
+                                            })}
+                                            <td className="px-3 py-3 text-center text-gray-600">{s.pruebasPresentes}/{s.pruebasTotales}</td>
+                                            <td className="px-3 py-3 text-center">
+                                                {s.todasLasPruebas ? (
+                                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">Sí</span>
+                                                ) : (
+                                                    <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">No</span>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-3 text-center">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedStudent(s.codigo);
+                                                        setViewMode('individual');
+                                                    }}
+                                                    className="p-1 text-indigo-600 hover:bg-indigo-50 rounded"
+                                                    title="Ver detalle"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
