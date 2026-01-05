@@ -9,7 +9,7 @@ export function generateInteractiveHTML(data) {
   // Calcular todas las métricas necesarias
   const dataConPIAR = data;
   const dataSinPIAR = data.filter(s => s['¿PIAR?'] !== 'Sí');
-  
+
   // Preparar listado de TODOS los estudiantes (incluyendo PIAR)
   const allStudentsList = data
     .map(s => ({
@@ -26,10 +26,10 @@ export function generateInteractiveHTML(data) {
       piar: s['¿PIAR?'] === 'Sí' ? 'Sí' : 'No'
     }))
     .sort((a, b) => b.global - a.global);
-  
+
   const globalAvgConPIAR = mean(dataConPIAR.map(s => s.Global)).toFixed(2);
   const globalAvgSinPIAR = mean(dataSinPIAR.map(s => s.Global)).toFixed(2);
-  
+
   const metricsConPIAR = calculateAreaMetrics(dataConPIAR, false);
   const metricsSinPIAR = calculateAreaMetrics(dataSinPIAR, false);
   const metricsByGrade = getMetricsByGrade(data);
@@ -37,20 +37,20 @@ export function generateInteractiveHTML(data) {
   const outliers = findOutliers(data);
   const top3ByGrade = getTop3ByGrade(data);
   const metricsComparison = getMetricsComparison(data);
-  
+
   const subjects = ['Lectura crítica', 'Matemáticas', 'Sociales', 'Naturales', 'Inglés'];
-  
+
   // Preparar datos de percentiles
   const chartDataPercentiles = subjects.map(subject => {
     const percentileKey = `Percentil ${subject}`;
     const area = subject.replace(' crítica', '');
-    
-    const studentsWithPercentilesConPIAR = data.filter(s => 
-      s[percentileKey] !== undefined && 
-      s[percentileKey] !== null && 
+
+    const studentsWithPercentilesConPIAR = data.filter(s =>
+      s[percentileKey] !== undefined &&
+      s[percentileKey] !== null &&
       s[percentileKey] !== ''
     );
-    
+
     let avgPercentileConPIAR = null;
     if (studentsWithPercentilesConPIAR.length > 0) {
       const sum = studentsWithPercentilesConPIAR.reduce((acc, s) => {
@@ -59,13 +59,13 @@ export function generateInteractiveHTML(data) {
       }, 0);
       avgPercentileConPIAR = sum / studentsWithPercentilesConPIAR.length;
     }
-    
-    const studentsWithPercentilesSinPIAR = dataSinPIAR.filter(s => 
-      s[percentileKey] !== undefined && 
-      s[percentileKey] !== null && 
+
+    const studentsWithPercentilesSinPIAR = dataSinPIAR.filter(s =>
+      s[percentileKey] !== undefined &&
+      s[percentileKey] !== null &&
       s[percentileKey] !== ''
     );
-    
+
     let avgPercentileSinPIAR = null;
     if (studentsWithPercentilesSinPIAR.length > 0) {
       const sum = studentsWithPercentilesSinPIAR.reduce((acc, s) => {
@@ -74,7 +74,7 @@ export function generateInteractiveHTML(data) {
       }, 0);
       avgPercentileSinPIAR = sum / studentsWithPercentilesSinPIAR.length;
     }
-    
+
     return {
       area,
       conPIAR: avgPercentileConPIAR,
@@ -82,34 +82,34 @@ export function generateInteractiveHTML(data) {
       hasData: avgPercentileConPIAR !== null || avgPercentileSinPIAR !== null
     };
   });
-  
+
   const hasPercentileData = chartDataPercentiles.some(d => d.hasData);
-  
+
   // Preparar datos para gráficos
   const chartDataPromedios = metricsConPIAR.map((m, index) => ({
     area: m.area.replace(' crítica', ''),
     conPIAR: parseFloat(m.promedio),
     sinPIAR: parseFloat(metricsSinPIAR[index].promedio)
   }));
-  
+
   const chartDataDesviacion = metricsConPIAR.map((m, index) => ({
     area: m.area.replace(' crítica', ''),
     conPIAR: parseFloat(m.desviacion),
     sinPIAR: parseFloat(metricsSinPIAR[index].desviacion)
   }));
-  
+
   const chartDataGradosPromedios = gradeAverages.map(g => ({
     grado: `Grado ${g.grado}`,
     conPIAR: parseFloat(g.promedioConPIAR.toFixed(2)),
     sinPIAR: parseFloat(g.promedioSinPIAR.toFixed(2))
   }));
-  
+
   const chartDataGradosDesviacion = gradeAverages.map(g => ({
     grado: `Grado ${g.grado}`,
     conPIAR: parseFloat(g.desviacionConPIAR.toFixed(2)),
     sinPIAR: parseFloat(g.desviacionSinPIAR.toFixed(2))
   }));
-  
+
   // Preparar datos para comparación con/sin outliers
   // Gráfico 1: Métricas Globales
   const chartDataOutliersGlobal = [
@@ -124,7 +124,7 @@ export function generateInteractiveHTML(data) {
       sinOutliers: metricsComparison.global.sinOutliers.desviacion
     }
   ];
-  
+
   // Gráfico 2: Métricas por Área (solo áreas, sin global)
   const chartDataOutliersAreas = metricsComparison.areas.map(area => ({
     area: area.area.replace(' crítica', ''),
@@ -133,12 +133,12 @@ export function generateInteractiveHTML(data) {
     desvConOutliers: area.conOutliers.desviacion,
     desvSinOutliers: area.sinOutliers.desviacion
   }));
-  
+
   // Preparar datos para gráfico integrado de todas las áreas por grado (CON y SIN PIAR)
   const chartDataIntegradoConPIAR = [];
   const chartDataIntegradoSinPIAR = [];
   const grades = [...new Set(data.map(s => s.Grupo))].sort();
-  
+
   grades.forEach(grado => {
     const gradoData = metricsByGrade.find(g => g.grado === grado);
     if (gradoData) {
@@ -152,7 +152,7 @@ export function generateInteractiveHTML(data) {
         'Inglés': parseFloat(gradoData.metricsConPIAR.find(m => m.subject === 'Inglés')?.promedio || 0)
       };
       chartDataIntegradoConPIAR.push(dataPointConPIAR);
-      
+
       // Sin PIAR
       const dataPointSinPIAR = {
         grado: `Grado ${grado}`,
@@ -165,7 +165,7 @@ export function generateInteractiveHTML(data) {
       chartDataIntegradoSinPIAR.push(dataPointSinPIAR);
     }
   });
-  
+
   // Generar el HTML
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -562,21 +562,7 @@ export function generateInteractiveHTML(data) {
       <h1>📊 Análisis ICFES</h1>
       <p>Presentación Interactiva de Resultados</p>
       <div class="brand">
-        <p style="font-size: 0.9em; opacity: 0.8;">Desarrollado por</p>
-        <a href="https://ediprofe.com" target="_blank">ediprofe.com</a>
-        <div class="social-links">
-          <a href="https://www.youtube.com/@ProfeEdi" target="_blank">
-            📺 YouTube
-          </a>
-          <span>|</span>
-          <a href="https://www.tiktok.com/@ediprofe" target="_blank">
-            🎵 TikTok
-          </a>
-          <span>|</span>
-          <a href="https://ediprofe.com" target="_blank">
-            🌐 Web
-          </a>
-        </div>
+        <p style="font-size: 0.9em; opacity: 0.8;">🔒 Procesado localmente - Tus datos nunca salen de tu dispositivo</p>
       </div>
     </header>
     
@@ -835,9 +821,9 @@ export function generateInteractiveHTML(data) {
         <h2>🏆 Top 5 por área</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
           ${subjects.map(subject => {
-            const top5 = getTop5BySubject(data, subject);
-            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-            return `
+    const top5 = getTop5BySubject(data, subject);
+    const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+    return `
               <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <h3 style="color: #2563eb; margin-top: 0;">${subject}</h3>
                 <ol class="top-list">
@@ -850,7 +836,7 @@ export function generateInteractiveHTML(data) {
                 </ol>
               </div>
             `;
-          }).join('')}
+  }).join('')}
         </div>
       </div>
       
@@ -859,8 +845,8 @@ export function generateInteractiveHTML(data) {
         <h2>🌟 Top 3 por grado</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
           ${top3ByGrade.map(({ grado, top }) => {
-            const medals = ['🥇', '🥈', '🥉'];
-            return `
+    const medals = ['🥇', '🥈', '🥉'];
+    return `
               <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 3px solid #fbbf24;">
                 <h3 style="color: #d97706; margin-top: 0;">Grado ${grado}</h3>
                 <ol class="top-list">
@@ -873,7 +859,7 @@ export function generateInteractiveHTML(data) {
                 </ol>
               </div>
             `;
-          }).join('')}
+  }).join('')}
         </div>
       </div>
     </div>
@@ -897,11 +883,11 @@ export function generateInteractiveHTML(data) {
             <div class="metric-label">Sobresalientes</div>
             <div class="metric-value" style="color: #059669;">
               ${outliers.filter(s => {
-                const globals = dataSinPIAR.map(st => st.Global);
-                const avg = mean(globals);
-                const sd = stdDev(globals);
-                return (s.Global - avg) / sd > 0;
-              }).length}
+    const globals = dataSinPIAR.map(st => st.Global);
+    const avg = mean(globals);
+    const sd = stdDev(globals);
+    return (s.Global - avg) / sd > 0;
+  }).length}
             </div>
             <div class="metric-subtitle">Por encima de +3σ</div>
           </div>
@@ -909,11 +895,11 @@ export function generateInteractiveHTML(data) {
             <div class="metric-label">Bajo rendimiento</div>
             <div class="metric-value" style="color: #dc2626;">
               ${outliers.filter(s => {
-                const globals = dataSinPIAR.map(st => st.Global);
-                const avg = mean(globals);
-                const sd = stdDev(globals);
-                return (s.Global - avg) / sd < 0;
-              }).length}
+    const globals = dataSinPIAR.map(st => st.Global);
+    const avg = mean(globals);
+    const sd = stdDev(globals);
+    return (s.Global - avg) / sd < 0;
+  }).length}
             </div>
             <div class="metric-subtitle">Por debajo de -3σ</div>
           </div>
@@ -921,12 +907,12 @@ export function generateInteractiveHTML(data) {
         
         <div style="margin-top: 30px;">
           ${outliers.map(student => {
-            const globals = dataSinPIAR.map(s => s.Global);
-            const avg = mean(globals);
-            const sd = stdDev(globals);
-            const z = (student.Global - avg) / sd;
-            const isSobresaliente = z > 0;
-            return `
+    const globals = dataSinPIAR.map(s => s.Global);
+    const avg = mean(globals);
+    const sd = stdDev(globals);
+    const z = (student.Global - avg) / sd;
+    const isSobresaliente = z > 0;
+    return `
               <div class="outlier-card ${isSobresaliente ? 'positive' : ''}">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <div>
@@ -936,18 +922,17 @@ export function generateInteractiveHTML(data) {
                     </div>
                   </div>
                   <div style="text-align: center;">
-                    <span style="display: inline-block; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.85em; ${
-                      isSobresaliente 
-                        ? 'background: #86efac; color: #065f46;' 
-                        : 'background: #fca5a5; color: #991b1b;'
-                    }">
+                    <span style="display: inline-block; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 0.85em; ${isSobresaliente
+        ? 'background: #86efac; color: #065f46;'
+        : 'background: #fca5a5; color: #991b1b;'
+      }">
                       ${isSobresaliente ? '↑ Sobresaliente' : '↓ Bajo rendimiento'}
                     </span>
                   </div>
                 </div>
               </div>
             `;
-          }).join('')}
+  }).join('')}
         </div>
     </div>
     ` : `
@@ -988,13 +973,11 @@ export function generateInteractiveHTML(data) {
     
     <footer>
       <p style="font-size: 1.2em; margin-bottom: 15px;">
-        Desarrollado por <a href="https://ediprofe.com" target="_blank">ediprofe.com</a>
+        📊 ICFES Analyzer
       </p>
       <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #475569;">
         <p style="font-size: 0.9em; opacity: 0.8;">
-          📺 <a href="https://www.youtube.com/@ProfeEdi" target="_blank">YouTube</a> | 
-          🎵 <a href="https://www.tiktok.com/@ediprofe" target="_blank">TikTok</a> | 
-          🌐 <a href="https://ediprofe.com" target="_blank">Sitio Web</a>
+          🔒 Este archivo fue procesado localmente. Ningún dato personal fue enviado a servidores externos.
         </p>
         <p style="font-size: 0.8em; margin-top: 15px; opacity: 0.6;">
           © ${new Date().getFullYear()} - Análisis ICFES interactivo
@@ -1834,7 +1817,7 @@ export function generateInteractiveHTML(data) {
   </script>
 </body>
 </html>`;
-  
+
   return html;
 }
 

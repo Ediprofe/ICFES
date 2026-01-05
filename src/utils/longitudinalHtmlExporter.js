@@ -892,8 +892,11 @@ function App() {
         ),
 
         // Footer
-        React.createElement('div', { className: 'text-center text-gray-400 text-sm mt-8 pb-8' },
-            '📊 Generado el ' + new Date().toLocaleString('es-CO')
+        React.createElement('div', { className: 'text-center text-gray-400 text-sm mt-8 pb-8 space-y-2' },
+            React.createElement('p', null, '📊 Generado el ' + new Date().toLocaleString('es-CO')),
+            React.createElement('p', { className: 'text-xs text-gray-300' }, 
+                '🔒 Este archivo fue procesado localmente. Ningún dato personal fue enviado a servidores externos.'
+            )
         )
     );
 }

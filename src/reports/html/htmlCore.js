@@ -100,14 +100,14 @@ export const generateHTMLTemplate = (title, year) => {
       
       /* Marca de agua */
       body::before {
-        content: "ediprofe.com";
+        content: "ICFES Analyzer";
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%) rotate(-45deg);
-        font-size: 120px;
+        font-size: 100px;
         font-weight: bold;
-        color: rgba(0, 0, 0, 0.05);
+        color: rgba(0, 0, 0, 0.03);
         z-index: 9999;
         pointer-events: none;
         white-space: nowrap;
@@ -367,50 +367,24 @@ export const generateHTMLTemplate = (title, year) => {
   </style>
 </head>
 <body class="bg-gray-50">
-  <!-- Botón flotante de exportar a PDF -->
-  <button class="export-pdf-button no-print" onclick="exportToPDF()">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-      <polyline points="14 2 14 8 20 8"></polyline>
-      <line x1="16" y1="13" x2="8" y2="13"></line>
-      <line x1="16" y1="17" x2="8" y2="17"></line>
-      <polyline points="10 9 9 9 8 9"></polyline>
-    </svg>
-    <span>Exportar a PDF</span>
-  </button>
   
-  <!-- Header con Branding -->
+  <!-- Header Neutral -->
   <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
     <div class="max-w-7xl mx-auto px-6 py-6">
       <div class="flex items-center justify-between flex-wrap gap-4">
         <div class="flex-1">
           <h1 class="text-4xl font-bold mb-2">
-            <a href="${BRANDING.url}" target="_blank" class="hover:text-blue-100 transition-colors">
-              ${BRANDING.name}
-            </a>
+            📊 ICFES Analyzer
           </h1>
           <p class="text-blue-100 text-lg">
-            Guía Educativa para Ciencias y Matemáticas
+            Análisis de Resultados Académicos
           </p>
         </div>
-        <div class="flex gap-6 items-center">
-          <a href="${BRANDING.social.youtube}" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="YouTube">
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-            </svg>
-            <span class="text-sm font-medium">/profedi</span>
-          </a>
-          <a href="${BRANDING.social.tiktok}" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="TikTok">
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-            </svg>
-            <span class="text-sm font-medium">@ediprofe</span>
-          </a>
-          <a href="${BRANDING.url}" target="_blank" class="flex items-center gap-2 hover:opacity-80 transition-opacity" title="Sitio Web">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-            </svg>
-          </a>
+        <div class="flex gap-4 items-center">
+          <div class="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
+            <p class="text-sm font-medium">🔒 Procesado localmente</p>
+            <p class="text-xs text-blue-200">Tus datos nunca salen de tu dispositivo</p>
+          </div>
         </div>
       </div>
     </div>
@@ -434,110 +408,45 @@ export const generateHTMLTemplate = (title, year) => {
     <!-- CONTENIDO SE INYECTA AQUÍ -->
   </div>
   
-  <!-- Footer con branding mejorado -->
-  <footer class="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 mt-12 py-12 text-white">
+  <!-- Footer Neutral -->
+  <footer class="bg-gradient-to-br from-blue-600 via-indigo-700 to-purple-800 mt-12 py-8 text-white">
     <div class="max-w-7xl mx-auto px-6">
-      <!-- Sección principal -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <!-- Información de la marca -->
-        <div>
-          <div class="flex items-center gap-3 mb-4">
-            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-3">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-              </svg>
-            </div>
-            <a href="https://ediprofe.com" target="_blank" class="text-3xl font-extrabold hover:text-blue-200 transition-colors">
-              ediprofe.com
-            </a>
-          </div>
-          <p class="text-blue-200 leading-relaxed mt-4">
-            Este material puede ser utilizado internamente por docentes e instituciones educativas que deseen analizar resultados de pruebas ICFES y encontrar insights que guíen la toma de decisiones pedagógicas. La plataforma facilita la identificación de fortalezas, áreas de mejora y tendencias en el rendimiento académico.
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <!-- Info principal -->
+        <div class="text-center md:text-left">
+          <h3 class="text-2xl font-bold mb-2">📊 ICFES Analyzer</h3>
+          <p class="text-blue-200 text-sm max-w-md">
+            Herramienta de análisis para resultados de pruebas tipo ICFES. 
+            Todos los datos son procesados localmente en tu navegador.
           </p>
         </div>
         
-        <!-- Redes sociales y enlaces -->
-        <div class="flex flex-col justify-center">
-          <h3 class="text-xl font-bold mb-4">🌐 Sígueme en redes</h3>
-          <div class="space-y-3">
-            <!-- YouTube -->
-            <a href="https://www.youtube.com/@ProfeEdi" target="_blank" 
-               class="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 transform hover:scale-105 group">
-              <div class="bg-red-500 rounded-full p-2">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                </svg>
-              </div>
-              <div class="flex-1">
-                <p class="font-bold">YouTube</p>
-                <p class="text-sm text-blue-200">/profedi</p>
-              </div>
-              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </a>
-            
-            <!-- TikTok -->
-            <a href="https://www.tiktok.com/@ediprofe" target="_blank" 
-               class="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 transform hover:scale-105 group">
-              <div class="bg-gray-900 rounded-full p-2">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                </svg>
-              </div>
-              <div class="flex-1">
-                <p class="font-bold">TikTok</p>
-                <p class="text-sm text-blue-200">@ediprofe</p>
-              </div>
-              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </a>
-            
-            <!-- Sitio Web -->
-            <a href="https://ediprofe.com" target="_blank" 
-               class="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 transform hover:scale-105 group">
-              <div class="bg-blue-500 rounded-full p-2">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="2" y1="12" x2="22" y2="12"></line>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                </svg>
-              </div>
-              <div class="flex-1">
-                <p class="font-bold">Sitio Web</p>
-                <p class="text-sm text-blue-200">ediprofe.com</p>
-              </div>
-              <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </a>
+        <!-- Privacidad -->
+        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+          <div class="flex items-center justify-center gap-2 mb-2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span class="font-bold">100% Privado</span>
           </div>
+          <p class="text-xs text-blue-200">
+            Ningún dato personal fue enviado a servidores externos
+          </p>
         </div>
       </div>
       
-      <!-- Línea divisoria y copyright -->
-      <div class="border-t border-white/20 pt-6">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p class="text-blue-100 text-sm">
-            © ${new Date().getFullYear()} ${BRANDING.name}
-          </p>
-          <p class="text-blue-200 text-xs">
-            Reporte generado el ${new Date().toLocaleDateString('es-ES', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </p>
-        </div>
-        <div class="mt-4 text-center">
-          <p class="text-blue-200 text-xs italic">
-            "Simplificando el aprendizaje de conceptos complejos, un paso a la vez"
-          </p>
-        </div>
+      <!-- Copyright -->
+      <div class="border-t border-white/20 mt-6 pt-4 text-center">
+        <p class="text-blue-200 text-xs">
+          Reporte generado el ${new Date().toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })}
+        </p>
       </div>
     </div>
   </footer>
@@ -584,7 +493,7 @@ export const generateMetricCard = (title, value, icon = '📊', color = 'blue') 
     orange: 'border-orange-500 text-orange-600',
     purple: 'border-purple-500 text-purple-600'
   };
-  
+
   return `
     <div class="metric-card border-l-4 ${colorClasses[color] || colorClasses.blue}">
       <div class="flex items-center justify-between">
@@ -603,21 +512,21 @@ export const generateMetricCard = (title, value, icon = '📊', color = 'blue') 
  */
 export const generateTable = (columns, rows, options = {}) => {
   const { striped = true, hover = true, bordered = false } = options;
-  
+
   const tableClasses = [
     'w-full',
     striped ? 'divide-y divide-gray-200' : '',
     bordered ? 'border border-gray-300' : ''
   ].filter(Boolean).join(' ');
-  
+
   const columnsHTML = columns.map(col => `<th class="px-4 py-3 text-left">${col}</th>`).join('');
-  
+
   const rowsHTML = rows.map((row, index) => {
     const rowClass = striped && index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
     const cells = row.map(cell => `<td class="px-4 py-2">${cell}</td>`).join('');
     return `<tr class="${rowClass} ${hover ? 'hover:bg-gray-100' : ''}">${cells}</tr>`;
   }).join('');
-  
+
   return `
     <div class="table-responsive bg-white rounded-lg shadow overflow-hidden">
       <table class="${tableClasses}">
@@ -656,7 +565,7 @@ export const generateBadge = (text, type = 'info') => {
     info: 'badge-info',
     error: 'bg-red-100 text-red-800'
   };
-  
+
   return `<span class="badge ${types[type] || types.info}">${text}</span>`;
 };
 

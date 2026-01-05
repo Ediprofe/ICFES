@@ -15,18 +15,18 @@ export const ExportButtons = () => {
   const finishLoadingYears = useAnalysisStore((state) => state.finishLoadingYears);
   const version = useAnalysisStore((state) => state.version); // Para forzar re-renders
   const [, forceUpdate] = useState({});
-  
+
   // Forzar actualización cuando cambie la versión
   useEffect(() => {
     forceUpdate({});
   }, [version]);
-  
+
   // Verificar si hay datos cargados
-  const hasData = multiYearAnalysis && 
-    multiYearAnalysis.analyses && 
+  const hasData = multiYearAnalysis &&
+    multiYearAnalysis.analyses &&
     multiYearAnalysis.analyses instanceof Map &&
     multiYearAnalysis.analyses.size > 0;
-  
+
   // Si no hay datos, mostrar botones deshabilitados
   if (!hasData) {
     return (
@@ -40,7 +40,7 @@ export const ExportButtons = () => {
             <p className="text-sm text-gray-500">Carga archivos para habilitar la exportación</p>
           </div>
         </div>
-        
+
         {/* Exportación de año individual - DESHABILITADO */}
         <div className="mb-6 p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl border-2 border-gray-300">
           <h4 className="text-base font-bold text-gray-600 mb-4 flex items-center gap-2">
@@ -51,23 +51,15 @@ export const ExportButtons = () => {
               disabled
               className="flex items-center gap-2 px-6 py-3 bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed font-bold shadow-lg"
             >
-              <FileText size={20} />
-              <span>PDF Anual</span>
-            </button>
-            
-            <button
-              disabled
-              className="flex items-center gap-2 px-6 py-3 bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed font-bold shadow-lg"
-            >
               <Download size={20} />
-              <span>HTML Anual</span>
+              <span>Descargar HTML</span>
             </button>
           </div>
           <p className="mt-3 text-xs text-gray-500 bg-white/50 p-2 rounded-lg">
             ℹ️ Carga un archivo Excel para habilitar la exportación de informe de cohorte
           </p>
         </div>
-        
+
         {/* Exportación comparativa - DESHABILITADO */}
         <div className="p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-xl border-2 border-gray-300">
           <h4 className="text-base font-bold text-gray-600 mb-4 flex items-center gap-2">
@@ -78,16 +70,8 @@ export const ExportButtons = () => {
               disabled
               className="flex items-center gap-2 px-6 py-3 bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed font-bold shadow-lg"
             >
-              <FileText size={20} />
-              <span>PDF Comparativo</span>
-            </button>
-            
-            <button
-              disabled
-              className="flex items-center gap-2 px-6 py-3 bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed font-bold shadow-lg"
-            >
               <Download size={20} />
-              <span>HTML Comparativo</span>
+              <span>Descargar HTML Comparativo</span>
             </button>
           </div>
           <p className="mt-3 text-xs text-gray-500 bg-white/50 p-2 rounded-lg">
@@ -97,27 +81,27 @@ export const ExportButtons = () => {
       </div>
     );
   }
-  
+
   // Obtener análisis activo directamente del Map
   const baseYear = multiYearAnalysis.baseYear;
   const activeAnalysis = multiYearAnalysis.analyses.get(baseYear);
-  
+
   if (!activeAnalysis) return null;
-  
+
   // Obtener todos los años disponibles
   const availableYears = multiYearAnalysis.analyses instanceof Map
     ? Array.from(multiYearAnalysis.analyses.keys())
     : [];
-  
+
   // Determinar si es modo comparativo (más de 1 año cargado)
   const isComparisonMode = availableYears.length > 1;
-  
+
   // Obtener análisis de comparación (todos excepto el año base)
   const comparisonAnalyses = availableYears
     .filter(year => year !== baseYear)
     .map(year => multiYearAnalysis.analyses.get(year))
     .filter(a => a !== null);
-  
+
   const handleExportPDF = () => {
     try {
       generatePDF(activeAnalysis, {
@@ -130,7 +114,7 @@ export const ExportButtons = () => {
       alert('Error al generar el PDF. Por favor, intenta nuevamente.');
     }
   };
-  
+
   const handleExportHTML = () => {
     try {
       generateHTML(activeAnalysis, {
@@ -143,7 +127,7 @@ export const ExportButtons = () => {
       alert('Error al generar el HTML. Por favor, intenta nuevamente.');
     }
   };
-  
+
   const handleExportComparativePDF = () => {
     try {
       generatePDF(activeAnalysis, {
@@ -156,7 +140,7 @@ export const ExportButtons = () => {
       alert('Error al generar el PDF comparativo. Por favor, intenta nuevamente.');
     }
   };
-  
+
   const handleExportComparativeHTML = () => {
     try {
       generateHTML(activeAnalysis, {
@@ -169,7 +153,7 @@ export const ExportButtons = () => {
       alert('Error al generar el HTML comparativo. Por favor, intenta nuevamente.');
     }
   };
-  
+
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-2xl p-6 mb-6 border-2 border-gray-200">
       {/* Mensaje de advertencia si está esperando más años */}
@@ -194,7 +178,7 @@ export const ExportButtons = () => {
           </div>
         </div>
       )}
-      
+
       <div className="flex items-center gap-3 mb-6">
         <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full p-3 shadow-lg">
           <Download size={24} className="text-white" />
@@ -206,51 +190,39 @@ export const ExportButtons = () => {
           </p>
         </div>
       </div>
-      
-      {/* Exportación de año individual */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
-        <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-          📄 Análisis individual - Cohorte {activeAnalysis.year}
-        </h4>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleExportPDF}
-            disabled={waitingForMoreYears}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg ${
-              waitingForMoreYears
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 hover:shadow-xl transform hover:scale-105'
-            }`}
-          >
-            <FileText size={20} />
-            <span>PDF {activeAnalysis.year}</span>
-          </button>
-          
-          <button
-            onClick={handleExportHTML}
-            disabled={waitingForMoreYears}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg ${
-              waitingForMoreYears
+
+      {/* Exportación de año individual (solo si NO es modo comparativo) */}
+      {!isComparisonMode && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+          <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+            📄 Análisis individual - Cohorte {activeAnalysis.year}
+          </h4>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleExportHTML}
+              disabled={waitingForMoreYears}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg ${waitingForMoreYears
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:shadow-xl transform hover:scale-105'
-            }`}
-          >
-            <Download size={20} />
-            <span>HTML {activeAnalysis.year}</span>
-          </button>
-        </div>
-        <p className="mt-3 text-xs text-gray-600 bg-white/50 p-2 rounded-lg">
-          ℹ️ Solo datos de la cohorte {activeAnalysis.year} ({activeAnalysis.metadata.studentsWithoutPIAR} estudiantes sin PIAR)
-        </p>
-        <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
-          <p className="text-xs text-gray-700 font-semibold mb-1">💡 Tip: Exportar HTML a PDF</p>
-          <p className="text-xs text-gray-600">
-            Descarga el HTML y ábrelo en tu navegador. Luego usa <strong>Ctrl+P</strong> (Cmd+P en Mac) → 
-            "Guardar como PDF" → Activa <strong>"Gráficos de fondo"</strong> para obtener un PDF perfecto con todos los colores y gráficos.
+                }`}
+            >
+              <Download size={20} />
+              <span>Descargar HTML</span>
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-gray-600 bg-white/50 p-2 rounded-lg">
+            ℹ️ Solo datos de la cohorte {activeAnalysis.year} ({activeAnalysis.metadata.studentsWithoutPIAR} estudiantes sin PIAR)
           </p>
+          <div className="mt-3 p-3 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+            <p className="text-xs text-gray-700 font-semibold mb-1">💡 Tip: Exportar HTML a PDF</p>
+            <p className="text-xs text-gray-600">
+              Descarga el HTML y ábrelo en tu navegador. Luego usa <strong>Ctrl+P</strong> (Cmd+P en Mac) →
+              "Guardar como PDF" → Activa <strong>"Gráficos de fondo"</strong> para obtener un PDF perfecto con todos los colores y gráficos.
+            </p>
+          </div>
         </div>
-      </div>
-      
+      )}
+
       {/* Exportación comparativa (solo si hay múltiples años) */}
       {isComparisonMode && (
         <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
@@ -262,29 +234,15 @@ export const ExportButtons = () => {
           </h4>
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={handleExportComparativePDF}
-              disabled={waitingForMoreYears}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg ${
-                waitingForMoreYears
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 hover:shadow-xl transform hover:scale-105'
-              }`}
-            >
-              <FileText size={20} />
-              <span>PDF Comparativo</span>
-            </button>
-            
-            <button
               onClick={handleExportComparativeHTML}
               disabled={waitingForMoreYears}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg ${
-                waitingForMoreYears
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 hover:shadow-xl transform hover:scale-105'
-              }`}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-300 font-bold shadow-lg ${waitingForMoreYears
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-700 hover:to-indigo-800 hover:shadow-xl transform hover:scale-105'
+                }`}
             >
               <Download size={20} />
-              <span>HTML Comparativo</span>
+              <span>Descargar HTML Comparativo</span>
             </button>
           </div>
           <p className="mt-3 text-xs text-gray-600 bg-white/50 p-2 rounded-lg">
@@ -293,7 +251,7 @@ export const ExportButtons = () => {
           <div className="mt-3 p-3 bg-purple-50 border-l-4 border-purple-500 rounded-lg">
             <p className="text-xs text-gray-700 font-semibold mb-1">💡 Tip: Exportar HTML a PDF</p>
             <p className="text-xs text-gray-600">
-              El HTML comparativo está optimizado para PDF. Usa <strong>Ctrl+P</strong> (Cmd+P en Mac) → 
+              El HTML comparativo está optimizado para PDF. Usa <strong>Ctrl+P</strong> (Cmd+P en Mac) →
               "Guardar como PDF" → Activa <strong>"Gráficos de fondo"</strong>. Los saltos de página están controlados automáticamente.
             </p>
           </div>

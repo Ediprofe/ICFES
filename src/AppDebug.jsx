@@ -84,7 +84,7 @@ function AppDebug() {
   const modeNames = {
     single: 'Análisis de Prueba',
     comparative: 'Comparativo de Cohortes',
-    longitudinal: 'Evolución Longitudinal'
+    longitudinal: 'Análisis Longitudinal'
   };
 
   // Si no hay modo seleccionado, mostrar selector

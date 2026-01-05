@@ -4,10 +4,11 @@
  * Tres modos disponibles:
  * 1. Análisis de Prueba (1 cohorte, 1 prueba)
  * 2. Comparativo de Cohortes (N cohortes, 1 prueba)
- * 3. Evolución Longitudinal (1 cohorte, N pruebas)
+ * 3. Análisis Longitudinal (1 cohorte, N pruebas)
  */
 
 import { BarChart3, GitCompare, TrendingUp } from 'lucide-react';
+import { PrivacyBanner } from './PrivacyBanner';
 
 /**
  * @typedef {'single' | 'comparative' | 'longitudinal'} AnalysisMode
@@ -35,7 +36,7 @@ export const ANALYSIS_MODES = {
     },
     longitudinal: {
         id: 'longitudinal',
-        name: 'Evolución Longitudinal',
+        name: 'Análisis Longitudinal',
         description: 'Una cohorte, varias pruebas',
         icon: TrendingUp,
         color: 'green',
@@ -144,10 +145,11 @@ export function AnalysisModeSelector({ onSelectMode }) {
                 </div>
 
                 {/* Footer info */}
-                <div className="mt-10 text-center text-sm text-gray-500">
+                <div className="mt-10 text-center text-sm text-gray-500 space-y-4">
                     <p>
                         Selecciona un modo para comenzar. Podrás cambiar de modo en cualquier momento.
                     </p>
+                    <PrivacyBanner variant="compact" />
                 </div>
             </div>
         </div>
