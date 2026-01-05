@@ -1,1 +1,17 @@
-No me gusta lo de las clafiicaciones, puede prstarse mpara malos entendidos, maneja algo más neutro y prudente. Prefiero que se exporte el word consolidado con todos los informes, para mandar una sola impresion y cuadrar un solo dcouemnto en retoques finales antes de imprimir. Pero ten en cuenta que esto de word todavía no. OJO, si te das cuenta la hoja de excel de subida debe tener la columna grupo, y eso quiere decir que realmente se van analizar los grupos que haya en un grado de una vez, es decir, puede analizarse 11°1, 11°2 y 11°3 en un solo excel a lo largo de diferntes pruebas, es decir, el análisis realmente es por grado (11 en este caso). DIME SI TODO ESTÁ CLARO...EL Html debe tener los filtros interactivos por estudiante, por grupo también y con comparativas de los grupos en esas métricas. Te doy libertad para que pienses cóm opodría eso aplciarse. Por ejempo sería interesante ver cómo evolucionan las métricas globales que ya te dije de manea global (por grado), pero también por grupo, y lógicamente también ver cómo evoluciona cada estudiante. Es importante tambien que uses funciones que ya se usan, y si ves que se usan y no están bien definiadas o oestán con malas practicas, haz eso primero. QUIERO QUE ANTES DE LA EJECUCION ME DES UN PLAN DE EXACTAMENTE QUE ES LO QUE PRETENDES EN DETALLE PARA APROBAR DE UNA VEZ O CORREGIR DE UNA VEZ.
+Mejor trabajemos sobre lo que ya está montado. Tengo algunas anotaciones. 
+
+Con respecto al trabajo con las métricas sobre la evolución longitudinal,
+![alt text](image-4.png),
+tengo algunas anotaciones:
+
+1. ![alt text](image.png) ![alt text](image-2.png)
+Por favor cada gráfica debe ocupar todo el ancho del contendor, para que se visualice mejor por ejemplo si se van a comparar muchas pruebas a lo largo del año para un solo grupo, no haya problema con el espaciado horizontal. 
+
+2. ![alt text](image-1.png) El ancho del contenedor que tiene las gráficas, o del contenido en general, debe ocupar todo el ancho de la pantalla, por esa misma razón de que esté preparado para evolución del grado y sus grupos a lo largo de muchas pruebas.
+
+3. El toggle que pones (Ver impacto PIAR), ![alt text](image-5.png), por favor ponlo a la altura de cada gráfica porque si queda arriba, como que cuando estoy en gráficas de abajo, me tocaría volver arriba para visualizarlo y es incómodo.
+
+
+Las antoaciones que te acabo de hacer aplican para todas las gráficas de todas las pestañas "Evolución del grado" y "Comparativa de grupos". 
+
+PROCEDE CON LAS MEJORES PRÁCTICAS DE CÓDIGO MANTENIBLE Y ESCALABLE.

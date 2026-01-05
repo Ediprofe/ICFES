@@ -4,3 +4,5 @@ export { LongitudinalDashboard } from './LongitudinalDashboard.jsx';
 export { GradeEvolution } from './GradeEvolution.jsx';
 export { GroupComparison } from './GroupComparison.jsx';
 export { StudentEvolution } from './StudentEvolution.jsx';
+export { ChartCard } from './ChartCard.jsx';
+
