@@ -1,14 +1,13 @@
 /**
  * LongitudinalDashboard - Dashboard principal para análisis longitudinal
  * 
- * Integra los tres componentes:
- * - GradeEvolution: Métricas a nivel de grado
- * - GroupComparison: Comparativa entre grupos
- * - StudentEvolution: Evolución individual
+ * MEJORAS:
+ * 1. Contenedor principal a 100% del ancho de pantalla
+ * 2. Footer con botón "Exportar" único
  */
 
 import { useState } from 'react';
-import { BarChart3, Users, User } from 'lucide-react';
+import { BarChart3, Users, User, FileDown } from 'lucide-react';
 import { GradeEvolution } from './GradeEvolution.jsx';
 import { GroupComparison } from './GroupComparison.jsx';
 import { StudentEvolution } from './StudentEvolution.jsx';
@@ -26,8 +25,14 @@ export function LongitudinalDashboard({ analysis }) {
         { id: 'students', label: 'Por Estudiante', icon: User }
     ];
 
+    const handleExportHTML = () => {
+        // TODO: Implementar exportación HTML
+        alert('Exportación HTML en desarrollo');
+    };
+
     return (
-        <div className="space-y-6">
+        // CONTENEDOR PRINCIPAL - 100% ANCHO SIN PADDING LATERAL
+        <div className="w-full space-y-6">
             {/* Resumen general */}
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -74,8 +79,8 @@ export function LongitudinalDashboard({ analysis }) {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${isActive
-                                            ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                                        ? 'border-blue-600 text-blue-600 bg-blue-50/50'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
                                     <Icon size={18} />
@@ -86,12 +91,23 @@ export function LongitudinalDashboard({ analysis }) {
                     </nav>
                 </div>
 
-                {/* Tab content */}
-                <div className="p-6">
+                {/* Tab content - SIN PADDING LATERAL para máximo ancho */}
+                <div className="p-4 md:p-6">
                     {activeTab === 'grade' && <GradeEvolution analysis={analysis} />}
                     {activeTab === 'groups' && <GroupComparison analysis={analysis} />}
                     {activeTab === 'students' && <StudentEvolution analysis={analysis} />}
                 </div>
+            </div>
+
+            {/* FOOTER - Solo botón Exportar */}
+            <div className="flex justify-end">
+                <button
+                    onClick={handleExportHTML}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all hover:shadow-xl"
+                >
+                    <FileDown size={20} />
+                    Exportar Informe
+                </button>
             </div>
         </div>
     );

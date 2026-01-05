@@ -1,16 +1,15 @@
 /**
  * StudentEvolution - Vista de evolución individual por estudiante
  * 
- * Muestra:
- * - Filtros por grupo y estudiante
- * - Toggle PIAR
- * - Gráfico de barras con resultados por prueba
- * - Métricas individuales
+ * MEJORAS:
+ * 1. Dominio Y con padding para etiquetas
+ * 2. Contenedor a ancho completo
  */
 
 import { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
-import { User, Search, Filter, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { User, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, EyeOff } from 'lucide-react';
+import { getYDomainWithPadding } from './ChartCard';
 
 // Colores por área
 const AREA_COLORS = {
@@ -29,6 +28,10 @@ const AREA_NAMES = {
     ingles: 'Inglés'
 };
 
+const PRUEBA_COLORS = [
+    '#3b82f6', '#22c55e', '#a855f7', '#f97316', '#ec4899', '#14b8a6',
+];
+
 /**
  * @param {Object} props
  * @param {import('../../models/LongitudinalAnalysis.js').LongitudinalAnalysis} props.analysis
@@ -43,7 +46,6 @@ export function StudentEvolution({ analysis }) {
     const filteredStudents = useMemo(() => {
         let students = Array.from(analysis.estudiantes?.values() || []);
 
-        // Filtrar por PIAR si está desactivado
         if (!includePIAR) {
             students = students.filter(s => s.piar !== 'Sí');
         }
@@ -79,13 +81,16 @@ export function StudentEvolution({ analysis }) {
         }));
     }, [studentMetrics]);
 
+    const maxGlobal = useMemo(() => {
+        return Math.max(...chartDataGlobal.map(d => d.Global || 0));
+    }, [chartDataGlobal]);
+
     // Preparar datos para gráfico por áreas
     const chartDataAreas = useMemo(() => {
         if (!studentMetrics) return [];
         return Object.keys(AREA_NAMES).map(areaId => {
             const data = { area: AREA_NAMES[areaId], areaId };
 
-            // Añadir cada prueba como una "serie"
             studentMetrics.resultados.forEach(r => {
                 data[r.pruebaNombre] = r.presente && r.areas[areaId] !== null ? r.areas[areaId] : null;
             });
@@ -107,7 +112,7 @@ export function StudentEvolution({ analysis }) {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-6">
             {/* Header con filtros */}
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -116,21 +121,23 @@ export function StudentEvolution({ analysis }) {
                         <h2 className="text-xl font-bold text-gray-800">Evolución por Estudiante</h2>
                     </div>
 
-                    {/* Toggle PIAR */}
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Incluir PIAR en lista:</span>
+                    {/* Toggle PIAR para filtrado de lista */}
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                        <span className="text-xs font-medium text-gray-500">
+                            {includePIAR ? 'Listar PIAR' : 'Ocultar PIAR'}
+                        </span>
                         <button
                             onClick={() => {
                                 setIncludePIAR(!includePIAR);
                                 setSelectedStudent(null);
                             }}
-                            className={`px-4 py-2 rounded-lg transition-all ${includePIAR
-                                ? 'bg-indigo-600 text-white'
-                                : 'bg-gray-200 text-gray-700'
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${includePIAR ? 'bg-indigo-600' : 'bg-gray-300'
                                 }`}
                         >
-                            {includePIAR ? 'Listar PIAR' : 'Ocultar PIAR'}
+                            <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${includePIAR ? 'translate-x-5' : 'translate-x-0.5'
+                                }`} />
                         </button>
+                        {includePIAR ? <Eye size={14} className="text-indigo-600" /> : <EyeOff size={14} className="text-gray-400" />}
                     </div>
                 </div>
 
@@ -243,24 +250,24 @@ export function StudentEvolution({ analysis }) {
                     {/* Gráfico Global por Prueba */}
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Puntaje Global por Prueba</h3>
-                        <ResponsiveContainer width="100%" height={250}>
+                        <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={chartDataGlobal}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="prueba" />
-                                <YAxis domain={['auto', 'auto']} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="prueba" axisLine={false} tickLine={false} />
+                                <YAxis domain={getYDomainWithPadding(maxGlobal)} axisLine={false} tickLine={false} />
                                 <Tooltip formatter={(value) => value || 'No presentó'} />
-                                <Bar dataKey="Global" fill="#6366f1">
+                                <Bar dataKey="Global" fill="#6366f1" radius={[4, 4, 0, 0]}>
                                     {chartDataGlobal.map((entry, idx) => (
                                         <Cell
                                             key={`cell-${idx}`}
-                                            fill={entry.Global !== null ? '#6366f1' : '#e5e7eb'}
+                                            fill={entry.Global !== null ? PRUEBA_COLORS[idx % PRUEBA_COLORS.length] : '#e5e7eb'}
                                         />
                                     ))}
                                     <LabelList
                                         dataKey="Global"
                                         position="top"
                                         style={{ fontSize: '12px', fontWeight: 'bold' }}
-                                        formatter={(v) => v || '—'}
+                                        formatter={(v) => v !== null ? v : '—'}
                                     />
                                 </Bar>
                             </BarChart>
@@ -269,27 +276,25 @@ export function StudentEvolution({ analysis }) {
 
                     {/* Gráfico por Áreas */}
                     <div className="bg-white rounded-xl shadow-lg p-6">
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Resultados Completos por Área</h3>
-                        <ResponsiveContainer width="100%" height={350}>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Resultados por Área</h3>
+                        <ResponsiveContainer width="100%" height={400}>
                             <BarChart data={chartDataAreas}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="area" />
-                                <YAxis domain={[0, 100]} />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="area" axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 115]} axisLine={false} tickLine={false} />
                                 <Tooltip formatter={(value) => value !== null ? value : 'No presentó'} />
-                                <Legend />
+                                <Legend wrapperStyle={{ paddingTop: '15px' }} iconType="circle" />
                                 {analysis.pruebas.map((p, idx) => (
                                     <Bar
                                         key={p.id}
                                         dataKey={p.nombre}
-                                        fill={idx === analysis.pruebas.length - 1 ? '#22c55e' : `rgba(99, 102, 241, ${0.4 + (idx * 0.2)})`}
+                                        fill={PRUEBA_COLORS[idx % PRUEBA_COLORS.length]}
+                                        radius={[3, 3, 0, 0]}
                                     >
-                                        {chartDataAreas.map((entry, i) => (
-                                            <Cell key={`cell-${i}`} fill={AREA_COLORS[entry.areaId] || '#6366f1'} opacity={idx === 0 ? 0.4 : idx === analysis.pruebas.length - 1 ? 1 : 0.7} />
-                                        ))}
                                         <LabelList
                                             dataKey={p.nombre}
                                             position="top"
-                                            style={{ fontSize: '10px', fontWeight: 'bold' }}
+                                            style={{ fontSize: '9px', fontWeight: 'bold' }}
                                             formatter={(v) => v !== null ? v.toFixed(1) : ''}
                                         />
                                     </Bar>

@@ -1,16 +1,16 @@
 /**
  * GradeEvolution - Dashboard de evolución a nivel de grado
  * 
- * Mejoras implementadas:
- * 1. Contenedor a ancho completo de pantalla
- * 2. Gráficas a ancho completo del contenedor
- * 3. Toggle PIAR individual por gráfica (usando ChartCard)
+ * MEJORAS:
+ * 1. Dominio Y con padding para que etiquetas no se corten
+ * 2. Contenedor a ancho completo
+ * 3. Toggle PIAR individual por gráfica
  */
 
 import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, BarChart3, LayoutGrid } from 'lucide-react';
-import { ChartCard } from './ChartCard';
+import { ChartCard, getYDomainWithPadding } from './ChartCard';
 
 // Colores consistentes 
 const AREA_COLORS = {
@@ -52,6 +52,11 @@ export function GradeEvolution({ analysis }) {
         }));
     }, [metricsConPIAR, metricsSinPIAR]);
 
+    // Max value para dominio Y global
+    const maxGlobal = useMemo(() => {
+        return Math.max(...chartDataGlobal.flatMap(d => [d['Con PIAR'], d['Sin PIAR']]));
+    }, [chartDataGlobal]);
+
     // Datos Desviación
     const chartDataDesviacion = useMemo(() => {
         return metricsConPIAR.map((m, idx) => ({
@@ -61,6 +66,10 @@ export function GradeEvolution({ analysis }) {
             'Desviación': parseFloat(metricsSinPIAR[idx]?.desviacionGlobal.toFixed(2) || 0)
         }));
     }, [metricsConPIAR, metricsSinPIAR]);
+
+    const maxDesviacion = useMemo(() => {
+        return Math.max(...chartDataDesviacion.flatMap(d => [d['Con PIAR'], d['Sin PIAR']]));
+    }, [chartDataDesviacion]);
 
     // Datos por Área
     const chartsByArea = useMemo(() => {
@@ -74,7 +83,9 @@ export function GradeEvolution({ analysis }) {
                 'Promedio': parseFloat(metricsSinPIAR[idx]?.areas[areaKey]?.promedio?.toFixed(2) || 0)
             }));
 
-            return { areaKey, title: AREA_NAMES[areaKey], color: AREA_COLORS[areaKey], data };
+            const maxValue = Math.max(...data.flatMap(d => [d['Con PIAR'], d['Sin PIAR']]));
+
+            return { areaKey, title: AREA_NAMES[areaKey], color: AREA_COLORS[areaKey], data, maxValue };
         });
     }, [metricsConPIAR, metricsSinPIAR]);
 
@@ -101,7 +112,6 @@ export function GradeEvolution({ analysis }) {
     }
 
     return (
-        // CONTENEDOR PRINCIPAL A ANCHO COMPLETO
         <div className="w-full max-w-full space-y-6">
 
             {/* Header con KPIs */}
@@ -139,14 +149,14 @@ export function GradeEvolution({ analysis }) {
                 )}
             </div>
 
-            {/* GRÁFICA 1: Promedio Global - ANCHO COMPLETO con su propio toggle */}
+            {/* GRÁFICA 1: Promedio Global */}
             <ChartCard title="Promedio Global">
                 {(showPIAR) => (
                     <ResponsiveContainer width="100%" height={350}>
                         <BarChart data={chartDataGlobal} barGap={0}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="prueba" tick={{ fill: '#4b5563', fontSize: 12 }} axisLine={false} tickLine={false} />
-                            <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} />
+                            <YAxis domain={getYDomainWithPadding(maxGlobal)} axisLine={false} tickLine={false} />
                             <Tooltip cursor={{ fill: '#f3f4f6' }} formatter={(value) => value.toFixed(2)} />
 
                             {showPIAR ? (
@@ -172,14 +182,14 @@ export function GradeEvolution({ analysis }) {
                 )}
             </ChartCard>
 
-            {/* GRÁFICA 2: Variabilidad - ANCHO COMPLETO con su propio toggle */}
+            {/* GRÁFICA 2: Variabilidad */}
             <ChartCard title="Variabilidad (Desviación Estándar)">
                 {(showPIAR) => (
                     <ResponsiveContainer width="100%" height={350}>
                         <BarChart data={chartDataDesviacion} barGap={0}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="prueba" tick={{ fill: '#4b5563', fontSize: 12 }} axisLine={false} tickLine={false} />
-                            <YAxis domain={[0, 'auto']} axisLine={false} tickLine={false} />
+                            <YAxis domain={getYDomainWithPadding(maxDesviacion)} axisLine={false} tickLine={false} />
                             <Tooltip cursor={{ fill: '#f3f4f6' }} formatter={(value) => value.toFixed(2)} />
 
                             {showPIAR ? (
@@ -219,7 +229,7 @@ export function GradeEvolution({ analysis }) {
                                     <BarChart data={chartInfo.data} barGap={2}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
                                         <XAxis dataKey="prueba" fontSize={11} tickLine={false} axisLine={false} tickMargin={10} />
-                                        <YAxis domain={[0, 100]} fontSize={11} width={35} tickLine={false} axisLine={false} />
+                                        <YAxis domain={getYDomainWithPadding(chartInfo.maxValue)} fontSize={11} width={35} tickLine={false} axisLine={false} />
                                         <Tooltip formatter={v => v.toFixed(1)} />
 
                                         {showPIAR ? (

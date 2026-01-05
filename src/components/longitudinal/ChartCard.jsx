@@ -6,11 +6,23 @@
  * - Toggle PIAR individual a la altura de la gráfica
  * - Estilo consistente
  * 
- * Esto permite código mantenible y escalable.
+ * UTILS:
+ * - getYDomainWithPadding: Añade padding superior al dominio Y para que las etiquetas no se corten
  */
 
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+
+/**
+ * Calcula un dominio Y con padding superior para que las etiquetas no se corten
+ * @param {number} maxValue - Valor máximo de los datos
+ * @param {number} paddingPercent - Porcentaje de padding (default 10%)
+ * @returns {[number, number]} - [min, max] para el dominio Y
+ */
+export function getYDomainWithPadding(maxValue, paddingPercent = 15) {
+    const padding = maxValue * (paddingPercent / 100);
+    return [0, Math.ceil(maxValue + padding)];
+}
 
 /**
  * @param {Object} props

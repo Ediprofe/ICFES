@@ -1,17 +1,10 @@
-Mejor trabajemos sobre lo que ya está montado. Tengo algunas anotaciones. 
+Sigo con algunas anotaciones.
 
-Con respecto al trabajo con las métricas sobre la evolución longitudinal,
-![alt text](image-4.png),
-tengo algunas anotaciones:
+1. El contenedor principal no ocupa el 100% del ancho de la pantalla. ![alt text](image-7.png)
 
-1. ![alt text](image.png) ![alt text](image-2.png)
-Por favor cada gráfica debe ocupar todo el ancho del contendor, para que se visualice mejor por ejemplo si se van a comparar muchas pruebas a lo largo del año para un solo grupo, no haya problema con el espaciado horizontal. 
+2. Hay gráficos que cuando son la barra más alta, la etiqueta del valor se ve como cortada arriba. ![alt text](image-8.png), ![alt text](image-10.png). CORRIGE ESO PARA TODOS LOS GRÁFICOS EN TODAS LAS PESTAÑAS, INCLUIDA LA PESTAÑA "Por Estudiante". UNA SIOLUCIÓN ROBUSTA Y DE BUENAS PRÁCTICAS, MANTENIBLE.
 
-2. ![alt text](image-1.png) El ancho del contenedor que tiene las gráficas, o del contenido en general, debe ocupar todo el ancho de la pantalla, por esa misma razón de que esté preparado para evolución del grado y sus grupos a lo largo de muchas pruebas.
+3. En el pie de de página, quiero que lo cambies por simplemente el botón que diga exportar, tipo algo así, para exportar el informe html. ![alt text](image-9.png)
 
-3. El toggle que pones (Ver impacto PIAR), ![alt text](image-5.png), por favor ponlo a la altura de cada gráfica porque si queda arriba, como que cuando estoy en gráficas de abajo, me tocaría volver arriba para visualizarlo y es incómodo.
+4. En la pestaña "Comparativa de grupos" quiero que por favor compares las mismas métricas que comparaste en el informe que están en la pestaña "Evolución del grado". Quitando por ejemplo esa matriz de resultados que se se vuelve redundante, por ejemplo: quiero que por favor en la pestaña "Comparativa de Grupos", muestres las gráficas de la sección "Desglose por Asignatura" de la pestaña "Evolución del Grado", pero ya separado por grupo.
 
-
-Las antoaciones que te acabo de hacer aplican para todas las gráficas de todas las pestañas "Evolución del grado" y "Comparativa de grupos". 
-
-PROCEDE CON LAS MEJORES PRÁCTICAS DE CÓDIGO MANTENIBLE Y ESCALABLE.
