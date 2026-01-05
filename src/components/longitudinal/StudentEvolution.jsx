@@ -1,37 +1,24 @@
 /**
  * StudentEvolution - Vista de evolución individual por estudiante
  * 
+ * MIGRADO A CHART.JS para fidelidad con HTML export
+ * 
  * INCLUYE:
- * 1. Tabla de ranking con TODAS las columnas ordenables
+ * 1. Tabla de ranking con filtros y ordenamiento
  * 2. Selector de prueba (Promedio / Por Simulacro)
- * 3. Columna "Presentó todas las pruebas"
+ * 3. Vista individual del estudiante seleccionado
  */
 
 import { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
+import { Bar } from 'react-chartjs-2';
 import { User, Search, Filter, TrendingUp, TrendingDown, Minus, Eye, Table, ChevronUp, ChevronDown, Calendar } from 'lucide-react';
-import { getYDomainWithPadding } from './ChartCard';
-
-// Colores por área
-const AREA_COLORS = {
-    lectura: '#3b82f6',
-    matematicas: '#ef4444',
-    sociales: '#f97316',
-    naturales: '#22c55e',
-    ingles: '#a855f7'
-};
-
-const AREA_NAMES = {
-    lectura: 'Lectura',
-    matematicas: 'Matemáticas',
-    sociales: 'Sociales',
-    naturales: 'Naturales',
-    ingles: 'Inglés'
-};
-
-const PRUEBA_COLORS = [
-    '#3b82f6', '#22c55e', '#a855f7', '#f97316', '#ec4899', '#14b8a6',
-];
+import {
+    COLORS,
+    AREA_NAMES,
+    baseOptions,
+    createSingleBarConfig,
+    createPruebasBarConfig
+} from '../../utils/chartConfig';
 
 /**
  * @param {Object} props
@@ -46,13 +33,11 @@ export function StudentEvolution({ analysis }) {
     const [filterCompleto, setFilterCompleto] = useState('all');
     const [sortField, setSortField] = useState('global');
     const [sortDir, setSortDir] = useState('desc');
-    // Selector de prueba: 'promedio' o ID de prueba específica
-    // Default: última prueba
     const [selectedPrueba, setSelectedPrueba] = useState(() => {
         return analysis.pruebas?.length > 0 ? analysis.pruebas[analysis.pruebas.length - 1].id : 'promedio';
     });
 
-    // Calcular datos de ranking para todos los estudiantes
+    // Calcular datos de ranking
     const rankingData = useMemo(() => {
         const allStudents = Array.from(analysis.estudiantes?.values() || []);
 
@@ -60,18 +45,15 @@ export function StudentEvolution({ analysis }) {
             const metrics = analysis.getStudentMetrics(student.codigo);
             const resultados = metrics?.resultados || [];
 
-            // Calcular promedios generales
             const globales = resultados.filter(r => r.presente).map(r => r.global);
             const promedioGlobal = globales.length > 0 ? globales.reduce((a, b) => a + b, 0) / globales.length : null;
 
-            // Promedios por área (promedio de todas las pruebas)
             const areasPromedio = {};
             Object.keys(AREA_NAMES).forEach(area => {
                 const valores = resultados.filter(r => r.presente && r.areas[area] !== null).map(r => r.areas[area]);
                 areasPromedio[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
             });
 
-            // Datos por prueba específica
             const datosPorPrueba = {};
             resultados.forEach(r => {
                 datosPorPrueba[r.pruebaId] = {
@@ -95,7 +77,6 @@ export function StudentEvolution({ analysis }) {
         });
     }, [analysis]);
 
-    // Obtener valores para la vista actual (promedio o prueba específica)
     const getValorActual = (student, campo) => {
         if (selectedPrueba === 'promedio') {
             if (campo === 'global') return student.promedioGlobal;
@@ -134,11 +115,9 @@ export function StudentEvolution({ analysis }) {
             data = data.filter(s => !s.todasLasPruebas);
         }
 
-        // Ordenar usando el valor actual según la prueba seleccionada
         data.sort((a, b) => {
             let valA, valB;
 
-            // Campos especiales que no dependen de la prueba
             if (['codigo', 'apellido', 'nombre', 'grupo'].includes(sortField)) {
                 valA = a[sortField] || '';
                 valB = b[sortField] || '';
@@ -158,34 +137,33 @@ export function StudentEvolution({ analysis }) {
         return data;
     }, [rankingData, includePIAR, selectedGroup, searchTerm, filterCompleto, sortField, sortDir, selectedPrueba]);
 
-    // Estudiante seleccionado para vista individual
+    // Estudiante seleccionado
     const studentMetrics = useMemo(() => {
         if (!selectedStudent) return null;
         return analysis.getStudentMetrics(selectedStudent);
     }, [analysis, selectedStudent]);
 
-    // Datos para gráficos del estudiante
-    const chartDataGlobal = useMemo(() => {
-        if (!studentMetrics) return [];
-        return studentMetrics.resultados.map(r => ({
-            prueba: r.pruebaNombre,
-            Global: r.presente ? r.global : null
-        }));
+    // Datos para gráfico global del estudiante
+    const studentGlobalData = useMemo(() => {
+        if (!studentMetrics) return null;
+        const labels = studentMetrics.resultados.map(r => r.pruebaNombre);
+        const values = studentMetrics.resultados.map(r => r.presente ? r.global : null);
+        const colors = studentMetrics.resultados.map((_, i) => COLORS.pruebas[i % COLORS.pruebas.length]);
+
+        return createSingleBarConfig(labels, values, colors, { label: 'Puntaje Global' });
     }, [studentMetrics]);
 
-    const maxGlobal = useMemo(() => {
-        return Math.max(...chartDataGlobal.map(d => d.Global || 0));
-    }, [chartDataGlobal]);
+    // Datos para gráfico por áreas del estudiante
+    const studentAreasData = useMemo(() => {
+        if (!studentMetrics) return null;
+        const labels = Object.values(AREA_NAMES);
 
-    const chartDataAreas = useMemo(() => {
-        if (!studentMetrics) return [];
-        return Object.keys(AREA_NAMES).map(areaId => {
-            const data = { area: AREA_NAMES[areaId], areaId };
-            studentMetrics.resultados.forEach(r => {
-                data[r.pruebaNombre] = r.presente && r.areas[areaId] !== null ? r.areas[areaId] : null;
-            });
-            return data;
-        });
+        const datasets = studentMetrics.resultados.map((r, idx) => ({
+            label: r.pruebaNombre,
+            data: Object.keys(AREA_NAMES).map(area => r.presente ? r.areas[area] : null)
+        }));
+
+        return createPruebasBarConfig(labels, datasets);
     }, [studentMetrics]);
 
     const getTrendIcon = (value) => {
@@ -225,14 +203,37 @@ export function StudentEvolution({ analysis }) {
         </th>
     );
 
-    // Título del ranking según la prueba seleccionada
     const rankingTitle = selectedPrueba === 'promedio'
         ? 'Ranking Promedio General'
         : `Ranking: ${analysis.pruebas.find(p => p.id === selectedPrueba)?.nombre || selectedPrueba}`;
 
+    // Opciones para gráficos del estudiante
+    const studentChartOptions = {
+        ...baseOptions,
+        plugins: {
+            ...baseOptions.plugins,
+            legend: { display: false }
+        }
+    };
+
+    const studentAreasOptions = {
+        ...baseOptions,
+        scales: {
+            ...baseOptions.scales,
+            y: { ...baseOptions.scales.y, min: 0, max: 100 }
+        },
+        plugins: {
+            ...baseOptions.plugins,
+            datalabels: {
+                ...baseOptions.plugins.datalabels,
+                font: { size: 9, weight: 'bold' }
+            }
+        }
+    };
+
     return (
         <div className="w-full max-w-full space-y-6">
-            {/* Header con selector de vista */}
+            {/* Header */}
             <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -240,7 +241,6 @@ export function StudentEvolution({ analysis }) {
                         <h2 className="text-xl font-bold text-gray-800">Evolución por Estudiante</h2>
                     </div>
 
-                    {/* Toggle Vista */}
                     <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
                         <button
                             onClick={() => setViewMode('table')}
@@ -263,11 +263,9 @@ export function StudentEvolution({ analysis }) {
 
                 {/* Filtros */}
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                    {/* Selector de Prueba */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                            <Calendar size={14} />
-                            Vista
+                            <Calendar size={14} /> Vista
                         </label>
                         <select
                             value={selectedPrueba}
@@ -281,11 +279,9 @@ export function StudentEvolution({ analysis }) {
                         </select>
                     </div>
 
-                    {/* Búsqueda */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                            <Search size={14} />
-                            Buscar
+                            <Search size={14} /> Buscar
                         </label>
                         <input
                             type="text"
@@ -296,11 +292,9 @@ export function StudentEvolution({ analysis }) {
                         />
                     </div>
 
-                    {/* Filtro por grupo */}
                     <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                            <Filter size={14} />
-                            Grupo
+                            <Filter size={14} /> Grupo
                         </label>
                         <select
                             value={selectedGroup}
@@ -314,7 +308,6 @@ export function StudentEvolution({ analysis }) {
                         </select>
                     </div>
 
-                    {/* Filtro PIAR */}
                     <div>
                         <label className="text-sm font-medium text-gray-700 mb-2 block">PIAR</label>
                         <select
@@ -327,7 +320,6 @@ export function StudentEvolution({ analysis }) {
                         </select>
                     </div>
 
-                    {/* Filtro Completitud */}
                     <div>
                         <label className="text-sm font-medium text-gray-700 mb-2 block">Asistencia</label>
                         <select
@@ -341,7 +333,6 @@ export function StudentEvolution({ analysis }) {
                         </select>
                     </div>
 
-                    {/* Selector estudiante (solo para vista individual) */}
                     {viewMode === 'individual' && (
                         <div>
                             <label className="text-sm font-medium text-gray-700 mb-2 block">Estudiante</label>
@@ -485,42 +476,20 @@ export function StudentEvolution({ analysis }) {
                         </div>
                     </div>
 
-                    {/* Gráfico Global */}
+                    {/* Gráfico Global del estudiante */}
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Puntaje Global por Prueba</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={chartDataGlobal}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="prueba" axisLine={false} tickLine={false} />
-                                <YAxis domain={getYDomainWithPadding(maxGlobal)} axisLine={false} tickLine={false} />
-                                <Tooltip formatter={(value) => value || 'No presentó'} />
-                                <Bar dataKey="Global" fill="#6366f1" radius={[4, 4, 0, 0]}>
-                                    {chartDataGlobal.map((entry, idx) => (
-                                        <Cell key={`cell-${idx}`} fill={entry.Global !== null ? PRUEBA_COLORS[idx % PRUEBA_COLORS.length] : '#e5e7eb'} />
-                                    ))}
-                                    <LabelList dataKey="Global" position="top" style={{ fontSize: '12px', fontWeight: 'bold' }} formatter={(v) => v !== null ? v : '—'} />
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className="h-[350px]">
+                            <Bar data={studentGlobalData} options={studentChartOptions} />
+                        </div>
                     </div>
 
-                    {/* Gráfico por Áreas */}
+                    {/* Gráfico por Áreas del estudiante */}
                     <div className="bg-white rounded-xl shadow-lg p-6">
                         <h3 className="text-lg font-bold text-gray-800 mb-4">Resultados por Área</h3>
-                        <ResponsiveContainer width="100%" height={400}>
-                            <BarChart data={chartDataAreas}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="area" axisLine={false} tickLine={false} />
-                                <YAxis domain={[0, 115]} axisLine={false} tickLine={false} />
-                                <Tooltip formatter={(value) => value !== null ? value : 'No presentó'} />
-                                <Legend wrapperStyle={{ paddingTop: '15px' }} iconType="circle" />
-                                {analysis.pruebas.map((p, idx) => (
-                                    <Bar key={p.id} dataKey={p.nombre} fill={PRUEBA_COLORS[idx % PRUEBA_COLORS.length]} radius={[3, 3, 0, 0]}>
-                                        <LabelList dataKey={p.nombre} position="top" style={{ fontSize: '9px', fontWeight: 'bold' }} formatter={(v) => v !== null ? v.toFixed(1) : ''} />
-                                    </Bar>
-                                ))}
-                            </BarChart>
-                        </ResponsiveContainer>
+                        <div className="h-[400px]">
+                            <Bar data={studentAreasData} options={studentAreasOptions} />
+                        </div>
                     </div>
 
                     {/* Cambios por área */}
@@ -543,7 +512,6 @@ export function StudentEvolution({ analysis }) {
                 </>
             )}
 
-            {/* Placeholder si está en modo individual pero no hay estudiante */}
             {viewMode === 'individual' && !selectedStudent && (
                 <div className="bg-white rounded-xl shadow-lg p-12 text-center text-gray-500">
                     <User className="mx-auto mb-4 text-gray-300" size={48} />

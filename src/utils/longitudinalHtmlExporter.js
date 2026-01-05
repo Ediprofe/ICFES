@@ -1,57 +1,44 @@
 /**
  * Generador de HTML para Análisis Longitudinal
  * 
- * Sigue el MISMO patrón probado de htmlExporter.js
- * - Mismos CDNs (versiones específicas)
- * - Mismo commonOptions con datalabels
- * - Misma estructura initCharts()
+ * USA LA MISMA CONFIGURACIÓN que los componentes React (chartConfig.js)
+ * para garantizar fidelidad visual 100%
  */
 
-import { AREA_NAMES } from './export/htmlTemplates.js';
-
-const AREA_COLORS = {
-    lectura: '#3b82f6',
-    matematicas: '#ef4444',
-    sociales: '#f97316',
-    naturales: '#22c55e',
-    ingles: '#a855f7'
-};
-
-const GROUP_COLORS = ['#3b82f6', '#22c55e', '#a855f7', '#f97316', '#ec4899', '#14b8a6'];
-const PRUEBA_COLORS = ['#3b82f6', '#22c55e', '#a855f7', '#f97316', '#ec4899', '#14b8a6'];
+import { COLORS, AREA_NAMES, baseOptions } from './chartConfig';
 
 /**
  * Prepara los datos de ranking de estudiantes
  */
 function prepareStudentRankingData(analysis) {
-    const allStudents = Array.from(analysis.estudiantes.values());
+  const allStudents = Array.from(analysis.estudiantes.values());
 
-    return allStudents.map(student => {
-        const metrics = analysis.getStudentMetrics(student.codigo);
-        const resultados = metrics?.resultados || [];
+  return allStudents.map(student => {
+    const metrics = analysis.getStudentMetrics(student.codigo);
+    const resultados = metrics?.resultados || [];
 
-        const globales = resultados.filter(r => r.presente).map(r => r.global);
-        const promedioGlobal = globales.length > 0 ? globales.reduce((a, b) => a + b, 0) / globales.length : null;
+    const globales = resultados.filter(r => r.presente).map(r => r.global);
+    const promedioGlobal = globales.length > 0 ? globales.reduce((a, b) => a + b, 0) / globales.length : null;
 
-        const areas = {};
-        Object.keys(AREA_NAMES).forEach(area => {
-            const valores = resultados.filter(r => r.presente && r.areas[area] !== null).map(r => r.areas[area]);
-            areas[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
-        });
+    const areas = {};
+    Object.keys(AREA_NAMES).forEach(area => {
+      const valores = resultados.filter(r => r.presente && r.areas[area] !== null).map(r => r.areas[area]);
+      areas[area] = valores.length > 0 ? valores.reduce((a, b) => a + b, 0) / valores.length : null;
+    });
 
-        const pruebasPresentes = resultados.filter(r => r.presente).length;
-        const todasLasPruebas = pruebasPresentes === analysis.pruebas.length;
+    const pruebasPresentes = resultados.filter(r => r.presente).length;
+    const todasLasPruebas = pruebasPresentes === analysis.pruebas.length;
 
-        return {
-            ...student,
-            promedioGlobal,
-            ...areas,
-            pruebasPresentes,
-            pruebasTotales: analysis.pruebas.length,
-            todasLasPruebas
-        };
-    }).filter(s => s.promedioGlobal !== null)
-        .sort((a, b) => (b.promedioGlobal || 0) - (a.promedioGlobal || 0));
+    return {
+      ...student,
+      promedioGlobal,
+      ...areas,
+      pruebasPresentes,
+      pruebasTotales: analysis.pruebas.length,
+      todasLasPruebas
+    };
+  }).filter(s => s.promedioGlobal !== null)
+    .sort((a, b) => (b.promedioGlobal || 0) - (a.promedioGlobal || 0));
 }
 
 /**
@@ -60,44 +47,58 @@ function prepareStudentRankingData(analysis) {
  * @returns {string} HTML completo
  */
 export function generateLongitudinalHTML(analysis) {
-    const gradeMetrics = analysis.getGradeMetrics(true);
-    const groups = analysis.grupos;
-    const studentRankingData = prepareStudentRankingData(analysis);
-    const pruebas = analysis.pruebas;
+  const gradeMetrics = analysis.getGradeMetrics(true);
+  const groups = analysis.grupos;
+  const studentRankingData = prepareStudentRankingData(analysis);
+  const pruebas = analysis.pruebas;
 
-    // Datos para gráficos
-    const dataGlobal = gradeMetrics.map(m => ({ prueba: m.pruebaNombre, valor: parseFloat(m.promedioGlobal.toFixed(2)) }));
-    const dataDesviacion = gradeMetrics.map(m => ({ prueba: m.pruebaNombre, valor: parseFloat(m.desviacionGlobal.toFixed(2)) }));
+  // Datos para gráficos (misma estructura que React)
+  const dataGlobal = gradeMetrics.map(m => ({ prueba: m.pruebaNombre, valor: parseFloat(m.promedioGlobal.toFixed(2)) }));
+  const dataDesviacion = gradeMetrics.map(m => ({ prueba: m.pruebaNombre, valor: parseFloat(m.desviacionGlobal.toFixed(2)) }));
 
-    // Datos por área
-    const dataAreas = {};
-    Object.keys(AREA_NAMES).forEach(key => {
-        dataAreas[key] = gradeMetrics.map(m => ({
-            prueba: m.pruebaNombre,
-            valor: parseFloat(m.areas[key]?.promedio?.toFixed(2) || 0)
-        }));
+  const dataAreas = {};
+  Object.keys(AREA_NAMES).forEach(key => {
+    dataAreas[key] = gradeMetrics.map(m => ({
+      prueba: m.pruebaNombre,
+      valor: parseFloat(m.areas[key]?.promedio?.toFixed(2) || 0)
+    }));
+  });
+
+  const dataGrupos = {};
+  groups.forEach(g => {
+    const gm = analysis.getGroupMetrics(g, true);
+    dataGrupos[g] = pruebas.map(p => {
+      const match = gm?.find(m => m.pruebaId === p.id);
+      return {
+        prueba: p.nombre,
+        global: parseFloat(match?.promedioGlobal?.toFixed(2) || 0),
+        desviacion: parseFloat(match?.desviacionGlobal?.toFixed(2) || 0)
+      };
     });
+  });
 
-    // Datos por grupo
-    const dataGrupos = {};
+  // Datos de áreas por grupo
+  const dataAreasPorGrupo = {};
+  Object.keys(AREA_NAMES).forEach(areaKey => {
+    dataAreasPorGrupo[areaKey] = {};
     groups.forEach(g => {
-        const gm = analysis.getGroupMetrics(g, true);
-        dataGrupos[g] = pruebas.map(p => {
-            const match = gm?.find(m => m.pruebaId === p.id);
-            return {
-                prueba: p.nombre,
-                global: parseFloat(match?.promedioGlobal?.toFixed(2) || 0),
-                desviacion: parseFloat(match?.desviacionGlobal?.toFixed(2) || 0)
-            };
-        });
+      const gm = analysis.getGroupMetrics(g, true);
+      dataAreasPorGrupo[areaKey][g] = pruebas.map(p => {
+        const match = gm?.find(m => m.pruebaId === p.id);
+        return parseFloat(match?.areas?.[areaKey]?.promedio?.toFixed(2) || 0);
+      });
     });
+  });
 
-    // KPIs
-    const first = gradeMetrics[0];
-    const last = gradeMetrics[gradeMetrics.length - 1];
-    const cambio = gradeMetrics.length >= 2 ? last.promedioGlobal - first.promedioGlobal : 0;
+  // KPIs
+  const first = gradeMetrics[0];
+  const last = gradeMetrics[gradeMetrics.length - 1];
+  const cambio = gradeMetrics.length >= 2 ? last.promedioGlobal - first.promedioGlobal : 0;
 
-    const html = `<!DOCTYPE html>
+  // Serializar configuración base (la misma que usa React)
+  const baseOptionsJSON = JSON.stringify(baseOptions);
+
+  const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -137,8 +138,8 @@ export function generateLongitudinalHTML(analysis) {
     }
     .card-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
     .chart-container { position: relative; height: 350px; }
-    .chart-container-small { position: relative; height: 250px; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .chart-container-small { position: relative; height: 280px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
     .kpi-card { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; padding: 20px; text-align: center; }
     .kpi-value { font-size: 2.5rem; font-weight: 800; color: #1e40af; }
     .kpi-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
@@ -149,8 +150,10 @@ export function generateLongitudinalHTML(analysis) {
     .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.5); }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+    .areas-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    .area-card { background: #f8fafc; border-radius: 12px; padding: 15px; }
+    .area-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .area-dot { width: 16px; height: 16px; border-radius: 50%; }
     table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
     th { background: #f8fafc; font-weight: 600; position: sticky; top: 0; cursor: pointer; user-select: none; }
@@ -234,13 +237,13 @@ export function generateLongitudinalHTML(analysis) {
 
       <div class="card">
         <div class="card-title">📚 Desglose por Asignatura</div>
-        <div class="grid-3">
+        <div class="areas-grid">
           ${Object.entries(AREA_NAMES).map(([key, name]) => `
-            <div style="background: #f8fafc; border-radius: 12px; padding: 15px;">
-              <h4 style="font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                <span style="width: 12px; height: 12px; border-radius: 50%; background: ${AREA_COLORS[key]};"></span>
-                ${name}
-              </h4>
+            <div class="area-card">
+              <div class="area-header">
+                <span class="area-dot" style="background: ${COLORS.areas[key]};"></span>
+                <h4 style="font-weight: 700; color: #374151;">${name}</h4>
+              </div>
               <div class="chart-container-small"><canvas id="chartArea_${key}"></canvas></div>
             </div>
           `).join('')}
@@ -251,7 +254,7 @@ export function generateLongitudinalHTML(analysis) {
     <!-- Tab 2: Comparativa de Grupos -->
     <div id="tab-groups" class="tab-content">
       <div class="card">
-        <div class="card-title">👥 Promedio Global por Grupo</div>
+        <div class="card-title">📊 Promedio Global por Grupo</div>
         <div class="chart-container"><canvas id="chartGroupsGlobal"></canvas></div>
       </div>
 
@@ -262,10 +265,13 @@ export function generateLongitudinalHTML(analysis) {
 
       <div class="card">
         <div class="card-title">📚 Desglose por Asignatura (Grupos)</div>
-        <div class="grid-2">
+        <div class="areas-grid">
           ${Object.entries(AREA_NAMES).map(([key, name]) => `
-            <div style="background: #f8fafc; border-radius: 12px; padding: 15px;">
-              <h4 style="font-weight: 600; margin-bottom: 10px;">${name}</h4>
+            <div class="area-card">
+              <div class="area-header">
+                <span class="area-dot" style="background: ${COLORS.areas[key]};"></span>
+                <h4 style="font-weight: 700; color: #374151;">${name}</h4>
+              </div>
               <div class="chart-container-small"><canvas id="chartGroupArea_${key}"></canvas></div>
             </div>
           `).join('')}
@@ -335,8 +341,8 @@ export function generateLongitudinalHTML(analysis) {
                   <td>${s.piar === 'Sí' ? '<span class="badge badge-yellow">PIAR</span>' : ''}</td>
                   <td class="${s.promedioGlobal >= 60 ? 'text-green' : 'text-red'}" style="font-weight: bold;">${s.promedioGlobal?.toFixed(1) || '-'}</td>
                   ${Object.keys(AREA_NAMES).map(area =>
-        `<td class="${s[area] !== null && s[area] >= 60 ? 'text-green' : s[area] !== null && s[area] < 40 ? 'text-red' : ''}">${s[area]?.toFixed(1) || '-'}</td>`
-    ).join('')}
+    `<td class="${s[area] !== null && s[area] >= 60 ? 'text-green' : s[area] !== null && s[area] < 40 ? 'text-red' : ''}">${s[area]?.toFixed(1) || '-'}</td>`
+  ).join('')}
                   <td style="text-align: center;">${s.pruebasPresentes}/${s.pruebasTotales}</td>
                   <td style="text-align: center;">${s.todasLasPruebas ? '<span class="badge badge-green">✓</span>' : '<span class="badge badge-red">✗</span>'}</td>
                 </tr>
@@ -354,51 +360,38 @@ export function generateLongitudinalHTML(analysis) {
   </div>
 
   <script>
-    // Registrar plugin globalmente (igual que htmlExporter.js)
+    // Registrar plugin
     Chart.register(ChartDataLabels);
 
-    // Datos
+    // Datos (exactamente igual que en React)
     const dataGlobal = ${JSON.stringify(dataGlobal)};
     const dataDesviacion = ${JSON.stringify(dataDesviacion)};
     const dataAreas = ${JSON.stringify(dataAreas)};
     const dataGrupos = ${JSON.stringify(dataGrupos)};
+    const dataAreasPorGrupo = ${JSON.stringify(dataAreasPorGrupo)};
     const groups = ${JSON.stringify(groups)};
-    const pruebaColors = ${JSON.stringify(PRUEBA_COLORS)};
-    const groupColors = ${JSON.stringify(GROUP_COLORS)};
-    const areaColors = ${JSON.stringify(AREA_COLORS)};
+    const COLORS = ${JSON.stringify(COLORS)};
+    const AREA_NAMES = ${JSON.stringify(AREA_NAMES)};
 
-    // Opciones comunes (EXACTAMENTE como htmlExporter.js)
-    const commonOptions = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: { font: { size: 12, weight: 'bold' }, padding: 15, usePointStyle: true }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          titleFont: { size: 14, weight: 'bold' },
-          bodyFont: { size: 13 },
-          cornerRadius: 8
-        },
-        datalabels: {
-          display: true,
-          anchor: 'end',
-          align: 'end',
-          offset: 4,
-          font: { size: 11, weight: 'bold' },
-          formatter: (value) => value ? parseFloat(value).toFixed(1) : '',
-          color: '#1e293b'
-        }
-      },
-      scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } },
-        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 11 } } }
-      },
-      animation: { duration: 800, easing: 'easeInOutQuart' }
+    // Opciones base (EXACTAMENTE igual que chartConfig.js)
+    const baseOptions = ${baseOptionsJSON};
+
+    // Opciones sin leyenda
+    const noLegendOptions = {
+      ...baseOptions,
+      plugins: { ...baseOptions.plugins, legend: { display: false } }
+    };
+
+    // Opciones para áreas (0-100)
+    const areaOptions = {
+      ...noLegendOptions,
+      scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } }
+    };
+
+    // Opciones agrupadas
+    const groupedOptions = {
+      ...baseOptions,
+      plugins: { ...baseOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, font: { size: 9, weight: 'bold' } } }
     };
 
     // Inicializar gráficos
@@ -411,13 +404,13 @@ export function generateLongitudinalHTML(analysis) {
           datasets: [{
             label: 'Promedio Global',
             data: dataGlobal.map(d => d.valor),
-            backgroundColor: dataGlobal.map((_, i) => pruebaColors[i % pruebaColors.length] + 'cc'),
-            borderColor: dataGlobal.map((_, i) => pruebaColors[i % pruebaColors.length]),
+            backgroundColor: dataGlobal.map((_, i) => COLORS.pruebas[i % COLORS.pruebas.length] + 'cc'),
+            borderColor: dataGlobal.map((_, i) => COLORS.pruebas[i % COLORS.pruebas.length]),
             borderWidth: 2,
             borderRadius: 8
           }]
         },
-        options: { ...commonOptions, plugins: { ...commonOptions.plugins, legend: { display: false } } }
+        options: noLegendOptions
       });
 
       // Gráfico Desviación
@@ -428,31 +421,24 @@ export function generateLongitudinalHTML(analysis) {
           datasets: [{
             label: 'Desviación Estándar',
             data: dataDesviacion.map(d => d.valor),
-            backgroundColor: 'rgba(249, 115, 22, 0.7)',
-            borderColor: 'rgb(249, 115, 22)',
+            backgroundColor: '#f97316cc',
+            borderColor: '#f97316',
             borderWidth: 2,
             borderRadius: 8
           }]
         },
-        options: { 
-          ...commonOptions, 
-          plugins: { 
-            ...commonOptions.plugins, 
-            legend: { display: false },
-            datalabels: { ...commonOptions.plugins.datalabels, formatter: (v) => parseFloat(v).toFixed(2) }
-          } 
-        }
+        options: { ...noLegendOptions, plugins: { ...noLegendOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, formatter: (v) => parseFloat(v).toFixed(2) } } }
       });
 
       // Gráficos por Área
       Object.entries(dataAreas).forEach(([key, data]) => {
-        const color = areaColors[key];
+        const color = COLORS.areas[key];
         new Chart(document.getElementById('chartArea_' + key), {
           type: 'bar',
           data: {
             labels: data.map(d => d.prueba),
             datasets: [{
-              label: key,
+              label: AREA_NAMES[key],
               data: data.map(d => d.valor),
               backgroundColor: color + 'aa',
               borderColor: color,
@@ -460,15 +446,7 @@ export function generateLongitudinalHTML(analysis) {
               borderRadius: 6
             }]
           },
-          options: {
-            ...commonOptions,
-            plugins: { 
-              ...commonOptions.plugins, 
-              legend: { display: false },
-              datalabels: { ...commonOptions.plugins.datalabels, color: color }
-            },
-            scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, min: 0, max: 100 } }
-          }
+          options: { ...areaOptions, plugins: { ...areaOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, color: color } } }
         });
       });
 
@@ -480,13 +458,13 @@ export function generateLongitudinalHTML(analysis) {
           datasets: groups.map((g, i) => ({
             label: g,
             data: dataGrupos[g].map(d => d.global),
-            backgroundColor: groupColors[i % groupColors.length] + 'aa',
-            borderColor: groupColors[i % groupColors.length],
+            backgroundColor: COLORS.groups[i % COLORS.groups.length] + 'aa',
+            borderColor: COLORS.groups[i % COLORS.groups.length],
             borderWidth: 2,
             borderRadius: 5
           }))
         },
-        options: commonOptions
+        options: groupedOptions
       });
 
       // Gráfico Grupos Desviación
@@ -497,56 +475,31 @@ export function generateLongitudinalHTML(analysis) {
           datasets: groups.map((g, i) => ({
             label: g,
             data: dataGrupos[g].map(d => d.desviacion),
-            backgroundColor: groupColors[i % groupColors.length] + 'aa',
-            borderColor: groupColors[i % groupColors.length],
+            backgroundColor: COLORS.groups[i % COLORS.groups.length] + 'aa',
+            borderColor: COLORS.groups[i % COLORS.groups.length],
             borderWidth: 2,
             borderRadius: 5
           }))
         },
-        options: {
-          ...commonOptions,
-          plugins: {
-            ...commonOptions.plugins,
-            datalabels: { ...commonOptions.plugins.datalabels, formatter: (v) => parseFloat(v).toFixed(2) }
-          }
-        }
+        options: { ...groupedOptions, plugins: { ...groupedOptions.plugins, datalabels: { ...baseOptions.plugins.datalabels, formatter: (v) => parseFloat(v).toFixed(2), font: { size: 9, weight: 'bold' } } } }
       });
 
-      // Gráficos Área por Grupo
+      // Gráficos de Área por Grupo
       Object.keys(dataAreas).forEach(areaKey => {
         new Chart(document.getElementById('chartGroupArea_' + areaKey), {
           type: 'bar',
           data: {
             labels: dataGlobal.map(d => d.prueba),
-            datasets: groups.map((g, i) => {
-              const gm = ${JSON.stringify(
-        Object.fromEntries(groups.map(g => [
-            g,
-            Object.fromEntries(Object.keys(AREA_NAMES).map(areaKey => [
-                areaKey,
-                pruebas.map(p => {
-                    const gm = analysis.getGroupMetrics(g, true);
-                    const match = gm?.find(m => m.pruebaId === p.id);
-                    return parseFloat(match?.areas?.[areaKey]?.promedio?.toFixed(2) || 0);
-                })
-            ]))
-        ]))
-    )};
-              return {
-                label: g,
-                data: gm[g][areaKey],
-                backgroundColor: groupColors[i % groupColors.length] + 'aa',
-                borderColor: groupColors[i % groupColors.length],
-                borderWidth: 1,
-                borderRadius: 4
-              };
-            })
+            datasets: groups.map((g, i) => ({
+              label: g,
+              data: dataAreasPorGrupo[areaKey][g],
+              backgroundColor: COLORS.groups[i % COLORS.groups.length] + 'aa',
+              borderColor: COLORS.groups[i % COLORS.groups.length],
+              borderWidth: 1,
+              borderRadius: 4
+            }))
           },
-          options: {
-            ...commonOptions,
-            plugins: { ...commonOptions.plugins, datalabels: { ...commonOptions.plugins.datalabels, font: { size: 9 } } },
-            scales: { ...commonOptions.scales, y: { ...commonOptions.scales.y, min: 0, max: 100 } }
-          }
+          options: { ...groupedOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, min: 0, max: 100 } } }
         });
       });
     }
@@ -615,5 +568,5 @@ export function generateLongitudinalHTML(analysis) {
 </body>
 </html>`;
 
-    return html;
+  return html;
 }
