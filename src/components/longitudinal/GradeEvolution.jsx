@@ -113,8 +113,8 @@ export function GradeEvolution({ analysis }) {
                         <button
                             onClick={() => setShowPIAR(!showPIAR)}
                             className={`px-4 py-2 rounded-lg transition-all ${showPIAR
-                                    ? 'bg-white text-blue-600 font-medium'
-                                    : 'bg-blue-500/30 text-white'
+                                ? 'bg-white text-blue-600 font-medium'
+                                : 'bg-blue-500/30 text-white'
                                 }`}
                         >
                             {showPIAR ? 'Comparación activa' : 'Comparación desactivada'}
@@ -222,6 +222,12 @@ export function GradeEvolution({ analysis }) {
                                 {chartDataAreas.map((entry, i) => (
                                     <Cell key={`cell-${i}`} fill={AREA_COLORS[entry.areaId] || '#6366f1'} opacity={idx === 0 ? 0.4 : idx === metricsConPIAR.length - 1 ? 1 : 0.7} />
                                 ))}
+                                <LabelList
+                                    dataKey={m.pruebaNombre}
+                                    position="top"
+                                    style={{ fontSize: '10px', fontWeight: 'bold' }}
+                                    formatter={(v) => v.toFixed(1)}
+                                />
                             </Bar>
                         ))}
                     </BarChart>

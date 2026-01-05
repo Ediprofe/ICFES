@@ -123,8 +123,8 @@ export function StudentEvolution({ analysis }) {
                                 setSelectedStudent(null);
                             }}
                             className={`px-4 py-2 rounded-lg transition-all ${includePIAR
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-gray-200 text-gray-700'
+                                ? 'bg-indigo-600 text-white'
+                                : 'bg-gray-200 text-gray-700'
                                 }`}
                         >
                             {includePIAR ? 'PIAR incluido' : 'PIAR excluido'}
@@ -284,6 +284,12 @@ export function StudentEvolution({ analysis }) {
                                         {chartDataAreas.map((entry, i) => (
                                             <Cell key={`cell-${i}`} fill={AREA_COLORS[entry.areaId] || '#6366f1'} opacity={idx === 0 ? 0.4 : idx === analysis.pruebas.length - 1 ? 1 : 0.7} />
                                         ))}
+                                        <LabelList
+                                            dataKey={p.nombre}
+                                            position="top"
+                                            style={{ fontSize: '10px', fontWeight: 'bold' }}
+                                            formatter={(v) => v !== null ? v.toFixed(1) : ''}
+                                        />
                                     </Bar>
                                 ))}
                             </BarChart>

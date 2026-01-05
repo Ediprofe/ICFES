@@ -109,8 +109,8 @@ export function GroupComparison({ analysis }) {
                         <button
                             onClick={() => setShowPIAR(!showPIAR)}
                             className={`px-4 py-2 rounded-lg transition-all ${showPIAR
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-gray-200 text-gray-700'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-200 text-gray-700'
                                 }`}
                         >
                             {showPIAR ? 'Incluye PIAR' : 'Excluye PIAR'}
@@ -168,7 +168,12 @@ export function GroupComparison({ analysis }) {
                         <Legend />
                         {selectedGroups.map((grupo) => (
                             <Bar key={grupo} dataKey={grupo} fill={getGroupColor(grupo)}>
-                                <LabelList dataKey={grupo} position="top" style={{ fontSize: '10px', fontWeight: 'bold' }} formatter={(v) => v.toFixed(1)} />
+                                <LabelList
+                                    dataKey={grupo}
+                                    position="top"
+                                    style={{ fontSize: '10px', fontWeight: 'bold' }}
+                                    formatter={(v) => v.toFixed(1)}
+                                />
                             </Bar>
                         ))}
                     </BarChart>
