@@ -8,13 +8,19 @@ import { DataPreview } from './components/DataPreview.jsx';
 import { ComparisonYearUploader } from './components/ComparisonYearUploader.jsx';
 import { ExportButtons } from './components/ExportButtons.jsx';
 import { AnalysisModeSelector } from './components/AnalysisModeSelector.jsx';
+import { LongitudinalUploader } from './components/longitudinal/LongitudinalUploader.jsx';
 import { useAnalysisStore } from './stores/analysisStore.js';
 import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { LongitudinalAnalysis } from './models/LongitudinalAnalysis.js';
 
 function AppDebug() {
   // Estado del modo de análisis
   const analysisMode = useAnalysisStore((state) => state.analysisMode);
   const setAnalysisMode = useAnalysisStore((state) => state.setAnalysisMode);
+
+  // Estado local para análisis longitudinal
+  const [longitudinalData, setLongitudinalData] = useState(null);
 
   // Otros estados
   const multiYearAnalysis = useAnalysisStore((state) => state.multiYearAnalysis);
@@ -27,6 +33,7 @@ function AppDebug() {
   const handleNewAnalysis = () => {
     if (confirm('¿Estás seguro de que deseas iniciar un nuevo análisis? Se perderán los datos actuales.')) {
       reset();
+      setLongitudinalData(null);
     }
   };
 
@@ -44,6 +51,12 @@ function AppDebug() {
 
   const handleBackToModeSelector = () => {
     reset();
+    setLongitudinalData(null);
+  };
+
+  const handleLongitudinalDataLoaded = (data) => {
+    const analysis = new LongitudinalAnalysis(data);
+    setLongitudinalData(analysis);
   };
 
   // Calcular hasData directamente
@@ -141,18 +154,53 @@ function AppDebug() {
           </div>
         </div>
 
-        {/* Componentes principales */}
-        {!hasData && <FileUploaderNew />}
-
-        {hasData && (
+        {/* Componentes según modo */}
+        {analysisMode === 'longitudinal' ? (
+          // Modo longitudinal
           <>
-            <DataPreview />
-            {comparisonMode && <ComparisonYearUploader />}
+            {!longitudinalData && (
+              <LongitudinalUploader onDataLoaded={handleLongitudinalDataLoaded} />
+            )}
+            {longitudinalData && (
+              <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                  📊 Datos cargados: {longitudinalData.grado}
+                </h2>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="bg-green-50 p-4 rounded-lg text-center">
+                    <p className="text-3xl font-bold text-green-600">{longitudinalData.pruebas?.length}</p>
+                    <p className="text-sm text-green-700">Pruebas</p>
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg text-center">
+                    <p className="text-3xl font-bold text-blue-600">{longitudinalData.estudiantes?.size}</p>
+                    <p className="text-sm text-blue-700">Estudiantes</p>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg text-center">
+                    <p className="text-3xl font-bold text-purple-600">{longitudinalData.grupos?.length}</p>
+                    <p className="text-sm text-purple-700">Grupos</p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mt-4">
+                  Próximamente: Visualizaciones de evolución por grado, grupo y estudiante
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          // Modos single y comparative
+          <>
+            {!hasData && <FileUploaderNew />}
+            {hasData && (
+              <>
+                <DataPreview />
+                {comparisonMode && <ComparisonYearUploader />}
+              </>
+            )}
           </>
         )}
 
-        {/* SIEMPRE mostrar botones de exportación */}
-        <ExportButtons />
+        {/* Botones de exportación */}
+        {(analysisMode !== 'longitudinal' || longitudinalData) && <ExportButtons />}
       </div>
     </div>
   );
