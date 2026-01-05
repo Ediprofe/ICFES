@@ -9,6 +9,7 @@ import { ComparisonYearUploader } from './components/ComparisonYearUploader.jsx'
 import { ExportButtons } from './components/ExportButtons.jsx';
 import { AnalysisModeSelector } from './components/AnalysisModeSelector.jsx';
 import { LongitudinalUploader } from './components/longitudinal/LongitudinalUploader.jsx';
+import { LongitudinalDashboard } from './components/longitudinal/LongitudinalDashboard.jsx';
 import { useAnalysisStore } from './stores/analysisStore.js';
 import { RefreshCw, Plus, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
@@ -162,28 +163,7 @@ function AppDebug() {
               <LongitudinalUploader onDataLoaded={handleLongitudinalDataLoaded} />
             )}
             {longitudinalData && (
-              <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                  📊 Datos cargados: {longitudinalData.grado}
-                </h2>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-green-50 p-4 rounded-lg text-center">
-                    <p className="text-3xl font-bold text-green-600">{longitudinalData.pruebas?.length}</p>
-                    <p className="text-sm text-green-700">Pruebas</p>
-                  </div>
-                  <div className="bg-blue-50 p-4 rounded-lg text-center">
-                    <p className="text-3xl font-bold text-blue-600">{longitudinalData.estudiantes?.size}</p>
-                    <p className="text-sm text-blue-700">Estudiantes</p>
-                  </div>
-                  <div className="bg-purple-50 p-4 rounded-lg text-center">
-                    <p className="text-3xl font-bold text-purple-600">{longitudinalData.grupos?.length}</p>
-                    <p className="text-sm text-purple-700">Grupos</p>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500 mt-4">
-                  Próximamente: Visualizaciones de evolución por grado, grupo y estudiante
-                </p>
-              </div>
+              <LongitudinalDashboard analysis={longitudinalData} />
             )}
           </>
         ) : (
