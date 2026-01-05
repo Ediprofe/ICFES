@@ -1,9 +1,10 @@
 /**
  * LongitudinalDashboard - Dashboard principal para análisis longitudinal
  * 
- * MEJORAS:
- * 1. Contenedor principal a 100% del ancho de pantalla
- * 2. Footer con botón "Exportar" único
+ * Integra los tres componentes:
+ * - GradeEvolution: Métricas a nivel de grado
+ * - GroupComparison: Comparativa entre grupos
+ * - StudentEvolution: Evolución individual
  */
 
 import { useState } from 'react';
@@ -11,6 +12,8 @@ import { BarChart3, Users, User, FileDown } from 'lucide-react';
 import { GradeEvolution } from './GradeEvolution.jsx';
 import { GroupComparison } from './GroupComparison.jsx';
 import { StudentEvolution } from './StudentEvolution.jsx';
+import { downloadHTML } from '../../utils/htmlExporter.js';
+import { generateLongitudinalHTML } from '../../utils/longitudinalHtmlExporter.js';
 
 /**
  * @param {Object} props
@@ -18,6 +21,7 @@ import { StudentEvolution } from './StudentEvolution.jsx';
  */
 export function LongitudinalDashboard({ analysis }) {
     const [activeTab, setActiveTab] = useState('grade');
+    const [isExporting, setIsExporting] = useState(false);
 
     const tabs = [
         { id: 'grade', label: 'Evolución del Grado', icon: BarChart3 },
@@ -25,13 +29,21 @@ export function LongitudinalDashboard({ analysis }) {
         { id: 'students', label: 'Por Estudiante', icon: User }
     ];
 
-    const handleExportHTML = () => {
-        // TODO: Implementar exportación HTML
-        alert('Exportación HTML en desarrollo');
+    const handleExportHTML = async () => {
+        setIsExporting(true);
+        try {
+            const html = generateLongitudinalHTML(analysis);
+            const filename = `Longitudinal_${analysis.grado}_${new Date().toISOString().split('T')[0]}.html`;
+            downloadHTML(html, filename);
+        } catch (error) {
+            console.error('Error exportando HTML:', error);
+            alert('Error al exportar: ' + error.message);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     return (
-        // CONTENEDOR PRINCIPAL - 100% ANCHO SIN PADDING LATERAL
         <div className="w-full space-y-6">
             {/* Resumen general */}
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -91,7 +103,7 @@ export function LongitudinalDashboard({ analysis }) {
                     </nav>
                 </div>
 
-                {/* Tab content - SIN PADDING LATERAL para máximo ancho */}
+                {/* Tab content */}
                 <div className="p-4 md:p-6">
                     {activeTab === 'grade' && <GradeEvolution analysis={analysis} />}
                     {activeTab === 'groups' && <GroupComparison analysis={analysis} />}
@@ -99,14 +111,15 @@ export function LongitudinalDashboard({ analysis }) {
                 </div>
             </div>
 
-            {/* FOOTER - Solo botón Exportar */}
+            {/* Footer - Botón Exportar */}
             <div className="flex justify-end">
                 <button
                     onClick={handleExportHTML}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all hover:shadow-xl"
+                    disabled={isExporting}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <FileDown size={20} />
-                    Exportar Informe
+                    {isExporting ? 'Exportando...' : 'Exportar Informe'}
                 </button>
             </div>
         </div>

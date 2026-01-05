@@ -1,8 +1,6 @@
-seguimos con estas anotaciones, que no se han arreglado.
+1. ![alt text](image-11.png)
 
-1. El contenedor principal no ocupa el 100% del ancho de la pantalla. ![alt text](image-7.png)
+cuando exporto el html sale ese mensaje y no descarga el html. Por favor corrige.
 
-
-3. En el pie de de página, quiero que lo cambies por simplemente el botón que diga exportar, tipo algo así, para exportar el informe html. ![alt text](image-9.png)
-
+2. Quiero que en la pestaña "Por Estudiante" haya la posibilidad de ver una tabla con filtros (así como la que aparece en los otros html exportados de los otros análisis diferentes al analisis longitudinal), en la cual por favor se vea el ranking de estudiantes de acuerdo a las diferentes pruebas, o sea con el promedio de cada estudiante en el global, en el de cada asginatura, y demás, o sea los mismos campos y filtros que la tabla grande por ejemplo que aparece en el html exportado en el analisis de una solla cohorte. Y quiero también que a cada estudiante le agregues una columna que diga si el estudiante presento todas las pruebas, si sí o si no.
 
