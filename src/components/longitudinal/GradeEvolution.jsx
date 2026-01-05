@@ -2,6 +2,8 @@
  * GradeEvolution - Evolución del grado completo
  * 
  * MIGRADO A CHART.JS para fidelidad con HTML export
+ * 
+ * Toggle PIAR: "Ver impacto PIAR" - Muestra barra gris comparativa al lado
  */
 
 import { useState, useMemo } from 'react';
@@ -10,30 +12,25 @@ import { TrendingUp, TrendingDown, Minus, Eye, EyeOff } from 'lucide-react';
 import {
     COLORS,
     AREA_NAMES,
-    baseOptions,
-    getOptionsNoLegend,
-    getOptionsWithColoredLabels,
-    createSingleBarConfig
+    baseOptions
 } from '../../utils/chartConfig';
 
 /**
  * Componente de tarjeta para gráficos con toggle PIAR
  */
-function ChartCard({ title, children, showPIAR, onTogglePIAR, hasPIARData = true }) {
+function ChartCard({ title, children, showPIARImpact, onTogglePIAR }) {
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 w-full">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-800">{title}</h3>
-                {hasPIARData && (
-                    <button
-                        onClick={onTogglePIAR}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showPIAR ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
-                            }`}
-                    >
-                        {showPIAR ? <Eye size={16} /> : <EyeOff size={16} />}
-                        {showPIAR ? 'Ocultando PIAR' : 'Incluir PIAR'}
-                    </button>
-                )}
+                <button
+                    onClick={onTogglePIAR}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showPIARImpact ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
+                        }`}
+                >
+                    {showPIARImpact ? <Eye size={16} /> : <EyeOff size={16} />}
+                    Ver impacto PIAR
+                </button>
             </div>
             <div className="h-[350px]">
                 {children}
@@ -43,59 +40,88 @@ function ChartCard({ title, children, showPIAR, onTogglePIAR, hasPIARData = true
 }
 
 /**
+ * Crea datos de gráfico con opción de comparar PIAR
+ * - Sin PIAR: Barras de colores
+ * - Con PIAR: Barras grises al lado
+ */
+function createComparisonData(labels, valuesSinPIAR, valuesConPIAR, colors, showPIARImpact, label) {
+    const datasets = [{
+        label: label,
+        data: valuesSinPIAR,
+        backgroundColor: Array.isArray(colors) ? colors.map(c => c + 'cc') : colors + 'cc',
+        borderColor: colors,
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false
+    }];
+
+    if (showPIARImpact) {
+        datasets.push({
+            label: 'Con PIAR',
+            data: valuesConPIAR,
+            backgroundColor: '#9ca3af99',
+            borderColor: '#9ca3af',
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false
+        });
+    }
+
+    return { labels, datasets };
+}
+
+/**
  * @param {Object} props
  * @param {import('../../models/LongitudinalAnalysis.js').LongitudinalAnalysis} props.analysis
  */
 export function GradeEvolution({ analysis }) {
-    // Estado de toggle PIAR por gráfico
+    // Estado de toggle PIAR por gráfico (false = oculto, true = mostrar impacto)
     const [piarStates, setPiarStates] = useState({
-        global: true,
-        variabilidad: true,
-        lectura: true,
-        matematicas: true,
-        sociales: true,
-        naturales: true,
-        ingles: true
+        global: false,
+        variabilidad: false,
+        lectura: false,
+        matematicas: false,
+        sociales: false,
+        naturales: false,
+        ingles: false
     });
 
     const togglePIAR = (key) => {
         setPiarStates(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
-    // Métricas para cada estado de PIAR
+    // Métricas
     const metricsSinPIAR = useMemo(() => analysis.getGradeMetrics(true), [analysis]);
     const metricsConPIAR = useMemo(() => analysis.getGradeMetrics(false), [analysis]);
 
-    const getMetrics = (excludePIAR) => excludePIAR ? metricsSinPIAR : metricsConPIAR;
-
     // Datos para gráfico global
     const globalChartData = useMemo(() => {
-        const metrics = getMetrics(piarStates.global);
-        const labels = metrics.map(m => m.pruebaNombre);
-        const values = metrics.map(m => m.promedioGlobal);
-        const colors = metrics.map((_, i) => COLORS.pruebas[i % COLORS.pruebas.length]);
+        const labels = metricsSinPIAR.map(m => m.pruebaNombre);
+        const valuesSinPIAR = metricsSinPIAR.map(m => m.promedioGlobal);
+        const valuesConPIAR = metricsConPIAR.map(m => m.promedioGlobal);
+        const colors = metricsSinPIAR.map((_, i) => COLORS.pruebas[i % COLORS.pruebas.length]);
 
-        return createSingleBarConfig(labels, values, colors, { label: 'Promedio Global' });
+        return createComparisonData(labels, valuesSinPIAR, valuesConPIAR, colors, piarStates.global, 'Sin PIAR');
     }, [piarStates.global, metricsSinPIAR, metricsConPIAR]);
 
     // Datos para gráfico de variabilidad
     const variabilidadChartData = useMemo(() => {
-        const metrics = getMetrics(piarStates.variabilidad);
-        const labels = metrics.map(m => m.pruebaNombre);
-        const values = metrics.map(m => m.desviacionGlobal);
+        const labels = metricsSinPIAR.map(m => m.pruebaNombre);
+        const valuesSinPIAR = metricsSinPIAR.map(m => m.desviacionGlobal);
+        const valuesConPIAR = metricsConPIAR.map(m => m.desviacionGlobal);
 
-        return createSingleBarConfig(labels, values, '#f97316', { label: 'Desviación Estándar' });
+        return createComparisonData(labels, valuesSinPIAR, valuesConPIAR, '#f97316', piarStates.variabilidad, 'Sin PIAR');
     }, [piarStates.variabilidad, metricsSinPIAR, metricsConPIAR]);
 
     // Datos para gráficos por área
     const areaChartData = useMemo(() => {
         const result = {};
         Object.keys(AREA_NAMES).forEach(areaKey => {
-            const metrics = getMetrics(piarStates[areaKey]);
-            const labels = metrics.map(m => m.pruebaNombre);
-            const values = metrics.map(m => m.areas[areaKey]?.promedio || 0);
+            const labels = metricsSinPIAR.map(m => m.pruebaNombre);
+            const valuesSinPIAR = metricsSinPIAR.map(m => m.areas[areaKey]?.promedio || 0);
+            const valuesConPIAR = metricsConPIAR.map(m => m.areas[areaKey]?.promedio || 0);
 
-            result[areaKey] = createSingleBarConfig(labels, values, COLORS.areas[areaKey], { label: AREA_NAMES[areaKey] });
+            result[areaKey] = createComparisonData(labels, valuesSinPIAR, valuesConPIAR, COLORS.areas[areaKey], piarStates[areaKey], 'Sin PIAR');
         });
         return result;
     }, [piarStates, metricsSinPIAR, metricsConPIAR]);
@@ -111,14 +137,26 @@ export function GradeEvolution({ analysis }) {
         return <Minus className="text-gray-400" size={20} />;
     };
 
-    // Opciones con escala 0-100 para áreas
-    const areaOptions = {
-        ...getOptionsNoLegend(),
+    // Opciones para gráficos
+    const getChartOptions = (showLegend = false, coloredLabels = null) => ({
+        ...baseOptions,
+        plugins: {
+            ...baseOptions.plugins,
+            legend: { display: showLegend, position: 'bottom', labels: { font: { size: 11 }, usePointStyle: true } },
+            datalabels: coloredLabels ? {
+                ...baseOptions.plugins.datalabels,
+                color: coloredLabels
+            } : baseOptions.plugins.datalabels
+        }
+    });
+
+    const areaOptions = (showLegend, color) => ({
+        ...getChartOptions(showLegend, color),
         scales: {
             ...baseOptions.scales,
             y: { ...baseOptions.scales.y, min: 0, max: 100 }
         }
-    };
+    });
 
     return (
         <div className="w-full space-y-6">
@@ -148,24 +186,24 @@ export function GradeEvolution({ analysis }) {
             {/* Gráfico Global */}
             <ChartCard
                 title="📊 Promedio Global"
-                showPIAR={piarStates.global}
+                showPIARImpact={piarStates.global}
                 onTogglePIAR={() => togglePIAR('global')}
             >
-                <Bar data={globalChartData} options={getOptionsNoLegend()} />
+                <Bar data={globalChartData} options={getChartOptions(piarStates.global)} />
             </ChartCard>
 
             {/* Gráfico Variabilidad */}
             <ChartCard
                 title="📉 Variabilidad (Desviación Estándar)"
-                showPIAR={piarStates.variabilidad}
+                showPIARImpact={piarStates.variabilidad}
                 onTogglePIAR={() => togglePIAR('variabilidad')}
             >
                 <Bar
                     data={variabilidadChartData}
                     options={{
-                        ...getOptionsNoLegend(),
+                        ...getChartOptions(piarStates.variabilidad),
                         plugins: {
-                            ...getOptionsNoLegend().plugins,
+                            ...getChartOptions(piarStates.variabilidad).plugins,
                             datalabels: {
                                 ...baseOptions.plugins.datalabels,
                                 formatter: (v) => parseFloat(v).toFixed(2)
@@ -195,22 +233,13 @@ export function GradeEvolution({ analysis }) {
                                         }`}
                                 >
                                     {piarStates[key] ? <Eye size={12} /> : <EyeOff size={12} />}
-                                    PIAR
+                                    Ver impacto PIAR
                                 </button>
                             </div>
                             <div className="h-[280px]">
                                 <Bar
                                     data={areaChartData[key]}
-                                    options={{
-                                        ...areaOptions,
-                                        plugins: {
-                                            ...areaOptions.plugins,
-                                            datalabels: {
-                                                ...baseOptions.plugins.datalabels,
-                                                color: COLORS.areas[key]
-                                            }
-                                        }
-                                    }}
+                                    options={areaOptions(piarStates[key], COLORS.areas[key])}
                                 />
                             </div>
                         </div>

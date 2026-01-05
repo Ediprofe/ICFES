@@ -1,3 +1,1 @@
-LO QUE SE EXPORTA NO ES 100% FIEL A LO QUE YO VEO EN LA APLICACIÓN EN LOCALHOST. POR FAVOR DIME QUÉ PASA...
-
-LAS GRÁFICAS DE BARRAS POR EJEMPLO SE METEN DE A DOS GRÁFICAS POR COLUMNA CUANDO YO NO LO TENGO ASÍ. TAMPCOO PUEDO VER EL INFORME DE CADA ESTUDIANTE POR SEPARADO....DIME QUÉ SEUCEDE.
+me gusta lo que hciiste pero en todas las gráficas eso que pones "Incluir PIAR" y "Ocultando PIAR" quítalo, o sea ponlo como estaba "Ver impacto PIAR" o no, y que cuando se quiera ver con piar, se muestre la barra gris al lado de la barra sin tener en cuenta lo estudiantes con PIAR.

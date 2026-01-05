@@ -2,6 +2,8 @@
  * GroupComparison - Comparativa entre grupos
  * 
  * MIGRADO A CHART.JS para fidelidad con HTML export
+ * 
+ * Toggle PIAR: "Ver impacto PIAR" - Muestra barras grises al lado
  */
 
 import { useState, useMemo } from 'react';
@@ -10,25 +12,24 @@ import { Users, Eye, EyeOff } from 'lucide-react';
 import {
     COLORS,
     AREA_NAMES,
-    baseOptions,
-    createGroupedBarConfig
+    baseOptions
 } from '../../utils/chartConfig';
 
 /**
  * Componente de tarjeta para gráficos con toggle PIAR
  */
-function ChartCard({ title, children, showPIAR, onTogglePIAR }) {
+function ChartCard({ title, children, showPIARImpact, onTogglePIAR }) {
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 w-full">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-800">{title}</h3>
                 <button
                     onClick={onTogglePIAR}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showPIAR ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showPIARImpact ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
                         }`}
                 >
-                    {showPIAR ? <Eye size={16} /> : <EyeOff size={16} />}
-                    {showPIAR ? 'Ocultando PIAR' : 'Incluir PIAR'}
+                    {showPIARImpact ? <Eye size={16} /> : <EyeOff size={16} />}
+                    Ver impacto PIAR
                 </button>
             </div>
             <div className="h-[380px]">
@@ -44,13 +45,13 @@ function ChartCard({ title, children, showPIAR, onTogglePIAR }) {
  */
 export function GroupComparison({ analysis }) {
     const [piarStates, setPiarStates] = useState({
-        global: true,
-        variabilidad: true,
-        lectura: true,
-        matematicas: true,
-        sociales: true,
-        naturales: true,
-        ingles: true
+        global: false,
+        variabilidad: false,
+        lectura: false,
+        matematicas: false,
+        sociales: false,
+        naturales: false,
+        ingles: false
     });
 
     const togglePIAR = (key) => {
@@ -77,56 +78,60 @@ export function GroupComparison({ analysis }) {
         return result;
     }, [analysis, groups]);
 
-    const getGroupMetrics = (excludePIAR) => excludePIAR ? groupMetricsSinPIAR : groupMetricsConPIAR;
-
-    // Datos para gráfico global por grupo
-    const globalChartData = useMemo(() => {
-        const metrics = getGroupMetrics(piarStates.global);
+    // Crea datasets para comparación
+    const createGroupedData = (getValueFn, showPIARImpact, formatter = null) => {
         const labels = pruebas.map(p => p.nombre);
 
-        const datasets = groups.map(g => ({
+        // Datasets sin PIAR (coloreados)
+        const datasets = groups.map((g, i) => ({
             label: g,
             data: pruebas.map(p => {
-                const match = metrics[g]?.find(m => m.pruebaId === p.id);
-                return match?.promedioGlobal || 0;
-            })
+                const match = groupMetricsSinPIAR[g]?.find(m => m.pruebaId === p.id);
+                return getValueFn(match);
+            }),
+            backgroundColor: COLORS.groups[i % COLORS.groups.length] + 'aa',
+            borderColor: COLORS.groups[i % COLORS.groups.length],
+            borderWidth: 2,
+            borderRadius: 5,
+            borderSkipped: false
         }));
 
-        return createGroupedBarConfig(labels, datasets);
-    }, [piarStates.global, groupMetricsSinPIAR, groupMetricsConPIAR, groups, pruebas]);
+        // Si mostrar impacto PIAR, agregar datasets grises
+        if (showPIARImpact) {
+            groups.forEach((g, i) => {
+                datasets.push({
+                    label: `${g} (PIAR)`,
+                    data: pruebas.map(p => {
+                        const match = groupMetricsConPIAR[g]?.find(m => m.pruebaId === p.id);
+                        return getValueFn(match);
+                    }),
+                    backgroundColor: '#9ca3af66',
+                    borderColor: '#9ca3af',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false
+                });
+            });
+        }
 
-    // Datos para gráfico de variabilidad
-    const variabilidadChartData = useMemo(() => {
-        const metrics = getGroupMetrics(piarStates.variabilidad);
-        const labels = pruebas.map(p => p.nombre);
+        return { labels, datasets };
+    };
 
-        const datasets = groups.map(g => ({
-            label: g,
-            data: pruebas.map(p => {
-                const match = metrics[g]?.find(m => m.pruebaId === p.id);
-                return match?.desviacionGlobal || 0;
-            })
-        }));
+    // Datos para gráficos
+    const globalChartData = useMemo(() =>
+        createGroupedData(m => m?.promedioGlobal || 0, piarStates.global),
+        [piarStates.global, groupMetricsSinPIAR, groupMetricsConPIAR, groups, pruebas]
+    );
 
-        return createGroupedBarConfig(labels, datasets);
-    }, [piarStates.variabilidad, groupMetricsSinPIAR, groupMetricsConPIAR, groups, pruebas]);
+    const variabilidadChartData = useMemo(() =>
+        createGroupedData(m => m?.desviacionGlobal || 0, piarStates.variabilidad),
+        [piarStates.variabilidad, groupMetricsSinPIAR, groupMetricsConPIAR, groups, pruebas]
+    );
 
-    // Datos por área
     const areaChartData = useMemo(() => {
         const result = {};
         Object.keys(AREA_NAMES).forEach(areaKey => {
-            const metrics = getGroupMetrics(piarStates[areaKey]);
-            const labels = pruebas.map(p => p.nombre);
-
-            const datasets = groups.map(g => ({
-                label: g,
-                data: pruebas.map(p => {
-                    const match = metrics[g]?.find(m => m.pruebaId === p.id);
-                    return match?.areas?.[areaKey]?.promedio || 0;
-                })
-            }));
-
-            result[areaKey] = createGroupedBarConfig(labels, datasets);
+            result[areaKey] = createGroupedData(m => m?.areas?.[areaKey]?.promedio || 0, piarStates[areaKey]);
         });
         return result;
     }, [piarStates, groupMetricsSinPIAR, groupMetricsConPIAR, groups, pruebas]);
@@ -143,7 +148,6 @@ export function GroupComparison({ analysis }) {
         }
     };
 
-    // Opciones con escala 0-100 para áreas
     const areaOptions = {
         ...groupedOptions,
         scales: {
@@ -182,7 +186,7 @@ export function GroupComparison({ analysis }) {
             {/* Gráfico Global por Grupo */}
             <ChartCard
                 title="📊 Promedio Global por Grupo"
-                showPIAR={piarStates.global}
+                showPIARImpact={piarStates.global}
                 onTogglePIAR={() => togglePIAR('global')}
             >
                 <Bar data={globalChartData} options={groupedOptions} />
@@ -191,7 +195,7 @@ export function GroupComparison({ analysis }) {
             {/* Gráfico Variabilidad por Grupo */}
             <ChartCard
                 title="📉 Variabilidad por Grupo"
-                showPIAR={piarStates.variabilidad}
+                showPIARImpact={piarStates.variabilidad}
                 onTogglePIAR={() => togglePIAR('variabilidad')}
             >
                 <Bar
@@ -229,7 +233,7 @@ export function GroupComparison({ analysis }) {
                                         }`}
                                 >
                                     {piarStates[key] ? <Eye size={12} /> : <EyeOff size={12} />}
-                                    PIAR
+                                    Ver impacto PIAR
                                 </button>
                             </div>
                             <div className="h-[300px]">
