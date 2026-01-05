@@ -14,132 +14,133 @@ const useAnalysisStore = create(
     persist(
       immer((set, get) => ({
         // Estado
+        analysisMode: null, // 'single' | 'comparative' | 'longitudinal' | null
         multiYearAnalysis: new MultiYearAnalysis(),
         comparisonMode: false,
         waitingForMoreYears: false, // Nuevo: indica si está esperando más archivos
         loading: false,
         error: null,
         version: 0, // Contador para forzar re-renders
-        
+
         // Selectores
         getActiveAnalysis: () => {
           const state = get();
           return state.multiYearAnalysis.getBaseAnalysis();
         },
-        
+
         getAvailableYears: () => {
           const state = get();
           return state.multiYearAnalysis.getAvailableYears();
         },
-        
+
         getBaseYear: () => {
           const state = get();
           return state.multiYearAnalysis.baseYear;
         },
-        
+
         getComparisonYears: () => {
           const state = get();
           return state.multiYearAnalysis.comparisonYears;
         },
-        
+
         getComparisonAnalyses: () => {
           const state = get();
           return state.multiYearAnalysis.getComparisonAnalyses();
         },
-        
+
         hasData: () => {
           const state = get();
           if (!state.multiYearAnalysis) return false;
-          
+
           // Verificar si analyses es un Map y tiene elementos
           if (state.multiYearAnalysis.analyses instanceof Map) {
             return state.multiYearAnalysis.analyses.size > 0;
           }
-          
+
           // Si es un array
           if (Array.isArray(state.multiYearAnalysis.analyses)) {
             return state.multiYearAnalysis.analyses.length > 0;
           }
-          
+
           // Si tiene el método getAvailableYears
           if (state.multiYearAnalysis.getAvailableYears) {
             return state.multiYearAnalysis.getAvailableYears().length > 0;
           }
-          
+
           return false;
         },
-        
+
         isYearLoaded: (year) => {
           const state = get();
           return state.multiYearAnalysis.analyses.has(year);
         },
-        
+
         // Actions
         loadBaseYear: async (file, yearLabel = null) => {
           set({ loading: true, error: null });
-          
+
           try {
             const result = await parseExcel(file, yearLabel);
             const { year, data, warnings } = result;
-            
+
             set((state) => {
               state.multiYearAnalysis.addAnalysis(year, data);
               state.loading = false;
               state.version += 1; // Incrementar para forzar re-render
             });
-            
+
             return { success: true, year, warnings };
           } catch (error) {
-            set({ 
-              loading: false, 
-              error: error.userMessage || error.message || 'Error al cargar el archivo' 
+            set({
+              loading: false,
+              error: error.userMessage || error.message || 'Error al cargar el archivo'
             });
             return { success: false, error: error.userMessage || error.message };
           }
         },
-        
+
         loadComparisonYear: async (file, yearLabel = null) => {
           set({ loading: true, error: null });
-          
+
           try {
             const result = await parseExcel(file, yearLabel);
             const { year, data, warnings } = result;
-            
+
             // Verificar que no sea el año base
             const baseYear = get().multiYearAnalysis.baseYear;
             if (year === baseYear) {
               throw new Error('No se puede cargar el mismo año como comparación');
             }
-            
+
             set((state) => {
               state.multiYearAnalysis.addAnalysis(year, data);
               state.multiYearAnalysis.addComparisonYear(year);
               state.loading = false;
               state.version += 1; // Incrementar para forzar re-render
             });
-            
+
             return { success: true, year, warnings };
           } catch (error) {
-            set({ 
-              loading: false, 
-              error: error.userMessage || error.message || 'Error al cargar el archivo de comparación' 
+            set({
+              loading: false,
+              error: error.userMessage || error.message || 'Error al cargar el archivo de comparación'
             });
             return { success: false, error: error.userMessage || error.message };
           }
         },
-        
+
         enableComparisonMode: () => {
           set({ comparisonMode: true, waitingForMoreYears: true });
         },
-        
+
         disableComparisonMode: () => {
           set({ comparisonMode: false, waitingForMoreYears: false });
         },
-        
+
         finishLoadingYears: () => {
           set({ waitingForMoreYears: false });
         },
-        
+
         setBaseYear: (year) => {
           set((state) => {
             try {
@@ -149,7 +150,7 @@ const useAnalysisStore = create(
             }
           });
         },
-        
+
         toggleYearInComparison: (year) => {
           set((state) => {
             try {
@@ -159,7 +160,7 @@ const useAnalysisStore = create(
             }
           });
         },
-        
+
         updateFilters: (year, filters) => {
           set((state) => {
             const analysis = state.multiYearAnalysis.getAnalysis(year);
@@ -168,19 +169,24 @@ const useAnalysisStore = create(
             }
           });
         },
-        
+
         removeYear: (year) => {
           set((state) => {
             state.multiYearAnalysis.removeAnalysis(year);
           });
         },
-        
+
+        setAnalysisMode: (mode) => {
+          set({ analysisMode: mode });
+        },
+
         clearError: () => {
           set({ error: null });
         },
-        
+
         reset: () => {
           set({
+            analysisMode: null,
             multiYearAnalysis: new MultiYearAnalysis(),
             comparisonMode: false,
             waitingForMoreYears: false,
