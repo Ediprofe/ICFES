@@ -22,3 +22,34 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# =============================================
+# ARCHIVOS SENSIBLES - NO SUBIR A GITHUB
+# =============================================
+
+# Excel files (pueden contener datos de estudiantes)
+*.xlsx
+*.xls
+docs/*.xlsx
+docs/*.xls
+
+# Word files
+*.docx
+*.doc
+
+# HTML exportados (pueden contener datos de estudiantes)
+docs/*.html
+*.html
+!index.html
+!dist/**/*.html
+
+# Imágenes de prueba/capturas
+image-*.png
+*.png
+!public/*.png
+!src/assets/*.png
+
+# Archivos temporales y de prueba
+docs/archive/
+*.tmp
+*.temp
